@@ -1,3 +1,4 @@
+include $(top_srcdir)/common.mk
 localedir = $(datadir)/locale
 
 bin_PROGRAMS = pchat

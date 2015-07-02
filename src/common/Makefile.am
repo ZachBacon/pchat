@@ -1,5 +1,5 @@
 ## Process this file with automake to produce Makefile.in
-
+include $(top_srcdir)/common.mk
 noinst_LIBRARIES = libpchatcommon.a
 
 AM_CPPFLAGS = $(COMMON_CFLAGS)

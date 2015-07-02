@@ -1,5 +1,5 @@
 localedir = $(datadir)/locale
-
+include $(top_srcdir)/common.mk
 bin_PROGRAMS = pchat-text
 
 AM_CPPFLAGS = $(COMMON_CFLAGS) -DLOCALEDIR=\"$(localedir)\"
