@@ -42,7 +42,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-int main()
+int main(int argc, char *argv[])
 {
 	char name[512];
 	char num[512];
