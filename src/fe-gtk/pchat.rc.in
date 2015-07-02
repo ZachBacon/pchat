@@ -1,0 +1,23 @@
+1 24 pchat.exe.manifest
+XC_ICON ICON "pchat.ico"
+
+VS_VERSION_INFO VERSIONINFO
+	FILEVERSION    @VERSION_COMMAS@,0
+	PRODUCTVERSION @VERSION_COMMAS@,0
+	BEGIN
+		BLOCK "StringFileInfo"
+		BEGIN
+			BLOCK "040904B0"
+			BEGIN
+				
+				VALUE "FileDescription", "PChat IRC Client"
+				VALUE "ProductName", "PChat"
+				VALUE "ProductVersion", "@PACKAGE_VERSION@"
+				VALUE "FileVersion", "@PACKAGE_VERSION@"
+			END
+		END
+		BLOCK "VarFileInfo"
+		BEGIN
+			VALUE "Translation", 0x0409, 0x04B0
+		END
+	END

@@ -1,0 +1,6788 @@
+# xchat for Latvian.
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# Artis Trops <hornet@navigators>, 2001.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: xchat\n"
+"Report-Msgid-Bugs-To: www.pchat-irc.net\n"
+"POT-Creation-Date: 2012-11-16 11:40-0400\n"
+"PO-Revision-Date: 2002-12-26 03:36+0200\n"
+"Last-Translator: Artis Trops <hornet@navigators.lv>\n"
+"Language-Team: Latvian <ll10nt@os.lv>\n"
+"Language: lv\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/common/cfgfiles.c:740
+msgid "I'm busy"
+msgstr "Esmu aizņemts"
+
+#: src/common/cfgfiles.c:764
+#, fuzzy
+msgid "Leaving"
+msgstr "Latvija"
+
+#: src/common/cfgfiles.c:825
+msgid ""
+"* Running IRC as root is stupid! You should\n"
+"  create a User Account and use that to login.\n"
+msgstr ""
+"* Lietot IRC kā rootam ir muļķīgi! Jums vajadzētu\n"
+" Izveidot Lietotāja Kontu un lietot to, lai pieteiktos.\n"
+
+#: src/common/dcc.c:81
+msgid "Waiting"
+msgstr "Gaidu"
+
+#: src/common/dcc.c:82
+msgid "Active"
+msgstr "Aktīvs"
+
+#: src/common/dcc.c:83
+msgid "Failed"
+msgstr "Neizdevās"
+
+#: src/common/dcc.c:84
+msgid "Done"
+msgstr "Darīts"
+
+#: src/common/dcc.c:85 src/fe-gtk/menu.c:943
+msgid "Connect"
+msgstr "Pieslēgties"
+
+#: src/common/dcc.c:86
+msgid "Aborted"
+msgstr "Izbeigts"
+
+#: src/common/dcc.c:1882 src/common/outbound.c:2530
+#, c-format
+msgid "Cannot access %s\n"
+msgstr "Nevar piekļūt %s\n"
+
+#: src/common/dcc.c:1883 src/common/text.c:1379 src/common/text.c:1417
+#: src/common/text.c:1428 src/common/text.c:1435 src/common/text.c:1448
+#: src/common/text.c:1465 src/common/text.c:1565 src/common/util.c:358
+msgid "Error"
+msgstr "Kļūda"
+
+#: src/common/dcc.c:2361
+#, c-format
+msgid "%s is offering \"%s\". Do you want to accept?"
+msgstr ""
+
+#: src/common/dcc.c:2576
+msgid "No active DCCs\n"
+msgstr "Nav aktīvu DCC\n"
+
+#: src/common/ignore.c:126 src/common/ignore.c:130 src/common/ignore.c:134
+#: src/common/ignore.c:138 src/common/ignore.c:142 src/common/ignore.c:146
+#: src/common/ignore.c:150
+msgid "YES  "
+msgstr "JĀ"
+
+#: src/common/ignore.c:128 src/common/ignore.c:132 src/common/ignore.c:136
+#: src/common/ignore.c:140 src/common/ignore.c:144 src/common/ignore.c:148
+#: src/common/ignore.c:152
+msgid "NO   "
+msgstr "NĒ   "
+
+#: src/common/ignore.c:383
+#, c-format
+msgid "You are being CTCP flooded from %s, ignoring %s\n"
+msgstr ""
+
+#: src/common/ignore.c:408
+#, c-format
+msgid "You are being MSG flooded from %s, setting gui_auto_open_dialog OFF.\n"
+msgstr ""
+
+#: src/common/notify.c:478
+#, c-format
+msgid "  %-20s online\n"
+msgstr "  %-20s tiešsaistē\n"
+
+#: src/common/notify.c:480
+#, c-format
+msgid "  %-20s offline\n"
+msgstr "  %-20s nav bezsaistē\n"
+
+#: src/common/outbound.c:72
+msgid "No channel joined. Try /join #<channel>\n"
+msgstr "Neesi pievienojies nevienam kanālam. Pamēģini /join #<kanāls>\n"
+
+#: src/common/outbound.c:78
+msgid "Not connected. Try /server <host> [<port>]\n"
+msgstr "Neesi pieslēdzies. Pamēģini /server <resursdators> [<ports>]\n"
+
+#: src/common/outbound.c:281
+#, c-format
+msgid "Server %s already exists on network %s.\n"
+msgstr ""
+
+#: src/common/outbound.c:287
+#, c-format
+msgid "Added server %s to network %s.\n"
+msgstr ""
+
+#: src/common/outbound.c:373
+#, c-format
+msgid "Already marked away: %s\n"
+msgstr ""
+
+#: src/common/outbound.c:446
+msgid "Already marked back.\n"
+msgstr ""
+
+#: src/common/outbound.c:1812
+msgid "I need /bin/sh to run!\n"
+msgstr "Lai darbotos, man vajag /bin/sh!\n"
+
+#: src/common/outbound.c:2203
+#, fuzzy
+msgid "Commands Available:"
+msgstr ""
+"\n"
+"Pieejamās Kommands:\n"
+"\n"
+"  "
+
+#: src/common/outbound.c:2217
+#, fuzzy
+msgid "User defined commands:"
+msgstr ""
+"Lietotāja definētās komandas:\n"
+"\n"
+"  "
+
+#: src/common/outbound.c:2233
+#, fuzzy
+msgid "Plugin defined commands:"
+msgstr ""
+"Lietotāja definētās komandas:\n"
+"\n"
+"  "
+
+#: src/common/outbound.c:2244
+#, fuzzy
+msgid "Type /HELP <command> for more information, or /HELP -l"
+msgstr ""
+"\n"
+"\n"
+"Raksti /HELP <komanda> papildus informācijai, vai /HELP -l\n"
+"\n"
+
+#: src/common/outbound.c:2328
+#, c-format
+msgid "Unknown arg '%s' ignored."
+msgstr "Nezināmais arguments '%s' ignorēts."
+
+#: src/common/outbound.c:3302
+msgid "No such plugin found.\n"
+msgstr "Tāds iespraudnis nav atrasts.\n"
+
+#: src/common/outbound.c:3307 src/fe-gtk/plugingui.c:195
+msgid "That plugin is refusing to unload.\n"
+msgstr "Šis iespraudnis atsakās izlādēties.\n"
+
+#: src/common/outbound.c:3576
+msgid "ADDBUTTON <name> <action>, adds a button under the user-list"
+msgstr "ADDBUTTON <nosaukums> <darbība>, pievieno pogu zem lietotājzvēlnes"
+
+#: src/common/outbound.c:3577
+msgid ""
+"ADDSERVER <NewNetwork> <newserver/6667>, adds a new network with a new "
+"server to the network list"
+msgstr ""
+
+#: src/common/outbound.c:3579
+msgid "ALLCHAN <cmd>, sends a command to all channels you're in"
+msgstr "ALLCHAN <komada>, sūta komandu uz visiem kanāliem, kuros esat"
+
+#: src/common/outbound.c:3581
+#, fuzzy
+msgid "ALLCHANL <cmd>, sends a command to all channels on the current server"
+msgstr "ALLCHAN <komada>, sūta komandu uz visiem kanāliem, kuros esat"
+
+#: src/common/outbound.c:3583
+msgid "ALLSERV <cmd>, sends a command to all servers you're in"
+msgstr "ALLSERV <komanda>, sūta komandu uz visiem serveriem, kuros esat"
+
+#: src/common/outbound.c:3584
+msgid "AWAY [<reason>], sets you away"
+msgstr "AWAY [<iemesls>], atzīmē jūs kā promesošu"
+
+#: src/common/outbound.c:3585
+msgid "BACK, sets you back (not away)"
+msgstr ""
+
+#: src/common/outbound.c:3587
+msgid ""
+"BAN <mask> [<bantype>], bans everyone matching the mask from the current "
+"channel. If they are already on the channel this doesn't kick them (needs "
+"chanop)"
+msgstr ""
+"BAN <maska> [<bantype>], izraida visus, kuri atbilst maskai no pašreizējā "
+"kanāla. Ja viņi jau ir kanālā, tas viņus neizmet (vajag būt kanālop)"
+
+#: src/common/outbound.c:3588
+#, fuzzy
+msgid "CHANOPT [-quiet] <variable> [<value>]"
+msgstr "SET <mainīgais> [<vērtība>]"
+
+#: src/common/outbound.c:3589
+msgid ""
+"CHARSET [<encoding>], get or set the encoding used for the current connection"
+msgstr ""
+
+#: src/common/outbound.c:3590
+#, fuzzy
+msgid "CLEAR [ALL|HISTORY], Clears the current text window or command history"
+msgstr "CLEAR, Attīra pašreizējo teksta logu"
+
+#: src/common/outbound.c:3591
+msgid "CLOSE, Closes the current window/tab"
+msgstr "CLOSE, Aizver pašreizējo logu/sadaļu"
+
+#: src/common/outbound.c:3594
+#, fuzzy
+msgid "COUNTRY [-s] <code|wildcard>, finds a country code, eg: au = australia"
+msgstr "COUNTRY <kods>, atrod valsts kodu, piem.: lv = Latvija"
+
+#: src/common/outbound.c:3596
+msgid ""
+"CTCP <nick> <message>, send the CTCP message to nick, common messages are "
+"VERSION and USERINFO"
+msgstr ""
+"CTCP <segvārds> <ziņa>, sūta CTCP ziņu segvārdam, izplatītākās ziņas ir "
+"VERSION un USERINFO"
+
+#: src/common/outbound.c:3598
+#, fuzzy
+msgid ""
+"CYCLE [<channel>], parts the current or given channel and immediately rejoins"
+msgstr "CYCLE, iziet no pašreizējā kanāla un nekavējoties atkal pievienojas"
+
+#: src/common/outbound.c:3600
+#, fuzzy
+msgid ""
+"\n"
+"DCC GET <nick>                      - accept an offered file\n"
+"DCC SEND [-maxcps=#] <nick> [file]  - send a file to someone\n"
+"DCC PSEND [-maxcps=#] <nick> [file] - send a file using passive mode\n"
+"DCC LIST                            - show DCC list\n"
+"DCC CHAT <nick>                     - offer DCC CHAT to someone\n"
+"DCC PCHAT <nick>                    - offer DCC CHAT using passive mode\n"
+"DCC CLOSE <type> <nick> <file>         example:\n"
+"         /dcc close send johnsmith file.tar.gz"
+msgstr ""
+"\n"
+"DCC GET <segvārds>          - pieņem piedāvāto failu\n"
+"DCC SEND [-maxcps=#] <segvārds> [fails] - sūta failu kādam\n"
+"DCC LIST                             - parāda DCC sarakstu\n"
+"DCC CHAT <segvārds>        - piedāvā DCC Tērzēšanu kādam\n"
+"DCC CLOSE <tips> <segvārds> <fails>         piemērs:\n"
+"         /dcc close send johnsmith file.tar.gz"
+
+#: src/common/outbound.c:3612
+msgid ""
+"DEHOP <nick>, removes chanhalf-op status from the nick on the current "
+"channel (needs chanop)"
+msgstr ""
+"DEHOP <segvāds>, noņem kanālpus-op statusu segvārdam pašreizējā kanālā "
+"(vajag būt kanālop)"
+
+#: src/common/outbound.c:3614
+msgid "DELBUTTON <name>, deletes a button from under the user-list"
+msgstr "DELBUTTON <nosaukums>, izdzēš pogu no lietotājsaraksta"
+
+#: src/common/outbound.c:3616
+msgid ""
+"DEOP <nick>, removes chanop status from the nick on the current channel "
+"(needs chanop)"
+msgstr ""
+"DEOP <segvāds>, noņem kanālop statusu segvārdam pašreizējā kanālā (vajag būt "
+"kanālop)"
+
+#: src/common/outbound.c:3618
+msgid ""
+"DEVOICE <nick>, removes voice status from the nick on the current channel "
+"(needs chanop)"
+msgstr ""
+"DEVOICE <segvārds>, noņem balss statusu segvārdam pašreizējā kanāla (vajag "
+"būt kanālop)"
+
+#: src/common/outbound.c:3619
+msgid "DISCON, Disconnects from server"
+msgstr "DISCON, Atslēdzas no servera"
+
+#: src/common/outbound.c:3620
+msgid "DNS <nick|host|ip>, Finds a users IP number"
+msgstr "DNS <segvārds|hostdators|ip>, Atrod lietotāja IP numuru"
+
+#: src/common/outbound.c:3621
+msgid "ECHO <text>, Prints text locally"
+msgstr "ECHO <teksts>, Izvada tekstu lokāli"
+
+#: src/common/outbound.c:3624
+msgid ""
+"EXEC [-o] <command>, runs the command. If -o flag is used then output is "
+"sent to current channel, else is printed to current text box"
+msgstr ""
+"EXEC [-o] <komanda>, palaiž komandu. Ja -o karodziņš tiek lietots, tad "
+"izvade tiek sūtīta uz pašreizējo kanālu, citādāk tā tiek izvadīta uz "
+"pašreizējo teksta lodziņu"
+
+#: src/common/outbound.c:3626
+msgid "EXECCONT, sends the process SIGCONT"
+msgstr "EXECCONT, sūta procesam SIGCONT"
+
+#: src/common/outbound.c:3629
+msgid ""
+"EXECKILL [-9], kills a running exec in the current session. If -9 is given "
+"the process is SIGKILL'ed"
+msgstr ""
+"EXECKILL [-9], nokauj palaisto exec pašreizējā sesijā. Ja tiek dots -9, "
+"process tiek SIGKILL'ots"
+
+#: src/common/outbound.c:3631
+msgid "EXECSTOP, sends the process SIGSTOP"
+msgstr "EXECSTOP, sūta procesam SIGSTOP"
+
+#: src/common/outbound.c:3632
+msgid "EXECWRITE, sends data to the processes stdin"
+msgstr "EXECWRITE, sūta datus uz procesa stdin"
+
+#: src/common/outbound.c:3636
+msgid "EXPORTCONF, exports PChat settings"
+msgstr ""
+
+#: src/common/outbound.c:3639
+msgid "FLUSHQ, flushes the current server's send queue"
+msgstr "FLUSHQ, noflašo pašreizējā servera sūtīšanas rindu"
+
+#: src/common/outbound.c:3641
+msgid "GATE <host> [<port>], proxies through a host, port defaults to 23"
+msgstr ""
+"GATE <hostdators> [<ports>], caur resursdatoru kā starpserveri, noklusētais "
+"ports ir 23"
+
+#: src/common/outbound.c:3645
+msgid "GHOST <nick> [password], Kills a ghosted nickname"
+msgstr ""
+
+#: src/common/outbound.c:3650
+msgid "HOP <nick>, gives chanhalf-op status to the nick (needs chanop)"
+msgstr ""
+"HOP <segvārds>, piešķir kanālpus-op'a statusu segvārdam (vajag būt kanālop)"
+
+#: src/common/outbound.c:3651
+msgid "ID <password>, identifies yourself to nickserv"
+msgstr ""
+
+#: src/common/outbound.c:3653
+#, fuzzy
+msgid ""
+"IGNORE <mask> <types..> <options..>\n"
+"    mask - host mask to ignore, eg: *!*@*.aol.com\n"
+"    types - types of data to ignore, one or all of:\n"
+"            PRIV, CHAN, NOTI, CTCP, DCC, INVI, ALL\n"
+"    options - NOSAVE, QUIET"
+msgstr ""
+"IGNORE <maska> <tipi..> <opcijas..>\n"
+"    maska - hostdatora maska, kuru ignorēt, piem.: *!*@*.aol.com\n"
+"    tipi - datu tipi, kurus ignorēt, viens vai visi:\n"
+"            PRIV, CHAN, NOTI, CTCP, INVI, ALL\n"
+"    opcijas - NOSAVE, QUIET"
+
+#: src/common/outbound.c:3660
+msgid ""
+"INVITE <nick> [<channel>], invites someone to a channel, by default the "
+"current channel (needs chanop)"
+msgstr ""
+"INVITE <segvārds> [<kanāls>], ielūdz kādu kanālā, pēc noklusējuma uz "
+"pašreizējo kanālu (vajag kanālop)"
+
+#: src/common/outbound.c:3661
+msgid "JOIN <channel>, joins the channel"
+msgstr "JOIN <kanāls>, pievienojas kanālam"
+
+#: src/common/outbound.c:3663
+msgid "KICK <nick>, kicks the nick from the current channel (needs chanop)"
+msgstr ""
+"KICK <segvārds>, izmet segvārdu no pašreizējā kanāla (vajag būt kanālop)"
+
+#: src/common/outbound.c:3665
+msgid ""
+"KICKBAN <nick>, bans then kicks the nick from the current channel (needs "
+"chanop)"
+msgstr ""
+"KICKBAN <segvārds>, izraida un tad izmet segvārdu no pašreizējā kanāla "
+"(vajag būt kanālop)"
+
+#: src/common/outbound.c:3668
+msgid "LAGCHECK, forces a new lag check"
+msgstr "LAGCHECK, rosina jaunu aiztures pārbaudi"
+
+#: src/common/outbound.c:3670
+msgid ""
+"LASTLOG [-h] [-m] [-r] [--] <string>, searches for a string in the buffer\n"
+"    Use -h to highlight the found string(s)\n"
+"    Use -m to match case\n"
+"    Use -r when string is a Regular Expression\n"
+"    Use -- (double hyphen) to end options when searching for, say, the "
+"string '-r'"
+msgstr ""
+
+#: src/common/outbound.c:3676
+#, fuzzy
+msgid "LOAD [-e] <file>, loads a plugin or script"
+msgstr "LOAD <fails>, ielādē iespraudni vai skriptu"
+
+#: src/common/outbound.c:3679
+msgid ""
+"MDEHOP, Mass deop's all chanhalf-ops in the current channel (needs chanop)"
+msgstr ""
+"MDEHOP, Masveidā deop'o visus kanālpus-op'us pašreizējā kanālā (vajag būt "
+"kanālop)"
+
+#: src/common/outbound.c:3681
+msgid "MDEOP, Mass deop's all chanops in the current channel (needs chanop)"
+msgstr ""
+"MDEOP, Masveidā deop'o visus kanālop'us pašreizējā kanālā (vajag būt kanālop)"
+
+#: src/common/outbound.c:3683
+msgid ""
+"ME <action>, sends the action to the current channel (actions are written in "
+"the 3rd person, like /me jumps)"
+msgstr ""
+"ME <darbība>, sūta darbību uz pašreizējo kanālu (darbības tiek rakstītas "
+"trešajā personā, kā /me smaida)"
+
+#: src/common/outbound.c:3687
+msgid ""
+"MKICK, Mass kicks everyone except you in the current channel (needs chanop)"
+msgstr ""
+"MKICK, Masveidā izmet visus, izņemot tevi, pašreizējā kanālā (vajag būt "
+"kanālop)"
+
+#: src/common/outbound.c:3690
+#, fuzzy
+msgid "MOP, Mass op's all users in the current channel (needs chanop)"
+msgstr ""
+"MDEOP, Masveidā deop'o visus kanālop'us pašreizējā kanālā (vajag būt kanālop)"
+
+#: src/common/outbound.c:3691
+msgid "MSG <nick> <message>, sends a private message"
+msgstr "MSG <segvārds> <ziņa>, sūta privātu ziņu"
+
+#: src/common/outbound.c:3694
+msgid "NAMES, Lists the nicks on the current channel"
+msgstr "NAMES, Parāda pašreizējā kanālā esošos segvārdus"
+
+#: src/common/outbound.c:3696
+msgid "NCTCP <nick> <message>, Sends a CTCP notice"
+msgstr "NCTCP <segvārds> <ziņa>, Sūta CTCP paziņojumu"
+
+#: src/common/outbound.c:3697
+#, fuzzy
+msgid "NEWSERVER [-noconnect] <hostname> [<port>]"
+msgstr "NEWSERVER <hostdators> [<ports>]"
+
+#: src/common/outbound.c:3698
+msgid "NICK <nickname>, sets your nick"
+msgstr "NICK <segvārds>, uzstāda jums segvārdu"
+
+#: src/common/outbound.c:3701
+msgid ""
+"NOTICE <nick/channel> <message>, sends a notice. Notices are a type of "
+"message that should be auto reacted to"
+msgstr ""
+"NOTICE <segvārds/kanāls> <ziņa>, sūta paziņojumu. Paziņojumi ir tādas ziņas, "
+"uz kurām vajadzētu automātiski reaģēt"
+
+#: src/common/outbound.c:3703
+#, fuzzy
+msgid ""
+"NOTIFY [-n network1[,network2,...]] [<nick>], displays your notify list or "
+"adds someone to it"
+msgstr ""
+"NOTIFY [<segvārds>], parāda jūsuu paziņojumu sarakstu vai kādu tam pievieno"
+
+#: src/common/outbound.c:3705
+msgid "OP <nick>, gives chanop status to the nick (needs chanop)"
+msgstr "OP <segvārds>, piešķir kanālop statusu segvārdam (vajag būt kanālop)"
+
+#: src/common/outbound.c:3707
+msgid ""
+"PART [<channel>] [<reason>], leaves the channel, by default the current one"
+msgstr "PART [<kanāls>] [<iemesls>], pamet kanālu, pēc noklusējuma pašreizējo"
+
+#: src/common/outbound.c:3709
+msgid "PING <nick | channel>, CTCP pings nick or channel"
+msgstr "PING <segvārds | kanāls>, CTCP pingo segvārdu vai kanālu"
+
+#: src/common/outbound.c:3711
+#, fuzzy
+msgid "QUERY [-nofocus] <nick>, opens up a new privmsg window to someone"
+msgstr "QUERY <segvārds>, atver jaunu privāto ziņu logu ar kādu"
+
+#: src/common/outbound.c:3713
+msgid "QUIT [<reason>], disconnects from the current server"
+msgstr "QUIT [<iemesls>], atslēdzas no pašreizējā servera"
+
+#: src/common/outbound.c:3715
+msgid "QUOTE <text>, sends the text in raw form to the server"
+msgstr "QUOTE <teksts>, sūta tekstu jēlā formā serverim"
+
+#: src/common/outbound.c:3718
+msgid ""
+"RECONNECT [-ssl] [<host>] [<port>] [<password>], Can be called just as /"
+"RECONNECT to reconnect to the current server or with /RECONNECT ALL to "
+"reconnect to all the open servers"
+msgstr ""
+"RECONNECT [-ssl] [<hostdators>] [<ports>] [<parole>], Var izsaukt arī "
+"vienkārši kā /RECONNECT, lai vēlreiz pārslēgtos uz pašreizējo serveri vai "
+"ar /RECONNECT ALL uz visiem atvērtajiem serveriem"
+
+#: src/common/outbound.c:3721
+msgid ""
+"RECONNECT [<host>] [<port>] [<password>], Can be called just as /RECONNECT "
+"to reconnect to the current server or with /RECONNECT ALL to reconnect to "
+"all the open servers"
+msgstr ""
+"RECONNECT [<hostdators>] [<ports>] [<parole>], Var izsaukt arī vienkārši kā /"
+"RECONNECT, lai vēlreiz pārslēgtos uz pašreizējo serveri vai ar /RECONNECT "
+"ALL uz visiem atvērtajiem serveriem"
+
+#: src/common/outbound.c:3723
+#, fuzzy
+msgid ""
+"RECV <text>, send raw data to PChat, as if it was received from the IRC "
+"server"
+msgstr "RECV <teksts>, sūta jēldatus xchat tā, itkā tas nāktu no irc servera"
+
+#: src/common/outbound.c:3726
+msgid "SAY <text>, sends the text to the object in the current window"
+msgstr "SAY <teksts>, sūta tekstu objektam pašreizējā logā"
+
+#: src/common/outbound.c:3727
+msgid "SEND <nick> [<file>]"
+msgstr ""
+
+#: src/common/outbound.c:3730
+msgid "SERVCHAN [-ssl] <host> <port> <channel>, connects and joins a channel"
+msgstr ""
+"SERVCHAN [-ssl] <hostdators> <ports> <kanāls>, pieslēdzas un pievienojas "
+"kanālam"
+
+#: src/common/outbound.c:3733
+msgid "SERVCHAN <host> <port> <channel>, connects and joins a channel"
+msgstr ""
+"SERVCHAN <hostdators> <ports> <kanāls>, pieslēdzas un pievienojas kanālam"
+
+#: src/common/outbound.c:3737
+#, fuzzy
+msgid ""
+"SERVER [-ssl] <host> [<port>] [<password>], connects to a server, the "
+"default port is 6667 for normal connections, and 6697 for ssl connections"
+msgstr ""
+"SERVER <hostdators> [<ports>] [<parole>], pieslēdzas serverim, noklusētais "
+"ports ir 6667 parastiem savienojumiem, 9999 ssl savienojumiem"
+
+#: src/common/outbound.c:3740
+msgid ""
+"SERVER <host> [<port>] [<password>], connects to a server, the default port "
+"is 6667"
+msgstr ""
+"SERVER <hostdators> [<ports>] [<parole>], pieslēdzas serverim, noklusētais "
+"ports ir 6667"
+
+#: src/common/outbound.c:3742
+#, fuzzy
+msgid "SET [-e] [-off|-on] [-quiet] <variable> [<value>]"
+msgstr "SET <mainīgais> [<vērtība>]"
+
+#: src/common/outbound.c:3743
+msgid "SETCURSOR [-|+]<position>, reposition the cursor in the inputbox"
+msgstr ""
+
+#: src/common/outbound.c:3744
+msgid "SETTAB <new name>, change a tab's name, tab_trunc limit still applies"
+msgstr ""
+
+#: src/common/outbound.c:3745
+msgid "SETTEXT <new text>, replace the text in the input box"
+msgstr ""
+
+#: src/common/outbound.c:3748
+msgid ""
+"TOPIC [<topic>], sets the topic if one is given, else shows the current topic"
+msgstr ""
+"TOPIC [<temats>], uzstāda tematu, ja tāds ir dots, savādāk parāda pašreizējo "
+"tematu"
+
+#: src/common/outbound.c:3750
+msgid ""
+"\n"
+"TRAY -f <timeout> <file1> [<file2>] Blink tray between two icons.\n"
+"TRAY -f <filename>                  Set tray to a fixed icon.\n"
+"TRAY -i <number>                    Blink tray with an internal icon.\n"
+"TRAY -t <text>                      Set the tray tooltip.\n"
+"TRAY -b <title> <text>              Set the tray balloon."
+msgstr ""
+
+#: src/common/outbound.c:3757
+msgid "UNBAN <mask> [<mask>...], unbans the specified masks."
+msgstr "UNBAN <maska> [<maska>...], noņem izraidījumu norādītajām maskām."
+
+#: src/common/outbound.c:3758
+msgid "UNIGNORE <mask> [QUIET]"
+msgstr "UNIGNORE <maska> [QUIET]"
+
+#: src/common/outbound.c:3759
+msgid "UNLOAD <name>, unloads a plugin or script"
+msgstr "UNLOAD <nosaukums>, izlādē iespraudni vai skriptu"
+
+#: src/common/outbound.c:3760
+msgid "URL <url>, opens a URL in your browser"
+msgstr ""
+
+#: src/common/outbound.c:3762
+msgid ""
+"USELECT [-a] [-s] <nick1> <nick2> etc, highlights nick(s) in channel userlist"
+msgstr ""
+
+#: src/common/outbound.c:3765
+msgid "VOICE <nick>, gives voice status to someone (needs chanop)"
+msgstr "VOICE <segvārds>, piešķir kādam balss statusu (vajag būt kanālop)"
+
+#: src/common/outbound.c:3767
+msgid "WALLCHAN <message>, writes the message to all channels"
+msgstr "WALLCHAN <ziņa>, raksta ziņu visiem kanāliem"
+
+#: src/common/outbound.c:3769
+msgid ""
+"WALLCHOP <message>, sends the message to all chanops on the current channel"
+msgstr "WALLCHOP <ziņa>, aizsūta ziņu visiem pašreizējā kanāla kanālopiem"
+
+#: src/common/outbound.c:3802
+#, c-format
+msgid "Usage: %s\n"
+msgstr "Lietošana: %s\n"
+
+#: src/common/outbound.c:3807
+msgid ""
+"\n"
+"No help available on that command.\n"
+msgstr ""
+"\n"
+"Šādai komandai palīdzība nav pieejama.\n"
+
+#: src/common/outbound.c:3813
+msgid "No such command.\n"
+msgstr "Nav tādas komandas.\n"
+
+#: src/common/outbound.c:4144
+msgid "Bad arguments for user command.\n"
+msgstr "Slikti argumenti lietotāja komandai.\n"
+
+#: src/common/outbound.c:4305
+msgid "Too many recursive usercommands, aborting."
+msgstr "Pārāk daudz rekursīvu pietotājkomandu, pārtraucu"
+
+#: src/common/outbound.c:4388
+msgid "Unknown Command. Try /help\n"
+msgstr "Nezināma Komanda.  Pamēģini /help\n"
+
+#: src/common/plugin.c:383 src/common/plugin.c:424
+#, fuzzy
+msgid "No xchat_plugin_init symbol; is this really a PChat plugin?"
+msgstr "Nav xchat_plugin_init simbola; vai tas patiesi ir xchat iespraudnis?"
+
+#: src/common/server.c:665
+msgid "Are you sure this is a SSL capable server and port?\n"
+msgstr ""
+
+#: src/common/server.c:1033
+#, c-format
+msgid ""
+"Cannot resolve hostname %s\n"
+"Check your IP Settings!\n"
+msgstr ""
+"Nevaru atšķetināt hostdatora vārdu %s\n"
+"Pārbauiet savus IP Uzstādījumus!\n"
+
+#: src/common/server.c:1038
+msgid "Proxy traversal failed.\n"
+msgstr "Starpservera šķērsošana neizdevās.\n"
+
+#: src/common/servlist.c:747
+#, c-format
+msgid "Cycling to next server in %s...\n"
+msgstr ""
+
+#: src/common/servlist.c:1220
+#, c-format
+msgid ""
+"Warning: \"%s\" character set is unknown. No conversion will be applied for "
+"network %s."
+msgstr ""
+
+#: src/common/textevents.h:6
+msgid "%C18*%O$t%C18$1%O added to notify list."
+msgstr ""
+
+#: src/common/textevents.h:9
+msgid "%C22*%O$t%C22$1%O Banlist: %C18$2%O on %C24$4%O by %C26$3%O"
+msgstr ""
+
+#: src/common/textevents.h:12
+msgid "%C22*%O$tCannot join%C22 $1 %O(%C20You are banned%O)."
+msgstr ""
+
+#: src/common/textevents.h:18
+msgid "%C29*%O$tCapabilities acknowledged: %C29$2%O"
+msgstr ""
+
+#: src/common/textevents.h:21
+msgid "%C23*%O$tCapabilities supported: %C29$2%O"
+msgstr ""
+
+#: src/common/textevents.h:24
+msgid "%C23*%O$tCapabilities requested: %C29$1%O"
+msgstr ""
+
+#: src/common/textevents.h:27
+msgid "%C24*%O$t%C28$1%O is now known as %C18$2%O"
+msgstr ""
+
+#: src/common/textevents.h:36
+msgid "%C22*%O$t%C26$1%O sets ban on %C18$2%O"
+msgstr ""
+
+#: src/common/textevents.h:39
+msgid "%C22*%O$tChannel %C22$1%O created"
+msgstr ""
+
+#: src/common/textevents.h:42
+msgid "%C22*%O$t%C26$1%O removes channel half-operator status from %C18$2%O"
+msgstr ""
+
+#: src/common/textevents.h:45
+msgid "%C22*%O$t%C26$1%O removes channel operator status from %C18$2%O"
+msgstr ""
+
+#: src/common/textevents.h:48
+msgid "%C22*%O$t%C26$1%O removes voice from %C18$2%O"
+msgstr ""
+
+#: src/common/textevents.h:51
+msgid "%C22*%O$t%C26 $1%C sets exempt on %C18$2%O"
+msgstr ""
+
+#: src/common/textevents.h:54
+msgid "%C22*%O$t%C26$1%O gives channel half-operator status to %C18$2%O"
+msgstr ""
+
+#: src/common/textevents.h:57
+msgid "%C22*%O$t%C26 $1%C sets invite on %C18$2%O"
+msgstr ""
+
+#: src/common/textevents.h:60
+msgid "%UChannel          Users   Topic"
+msgstr ""
+
+#: src/common/textevents.h:66
+msgid "%C22*%O$t%C26$1%O sets mode %C24$2$3%O on %C22$4%O"
+msgstr ""
+
+#: src/common/textevents.h:69
+msgid "%C22*%O$tChannel %C22$1%O modes: %C24$2"
+msgstr ""
+
+#: src/common/textevents.h:78
+msgid "%C22*%O$t%C26$1%O gives channel operator status to %C18$2%O"
+msgstr ""
+
+#: src/common/textevents.h:81
+msgid "%C22*%O$t%C26$1%O removes exempt on %C18$2%O"
+msgstr ""
+
+#: src/common/textevents.h:84
+msgid "%C22*%O$t%C26 $1%O removes invite on %C18$2%O"
+msgstr ""
+
+#: src/common/textevents.h:87
+msgid "%C22*%O$t%C26$1%O removes channel keyword"
+msgstr ""
+
+#: src/common/textevents.h:90
+msgid "%C22*%O$t%C26$1%O removes user limit"
+msgstr ""
+
+#: src/common/textevents.h:93
+msgid "%C22*%O$t$1 sets channel keyword to %C24$2%O"
+msgstr ""
+
+#: src/common/textevents.h:96
+msgid "%C22*%O$t%C26$1%O sets channel limit to %C24$2%O"
+msgstr ""
+
+#: src/common/textevents.h:99
+msgid "%C22*%O$t%C26$1%O removes ban on %C24$2%O"
+msgstr ""
+
+#: src/common/textevents.h:102
+msgid "%C22*%O$t%C26$1%O gives voice to %C18$2%O"
+msgstr ""
+
+#: src/common/textevents.h:105
+msgid "%C23*%O$tConnected. Now logging in."
+msgstr ""
+
+#: src/common/textevents.h:108
+msgid "%C23*%O$tConnecting to %C29$1%C (%C23$2:$3%O)"
+msgstr ""
+
+#: src/common/textevents.h:111
+msgid "%C20*%O$tConnection failed (%C20$1%O)"
+msgstr ""
+
+#: src/common/textevents.h:114
+msgid "%C24*%O$tReceived a CTCP %C24$1%C from %C18$2%O"
+msgstr ""
+
+#: src/common/textevents.h:117
+msgid "%C24*%C$tReceived a CTCP %C24$1%C from %C18$2%C (to %C22$3%C)%O"
+msgstr ""
+
+#: src/common/textevents.h:123
+msgid "%C24*%O$tReceived a CTCP Sound %C24$1%C from %C18$2%O"
+msgstr ""
+
+#: src/common/textevents.h:126
+msgid "%C24*%O$tReceived a CTCP Sound %C24$1%C from %C18$2%C (to %C22$3%O)"
+msgstr ""
+
+#: src/common/textevents.h:129
+msgid "%C23*%O$tDCC CHAT to %C18$1%O aborted."
+msgstr ""
+
+#: src/common/textevents.h:132
+msgid "%C24*%O$tDCC CHAT connection established to %C18$1%C %C30[%C24$2%C30]%O"
+msgstr ""
+
+#: src/common/textevents.h:135
+msgid "%C20*%O$tDCC CHAT to %C18$1%O lost (%C20$4%O)"
+msgstr ""
+
+#: src/common/textevents.h:138
+msgid "%C24*%O$tReceived a DCC CHAT offer from %C18$1%O"
+msgstr ""
+
+#: src/common/textevents.h:141
+msgid "%C24*%O$tOffering DCC CHAT to %C18$1%O"
+msgstr ""
+
+#: src/common/textevents.h:144
+msgid "%C24*%O$tAlready offering CHAT to %C18$1%O"
+msgstr ""
+
+#: src/common/textevents.h:147
+msgid "%C20*%O$tDCC $1 connect attempt to %C18$2%O failed (%C20$3%O)"
+msgstr ""
+
+#: src/common/textevents.h:150
+msgid "%C23*%O$tReceived '%C23$1%C' from %C18$2%O"
+msgstr ""
+
+#: src/common/textevents.h:153
+#, c-format
+msgid "%C16,17 Type  To/From    Status  Size    Pos     File         "
+msgstr ""
+
+#: src/common/textevents.h:156
+msgid ""
+"%C20*%O$tReceived a malformed DCC request from %C18$1%O.%010%C23*%O"
+"$tContents of packet: %C23$2%O"
+msgstr ""
+
+#: src/common/textevents.h:159
+msgid "%C24*%O$tOffering '%C24$1%O' to %C18$2%O"
+msgstr ""
+
+#: src/common/textevents.h:162
+msgid "%C23*%O$tNo such DCC offer."
+msgstr ""
+
+#: src/common/textevents.h:165
+msgid "%C23*%O$tDCC RECV '%C23$2%O' to %C18$1%O aborted."
+msgstr ""
+
+#: src/common/textevents.h:168
+msgid ""
+"%C24*%O$tDCC RECV '%C23$1%O' from %C18$3%O complete %C30[%C24$4%O cps%C30]%O"
+msgstr ""
+
+#: src/common/textevents.h:171
+msgid "%C24*%O$tDCC RECV connection established to %C18$1 %C30[%O%C24$2%C30]%O"
+msgstr ""
+
+#: src/common/textevents.h:174
+msgid "%C20*%O$tDCC RECV '%C23$1%O' from %C18$3%O failed (%C20$4%O)"
+msgstr ""
+
+#: src/common/textevents.h:177
+msgid "%C20*%O$tDCC RECV: Cannot open '%C23$1%C' for writing (%C20$2%O)"
+msgstr ""
+
+#: src/common/textevents.h:180
+msgid ""
+"%C23*%O$tThe file '%C24$1%C' already exists, saving it as '%C23$2%O' instead."
+msgstr ""
+
+#: src/common/textevents.h:183
+msgid "%C24*%O$t%C18$1%C has requested to resume '%C23$2%C' from %C24$3%O."
+msgstr ""
+
+#: src/common/textevents.h:186
+msgid "%C23*%O$tDCC SEND '%C23$2%C' to %C18$1%O aborted."
+msgstr ""
+
+#: src/common/textevents.h:189
+msgid ""
+"%C24*%O$tDCC SEND '%C23$1%C' to %C18$2%C complete %C30[%C24$3%C cps%C30]%O"
+msgstr ""
+
+#: src/common/textevents.h:192
+msgid "%C24*%O$tDCC SEND connection established to %C18$1 %C30[%O%C24$2%C30]%O"
+msgstr ""
+
+#: src/common/textevents.h:195
+msgid "%C20*%O$tDCC SEND '%C23$1%C' to %C18$2%C failed (%C20$3%O)"
+msgstr ""
+
+#: src/common/textevents.h:198
+msgid "%C24*%O$t%C18$1%C has offered '%C23$2%C' (%C24$3%O bytes)"
+msgstr ""
+
+#: src/common/textevents.h:201
+msgid "%C20*%O$tDCC $1 '%C23$2%C' to %C18$3%O stalled, aborting."
+msgstr ""
+
+#: src/common/textevents.h:204
+msgid "%C20*%O$tDCC $1 '%C23$2%C' to %C18$3%O timed out, aborting."
+msgstr ""
+
+#: src/common/textevents.h:207
+msgid "%C24*%O$t%C18$1%O deleted from notify list."
+msgstr ""
+
+#: src/common/textevents.h:210
+msgid "%C20*%O$tDisconnected (%C20$1%O)"
+msgstr ""
+
+#: src/common/textevents.h:213
+msgid "%C24*%O$tFound your IP: %C30[%C24$1%C30]%O"
+msgstr ""
+
+#: src/common/textevents.h:219
+msgid "%O%C18$1%O added to ignore list."
+msgstr ""
+
+#: src/common/textevents.h:222
+msgid "%OIgnore on %C18$1%O changed."
+msgstr ""
+
+#: src/common/textevents.h:225
+#, c-format
+msgid "%C16,17                                                              "
+msgstr ""
+
+#: src/common/textevents.h:228
+#, c-format
+msgid "%C16,17 Hostmask                  PRIV NOTI CHAN CTCP DCC  INVI UNIG "
+msgstr ""
+
+#: src/common/textevents.h:231
+msgid "%O%C18$1%O removed from ignore list."
+msgstr ""
+
+#: src/common/textevents.h:234
+#, fuzzy
+msgid "%OIgnore list is empty."
+msgstr "X-Chat: Ignorēšanas saraksts"
+
+#: src/common/textevents.h:237
+msgid "%C20*%O$tCannot join %C22$1%C (%C20Channel is invite only%O)"
+msgstr ""
+
+#: src/common/textevents.h:240
+msgid "%C24*%O$tYou have been invited to %C22$1%O by %C18$2%O (%C29$3%O)"
+msgstr ""
+
+#: src/common/textevents.h:243
+#, c-format
+msgid "%C23*$t$1 ($3) has joined"
+msgstr ""
+
+#: src/common/textevents.h:246
+msgid "%C20*%O$tCannot join %C22$1%C (%C20Requires keyword%O)"
+msgstr ""
+
+#: src/common/textevents.h:249
+msgid "%C22*%O$t%C26$1%C has kicked %C18$2%C from %C22$3%C (%C24$4%O)"
+msgstr ""
+
+#: src/common/textevents.h:252
+msgid "%C19*%O$t%C19You have been killed by %C26$1%C (%C20$2%O)"
+msgstr ""
+
+#: src/common/textevents.h:261
+msgid "%C29*%O$t%C29MOTD Skipped%O"
+msgstr ""
+
+#: src/common/textevents.h:264
+msgid "%C23*%O$t%C28$1%C already in use. Retrying with %C18$2%O..."
+msgstr ""
+
+#: src/common/textevents.h:267
+msgid "%C20*%O$tNickname already in use. Use /NICK to try another."
+msgstr ""
+
+#: src/common/textevents.h:270
+msgid "%C20*%O$tNo such DCC."
+msgstr ""
+
+#: src/common/textevents.h:273
+msgid "%C23*%O$tNo process is currently running"
+msgstr ""
+
+#: src/common/textevents.h:282
+msgid "$tNotify list is empty."
+msgstr ""
+
+#: src/common/textevents.h:285
+#, c-format
+msgid "%C16,17  Notify List                           "
+msgstr ""
+
+#: src/common/textevents.h:288
+msgid "%C23*%O$t%C23$1%O users in notify list."
+msgstr ""
+
+#: src/common/textevents.h:291
+msgid "%C23*%O$tNotify: %C18$1%C is offline (%C29$3%O)"
+msgstr ""
+
+#: src/common/textevents.h:294
+msgid "%C23*%O$tNotify: %C18$1%C is online (%C29$3%O)"
+msgstr ""
+
+#: src/common/textevents.h:300
+#, c-format
+msgid "%C24*$t$1 has left"
+msgstr ""
+
+#: src/common/textevents.h:303
+msgid "%C24*%O$t%C18$1%C ($2) has left (%C24$4%O)"
+msgstr ""
+
+#: src/common/textevents.h:306
+msgid "%C24*%O$tPing reply from%C18 $1%C: %C24$2%O second(s)"
+msgstr ""
+
+#: src/common/textevents.h:309
+msgid "%C20*%O$tNo ping reply for %C24$1%O seconds, disconnecting."
+msgstr ""
+
+#: src/common/textevents.h:324
+msgid "%C24*%O$tA process is already running"
+msgstr ""
+
+#: src/common/textevents.h:327
+#, c-format
+msgid "%C24*$t$1 has quit ($2)"
+msgstr ""
+
+#: src/common/textevents.h:330
+msgid "%C24*%O$t%C26$1%C sets modes %C30[%C24$2%C30]%O"
+msgstr ""
+
+#: src/common/textevents.h:333
+msgid "%O-%C29$1/Wallops%O-$t$2"
+msgstr ""
+
+#: src/common/textevents.h:336
+msgid "%C24*%O$tLooking up IP number for %C18$1%O..."
+msgstr ""
+
+#: src/common/textevents.h:339
+msgid "%C23*%O$tAuthenticating via SASL as %C18$1%O"
+msgstr ""
+
+#: src/common/textevents.h:345
+#, fuzzy
+msgid "%C29*%O$tConnected."
+msgstr "Ciklēt līdz pieslēdzas"
+
+#: src/common/textevents.h:351
+msgid "%C29*%O$tLooking up %C29$1%O"
+msgstr ""
+
+#: src/common/textevents.h:363
+msgid "%C23*%O$tStopped previous connection attempt (%C24$1%O)"
+msgstr ""
+
+#: src/common/textevents.h:366
+#, fuzzy
+msgid "%C22*%O$tTopic for %C22$1%C is: $2%O"
+msgstr "Temats %s ir: %s"
+
+#: src/common/textevents.h:369
+msgid "%C22*%O$t%C26$1%C has changed the topic to: $2%O"
+msgstr ""
+
+#: src/common/textevents.h:372
+msgid "%C22*%O$tTopic for %C22$1%C set by %C26$2%C (%C24$3%O)"
+msgstr ""
+
+#: src/common/textevents.h:375
+msgid "%C20*%O$tUnknown host. Maybe you misspelled it?"
+msgstr ""
+
+#: src/common/textevents.h:378
+msgid "%C20*%O$tCannot join %C22$1%C (%C20User limit reached%O)"
+msgstr ""
+
+#: src/common/textevents.h:381
+msgid "%C22*%O$tUsers on %C22$1%C: %C24$2%O"
+msgstr ""
+
+#: src/common/textevents.h:387
+msgid "%C23*%O$t%C28[%C18$1%C28]%C is away %C30(%C23$2%O%C30)%O"
+msgstr ""
+
+#: src/common/textevents.h:393
+msgid "%C23*%O$t%C28[%C18$1%C28] %OEnd of WHOIS list."
+msgstr ""
+
+#: src/common/textevents.h:399
+msgid "%C23*%O$t%C28[%C18$1%C28]%O idle %C23$2%O"
+msgstr ""
+
+#: src/common/textevents.h:402
+msgid "%C23*%O$t%C28[%C18$1%C28]%O idle %C23$2%O, signon: %C23$3%O"
+msgstr ""
+
+#: src/common/textevents.h:408
+msgid ""
+"%C23*%O$t%C28[%C18$1%C28]%O Real Host: %C23$2%O, Real IP: %C30[%C23$3%C30]%O"
+msgstr ""
+
+#: src/common/textevents.h:417
+msgid "%C19*%O$tNow talking on %C22$2%O"
+msgstr ""
+
+#: src/common/textevents.h:420
+msgid "%C19*%O$tYou have been kicked from %C22$2%C by %C26$3%O (%C20$4%O)"
+msgstr ""
+
+#: src/common/textevents.h:423
+msgid "%C19*%O$tYou have left channel %C22$3%O"
+msgstr ""
+
+#: src/common/textevents.h:426
+msgid "%C19*%O$tYou have left channel %C22$3%C (%C24$4%O)"
+msgstr ""
+
+#: src/common/textevents.h:432
+msgid "%C20*%O$tYou've invited %C18$1%O to %C22$2%O (%C24$3%O)"
+msgstr ""
+
+#: src/common/textevents.h:438
+msgid "%C20*%O$tYou are now known as %C18$2%O"
+msgstr ""
+
+#: src/common/text.c:348
+#, fuzzy
+msgid "Loaded log from"
+msgstr "Ielādēt No"
+
+#: src/common/text.c:365
+#, c-format
+msgid "**** ENDING LOGGING AT %s\n"
+msgstr "**** BEIDZU IEGRĀMATOŠANU IEKŠ %s\n"
+
+#: src/common/text.c:587
+#, c-format
+msgid "**** BEGIN LOGGING AT %s\n"
+msgstr "**** SĀKU IEGRĀMATOŠANU IEKŠ %s\n"
+
+#: src/common/text.c:606
+#, c-format
+msgid ""
+"* Can't open log file(s) for writing. Check the\n"
+"permissions on %s"
+msgstr ""
+
+#: src/common/text.c:1047
+#, fuzzy
+msgid "Left message"
+msgstr "Ziņa"
+
+#: src/common/text.c:1048
+#, fuzzy
+msgid "Right message"
+msgstr "Ziņa"
+
+#: src/common/text.c:1053 src/common/text.c:1415 src/common/text.c:1453
+#: src/common/text.c:1458 src/common/text.c:1499
+msgid "IP address"
+msgstr "IP adrese"
+
+#: src/common/text.c:1054 src/common/text.c:1282 src/common/text.c:1341
+#: src/common/text.c:1347
+msgid "Username"
+msgstr "Lietotājvārds"
+
+#: src/common/text.c:1059
+msgid "The nick of the joining person"
+msgstr "Pievienojušās personas segvārds"
+
+#: src/common/text.c:1060
+msgid "The channel being joined"
+msgstr "Kanāls, kuram pievienojas"
+
+#: src/common/text.c:1061 src/common/text.c:1123 src/common/text.c:1174
+msgid "The host of the person"
+msgstr "Personas hostdators"
+
+#: src/common/text.c:1065 src/common/text.c:1072 src/common/text.c:1079
+#: src/common/text.c:1281 src/common/text.c:1288 src/common/text.c:1293
+#: src/common/text.c:1298 src/common/text.c:1303 src/common/text.c:1309
+#: src/common/text.c:1314 src/common/text.c:1318 src/common/text.c:1324
+#: src/common/text.c:1330 src/common/text.c:1393 src/common/text.c:1404
+#: src/common/text.c:1409 src/common/text.c:1414 src/common/text.c:1423
+#: src/common/text.c:1434 src/common/text.c:1441 src/common/text.c:1447
+#: src/common/text.c:1452 src/common/text.c:1457 src/common/text.c:1464
+#: src/common/text.c:1470 src/common/text.c:1476 src/common/text.c:1481
+#: src/common/text.c:1486 src/common/text.c:1490 src/common/text.c:1496
+#: src/common/text.c:1504 src/common/text.c:1538 src/common/text.c:1543
+msgid "Nickname"
+msgstr "Segvārds"
+
+#: src/common/text.c:1066
+msgid "The action"
+msgstr "Darbība"
+
+#: src/common/text.c:1067 src/common/text.c:1074
+msgid "Mode char"
+msgstr "Režīma burts"
+
+#: src/common/text.c:1068 src/common/text.c:1075 src/common/text.c:1081
+#, fuzzy
+msgid "Identified text"
+msgstr "Info teksts"
+
+#: src/common/text.c:1073
+msgid "The text"
+msgstr "Teksts"
+
+#: src/common/text.c:1080 src/common/text.c:1151 src/common/text.c:1157
+msgid "The message"
+msgstr "Ziņa"
+
+#: src/common/text.c:1085 src/common/text.c:1090 src/common/text.c:1345
+#: src/common/text.c:1353 src/common/text.c:1359 src/common/text.c:1365
+#: src/common/text.c:1394 src/common/text.c:1512 src/common/text.c:1554
+msgid "Server Name"
+msgstr "Servera Nosaukums"
+
+#: src/common/text.c:1086
+msgid "Acknowledged Capabilities"
+msgstr ""
+
+#: src/common/text.c:1091
+#, fuzzy
+msgid "Server Capabilities"
+msgstr "Servera Nosaukums"
+
+#: src/common/text.c:1095
+msgid "Requested Capabilities"
+msgstr ""
+
+#: src/common/text.c:1099 src/common/text.c:1161
+msgid "Old nickname"
+msgstr "Vecais segvārds"
+
+#: src/common/text.c:1100 src/common/text.c:1162
+msgid "New nickname"
+msgstr "Jauns segvārds"
+
+#: src/common/text.c:1104
+msgid "Nick of person who changed the topic"
+msgstr "Personas segvārds, kura izmainīja tematu"
+
+#: src/common/text.c:1105 src/common/text.c:1111 src/fe-gtk/chanlist.c:788
+#: src/fe-gtk/chanlist.c:891 src/fe-gtk/setup.c:357
+msgid "Topic"
+msgstr "Temats"
+
+#: src/common/text.c:1106 src/common/text.c:1110 src/common/text.c:1558
+#: src/fe-gtk/chanlist.c:786 src/fe-gtk/ignoregui.c:174
+#: src/fe-gtk/servlistgui.c:894
+msgid "Channel"
+msgstr "Kanāls"
+
+#: src/common/text.c:1115 src/common/text.c:1168
+msgid "The nickname of the kicker"
+msgstr "Izmetēja segvārds"
+
+#: src/common/text.c:1116 src/common/text.c:1166
+msgid "The person being kicked"
+msgstr "Persona, kuru izmeta"
+
+#: src/common/text.c:1117 src/common/text.c:1124 src/common/text.c:1128
+#: src/common/text.c:1133 src/common/text.c:1167 src/common/text.c:1175
+#: src/common/text.c:1182
+msgid "The channel"
+msgstr "Kanāls"
+
+#: src/common/text.c:1118 src/common/text.c:1169 src/common/text.c:1176
+msgid "The reason"
+msgstr "Iemesls"
+
+#: src/common/text.c:1122 src/common/text.c:1173
+msgid "The nick of the person leaving"
+msgstr "Personas segvārds, kura atstāj"
+
+#: src/common/text.c:1129 src/common/text.c:1135
+msgid "The time"
+msgstr "Laiks"
+
+#: src/common/text.c:1134
+msgid "The creator"
+msgstr "Veidotājs"
+
+#: src/common/text.c:1139 src/fe-gtk/dccgui.c:768 src/fe-gtk/dccgui.c:1001
+msgid "Nick"
+msgstr "Segvārds"
+
+#: src/common/text.c:1140 src/common/text.c:1410
+msgid "Reason"
+msgstr "Iemesls"
+
+#: src/common/text.c:1141 src/common/text.c:1283 src/common/text.c:1383
+msgid "Host"
+msgstr "Hostdators"
+
+#: src/common/text.c:1145 src/common/text.c:1150 src/common/text.c:1155
+msgid "Who it's from"
+msgstr "No kā tas ir"
+
+#: src/common/text.c:1146
+msgid "The time in x.x format (see below)"
+msgstr "Laiks x.x formātā (skaties zemāk)"
+
+#: src/common/text.c:1156 src/common/text.c:1193
+msgid "The Channel it's going to"
+msgstr "Kanāls gatavojas"
+
+#: src/common/text.c:1180
+msgid "The sound"
+msgstr "Skaņa"
+
+#: src/common/text.c:1181 src/common/text.c:1187 src/common/text.c:1192
+msgid "The nick of the person"
+msgstr "Personas segvārds"
+
+#: src/common/text.c:1186 src/common/text.c:1191
+msgid "The CTCP event"
+msgstr "CTCP notikums"
+
+#: src/common/text.c:1197
+msgid "The nick of the person who set the key"
+msgstr "Personas segvārds, kura uzstādīja atslēgu"
+
+#: src/common/text.c:1198
+msgid "The key"
+msgstr "Atslēga"
+
+#: src/common/text.c:1202
+msgid "The nick of the person who set the limit"
+msgstr "Personas segvārds, kura uzstādīja limitu"
+
+#: src/common/text.c:1203
+msgid "The limit"
+msgstr "Limits"
+
+#: src/common/text.c:1207
+msgid "The nick of the person who did the op'ing"
+msgstr "Personas segvārds, kura op'oja"
+
+#: src/common/text.c:1208
+msgid "The nick of the person who has been op'ed"
+msgstr "Personas segvārds, kuru op'oja"
+
+#: src/common/text.c:1212
+msgid "The nick of the person who has been halfop'ed"
+msgstr "Personas segvārds, kuru pus-op'oja"
+
+#: src/common/text.c:1213
+msgid "The nick of the person who did the halfop'ing"
+msgstr "Personas segvārds, kura pus-op'oja"
+
+#: src/common/text.c:1217
+msgid "The nick of the person who did the voice'ing"
+msgstr "Personas segvārds, kura iedeva balsi"
+
+#: src/common/text.c:1218
+msgid "The nick of the person who has been voice'ed"
+msgstr "Personas segvārds, kurai iedeva balsi"
+
+#: src/common/text.c:1222
+msgid "The nick of the person who did the banning"
+msgstr "Personas segvārds, kura izraidīja"
+
+#: src/common/text.c:1223 src/common/text.c:1250
+msgid "The ban mask"
+msgstr "Izraidījuma maska"
+
+#: src/common/text.c:1227
+msgid "The nick who removed the key"
+msgstr "Segvārds, kurš noņēma atslēgu"
+
+#: src/common/text.c:1231
+msgid "The nick who removed the limit"
+msgstr "Segvārds, kurš noņēma limitu"
+
+#: src/common/text.c:1235
+msgid "The nick of the person of did the deop'ing"
+msgstr "Personas segvārds, kura deop'oja"
+
+#: src/common/text.c:1236
+msgid "The nick of the person who has been deop'ed"
+msgstr "Personas segvārds, kuru deop'oja"
+
+#: src/common/text.c:1239
+msgid "The nick of the person of did the dehalfop'ing"
+msgstr "Personas segvārds, kura pus-op'oja"
+
+#: src/common/text.c:1240
+msgid "The nick of the person who has been dehalfop'ed"
+msgstr "Personas segvārds, kuru pus-op'oja"
+
+#: src/common/text.c:1244
+msgid "The nick of the person of did the devoice'ing"
+msgstr "Personas segvārds, kura noņēma balsi"
+
+#: src/common/text.c:1245
+msgid "The nick of the person who has been devoice'ed"
+msgstr "Personas segvārds, kurai noņēma balsi"
+
+#: src/common/text.c:1249
+msgid "The nick of the person of did the unban'ing"
+msgstr "Personas segvārds, kura noņēma izraidījumu"
+
+#: src/common/text.c:1254
+msgid "The nick of the person who did the exempt"
+msgstr "Personas segvārds, kura atbrīvoja"
+
+#: src/common/text.c:1255 src/common/text.c:1260
+msgid "The exempt mask"
+msgstr "Atbrīvošanas maska"
+
+#: src/common/text.c:1259
+msgid "The nick of the person removed the exempt"
+msgstr "Personas segvārds, kura noņēma atbrīvojumu"
+
+#: src/common/text.c:1264
+msgid "The nick of the person who did the invite"
+msgstr "Personas segvārds, kura ielūdza"
+
+#: src/common/text.c:1265 src/common/text.c:1270
+msgid "The invite mask"
+msgstr "Ielūguma maska"
+
+#: src/common/text.c:1269
+msgid "The nick of the person removed the invite"
+msgstr "Personas segvārds, kura noņēma ielūgumu"
+
+#: src/common/text.c:1274
+msgid "The nick of the person setting the mode"
+msgstr "Personas segvārds, kura uzstadīja režīmu"
+
+#: src/common/text.c:1275
+msgid "The mode's sign (+/-)"
+msgstr "Režīma zīme (+/-)"
+
+#: src/common/text.c:1276
+msgid "The mode letter"
+msgstr "Režīma burts"
+
+#: src/common/text.c:1277
+msgid "The channel it's being set on"
+msgstr "Kanāls, kuram tas tika uzstādīts"
+
+#: src/common/text.c:1284
+msgid "Full name"
+msgstr "Pilns vārds"
+
+#: src/common/text.c:1289
+msgid "Channel Membership/\"is an IRC operator\""
+msgstr "Kanāla Piederība/\"ir IRC operātors\""
+
+#: src/common/text.c:1294
+msgid "Server Information"
+msgstr "Serva Informācija"
+
+#: src/common/text.c:1299 src/common/text.c:1304
+msgid "Idle time"
+msgstr "Dīkstāves laiks"
+
+#: src/common/text.c:1305
+msgid "Signon time"
+msgstr "Ierašanās laiks"
+
+#: src/common/text.c:1310
+msgid "Away reason"
+msgstr "Prombūtnes iemesls"
+
+#: src/common/text.c:1319 src/common/text.c:1325 src/common/text.c:1333
+#: src/common/text.c:1348 src/common/text.c:1530
+msgid "Message"
+msgstr "Ziņojums"
+
+#: src/common/text.c:1326
+#, fuzzy
+msgid "Account"
+msgstr "Pieņemt"
+
+#: src/common/text.c:1331
+#, fuzzy
+msgid "Real user@host"
+msgstr "Parādīt/Paslēpt lietotāju sarakstu"
+
+#: src/common/text.c:1332
+msgid "Real IP"
+msgstr ""
+
+#: src/common/text.c:1337 src/common/text.c:1363 src/common/text.c:1369
+#: src/common/text.c:1399 src/common/text.c:1553
+msgid "Channel Name"
+msgstr "Kanāla Nosaukums"
+
+#: src/common/text.c:1346 src/common/text.c:1354
+msgid "Raw Numeric or Identifier"
+msgstr ""
+
+#: src/common/text.c:1352 src/common/text.c:1358 src/common/text.c:1516
+#: src/fe-gtk/menu.c:1459 src/fe-gtk/menu.c:1647 src/fe-gtk/setup.c:246
+#: src/fe-gtk/textgui.c:390
+msgid "Text"
+msgstr "Teksts"
+
+#: src/common/text.c:1364
+msgid "Nick of person who invited you"
+msgstr "Personas segvārds, kura jūs ielūdza"
+
+#: src/common/text.c:1370 src/fe-gtk/chanlist.c:787
+msgid "Users"
+msgstr "Lietotāji"
+
+#: src/common/text.c:1374
+msgid "Nickname in use"
+msgstr "Segvārds jau lietošanā"
+
+#: src/common/text.c:1375
+msgid "Nick being tried"
+msgstr "Mēģināmais segvārds"
+
+#: src/common/text.c:1384 src/common/text.c:1520
+msgid "IP"
+msgstr "IP"
+
+#: src/common/text.c:1385 src/common/text.c:1416
+msgid "Port"
+msgstr "Ports"
+
+#: src/common/text.c:1395 src/fe-gtk/notifygui.c:138 src/fe-gtk/setup.c:1914
+msgid "Network"
+msgstr "Tīkls"
+
+#: src/common/text.c:1400 src/common/text.c:1405
+msgid "Modes string"
+msgstr "Režīma rinda"
+
+#: src/common/text.c:1421 src/common/text.c:1446
+msgid "DCC Type"
+msgstr "DCC Tips"
+
+#: src/common/text.c:1422 src/common/text.c:1427 src/common/text.c:1432
+#: src/common/text.c:1439 src/common/text.c:1459 src/common/text.c:1463
+#: src/common/text.c:1469 src/common/text.c:1475 src/common/text.c:1482
+#: src/common/text.c:1491 src/common/text.c:1497
+msgid "Filename"
+msgstr "Faila nosaukums"
+
+#: src/common/text.c:1433 src/common/text.c:1440
+msgid "Destination filename"
+msgstr "Mērķa faila nosaukums"
+
+#: src/common/text.c:1442 src/common/text.c:1471
+msgid "CPS"
+msgstr "CPS"
+
+#: src/common/text.c:1477
+msgid "Pathname"
+msgstr "Ceļa nosaukums"
+
+#: src/common/text.c:1492 src/fe-gtk/dccgui.c:764
+msgid "Position"
+msgstr "Pozīcija"
+
+#: src/common/text.c:1498 src/fe-gtk/dccgui.c:763
+msgid "Size"
+msgstr "Izmērs"
+
+#: src/common/text.c:1503
+msgid "DCC String"
+msgstr "DCC Virkne"
+
+#: src/common/text.c:1508
+msgid "Number of notify items"
+msgstr "Paziņojamo priekšmetu skaits"
+
+#: src/common/text.c:1524
+msgid "Old Filename"
+msgstr "Vecais Faila nosaukums"
+
+#: src/common/text.c:1525
+msgid "New Filename"
+msgstr "Jaunais Faila nosaukums"
+
+#: src/common/text.c:1529
+msgid "Receiver"
+msgstr "Saņēmējs"
+
+#: src/common/text.c:1534
+msgid "Hostmask"
+msgstr "Hostdatora maska"
+
+#: src/common/text.c:1539
+msgid "Hostname"
+msgstr "Hostdatora vārds"
+
+#: src/common/text.c:1544
+msgid "The Packet"
+msgstr "Pakete"
+
+#: src/common/text.c:1548
+msgid "Seconds"
+msgstr "Sekundes"
+
+#: src/common/text.c:1552
+msgid "Nick of person who have been invited"
+msgstr "Personas segvārds, kura tikusi ielūgta"
+
+#: src/common/text.c:1559
+msgid "Banmask"
+msgstr "Izraidījuma maska"
+
+#: src/common/text.c:1560
+msgid "Who set the ban"
+msgstr "Kurš uzstādīja izraidījumu"
+
+#: src/common/text.c:1561
+msgid "Ban time"
+msgstr "Izraidījuma laiks"
+
+#: src/common/text.c:1601
+#, fuzzy, c-format
+msgid ""
+"Error parsing event %s.\n"
+"Loading default."
+msgstr ""
+"Kļūda parsējot notikumu %s.\n"
+"Lādēju noklusēto"
+
+#: src/common/text.c:2359
+#, fuzzy, c-format
+msgid ""
+"Cannot read sound file:\n"
+"%s"
+msgstr "Nevar nolasīt to failu."
+
+#: src/common/util.c:302
+msgid "Remote host closed socket"
+msgstr "Attālinātais hostdators aizvēra ligzdu"
+
+#: src/common/util.c:307
+msgid "Connection refused"
+msgstr "Savienojums atteikts"
+
+#: src/common/util.c:310
+msgid "No route to host"
+msgstr "Nav maršruta uz resursdatoru"
+
+#: src/common/util.c:312
+msgid "Connection timed out"
+msgstr "Savinojuma taimauts"
+
+#: src/common/util.c:314
+msgid "Cannot assign that address"
+msgstr "Nevaru piešķirt to adresi"
+
+#: src/common/util.c:316
+msgid "Connection reset by peer"
+msgstr "Savienojuma pārtraukums"
+
+#: src/common/util.c:960
+#, fuzzy
+msgid "Ascension Island"
+msgstr "Kokosu salas"
+
+#: src/common/util.c:961
+msgid "Andorra"
+msgstr "Andora"
+
+#: src/common/util.c:962
+msgid "United Arab Emirates"
+msgstr "Apvienotie Arābu Emirāti"
+
+#: src/common/util.c:963
+msgid "Aviation-Related Fields"
+msgstr ""
+
+#: src/common/util.c:964
+msgid "Afghanistan"
+msgstr "Afganistāna"
+
+#: src/common/util.c:965
+msgid "Antigua and Barbuda"
+msgstr "Antigva un Barbuda"
+
+#: src/common/util.c:966
+msgid "Anguilla"
+msgstr "Angilja"
+
+#: src/common/util.c:967
+msgid "Albania"
+msgstr "Albānija"
+
+#: src/common/util.c:968
+msgid "Armenia"
+msgstr "Armēnija"
+
+#: src/common/util.c:969
+msgid "Netherlands Antilles"
+msgstr "Nīderlandes Antiļas"
+
+#: src/common/util.c:970
+msgid "Angola"
+msgstr "Angola"
+
+#: src/common/util.c:971
+msgid "Antarctica"
+msgstr "Antarktika"
+
+#: src/common/util.c:972
+msgid "Argentina"
+msgstr "Argentīna"
+
+#: src/common/util.c:973
+msgid "Reverse DNS"
+msgstr "Reverss DNS"
+
+#: src/common/util.c:974
+msgid "American Samoa"
+msgstr "Amērikas Samoa"
+
+#: src/common/util.c:975
+msgid "Asia-Pacific Region"
+msgstr ""
+
+#: src/common/util.c:976
+msgid "Austria"
+msgstr "Austrija"
+
+#: src/common/util.c:977
+msgid "Nato Fiel"
+msgstr "Nato Fiel"
+
+#: src/common/util.c:978
+msgid "Australia"
+msgstr "Austrālija"
+
+#: src/common/util.c:979
+msgid "Aruba"
+msgstr "Aruba"
+
+#: src/common/util.c:980
+#, fuzzy
+msgid "Aland Islands"
+msgstr "Folklenda salas"
+
+#: src/common/util.c:981
+msgid "Azerbaijan"
+msgstr "Azerbaidžāna"
+
+#: src/common/util.c:982
+msgid "Bosnia and Herzegovina"
+msgstr "Bosnija un Hercogovina"
+
+#: src/common/util.c:983
+msgid "Barbados"
+msgstr "Barbadosa"
+
+#: src/common/util.c:984
+msgid "Bangladesh"
+msgstr "Bangladeša"
+
+#: src/common/util.c:985
+msgid "Belgium"
+msgstr "Beļģija"
+
+#: src/common/util.c:986
+msgid "Burkina Faso"
+msgstr "Burkinafaso"
+
+#: src/common/util.c:987
+msgid "Bulgaria"
+msgstr "Bulgārija"
+
+#: src/common/util.c:988
+msgid "Bahrain"
+msgstr "Bahreina"
+
+#: src/common/util.c:989
+msgid "Burundi"
+msgstr "Burundi"
+
+#: src/common/util.c:990
+msgid "Businesses"
+msgstr ""
+
+#: src/common/util.c:991
+msgid "Benin"
+msgstr "Benina"
+
+#: src/common/util.c:992
+msgid "Bermuda"
+msgstr "Bermuda"
+
+#: src/common/util.c:993
+msgid "Brunei Darussalam"
+msgstr "Bruneja"
+
+#: src/common/util.c:994
+msgid "Bolivia"
+msgstr "Bolīvija"
+
+#: src/common/util.c:995
+msgid "Brazil"
+msgstr "Brazīlija"
+
+#: src/common/util.c:996
+msgid "Bahamas"
+msgstr "Bahamas"
+
+#: src/common/util.c:997
+msgid "Bhutan"
+msgstr "Butāna"
+
+#: src/common/util.c:998
+msgid "Bouvet Island"
+msgstr "Bovetu salas"
+
+#: src/common/util.c:999
+msgid "Botswana"
+msgstr "Botsvāna"
+
+#: src/common/util.c:1000
+msgid "Belarus"
+msgstr "Baltkrievija"
+
+#: src/common/util.c:1001
+msgid "Belize"
+msgstr "Beliza"
+
+#: src/common/util.c:1002
+msgid "Canada"
+msgstr "Kanāda"
+
+#: src/common/util.c:1003 src/fe-gtk/setup.c:113
+msgid "Catalan"
+msgstr ""
+
+#: src/common/util.c:1004
+msgid "Cocos Islands"
+msgstr "Kokosu salas"
+
+#: src/common/util.c:1005
+msgid "Democratic Republic of Congo"
+msgstr ""
+
+#: src/common/util.c:1006
+msgid "Central African Republic"
+msgstr "Centrālāfrikas Republika"
+
+#: src/common/util.c:1007
+msgid "Congo"
+msgstr "Kongo"
+
+#: src/common/util.c:1008
+msgid "Switzerland"
+msgstr "Šveice"
+
+#: src/common/util.c:1009
+#, fuzzy
+msgid "Cote d'Ivoire"
+msgstr "Kotdivuāra"
+
+#: src/common/util.c:1010
+msgid "Cook Islands"
+msgstr "Kuka salas"
+
+#: src/common/util.c:1011
+msgid "Chile"
+msgstr "Čīle"
+
+#: src/common/util.c:1012
+msgid "Cameroon"
+msgstr "Kamerūna"
+
+#: src/common/util.c:1013
+msgid "China"
+msgstr "Ķīna"
+
+#: src/common/util.c:1014
+msgid "Colombia"
+msgstr "Kolumbija"
+
+#: src/common/util.c:1015
+msgid "Internic Commercial"
+msgstr "Starptautiskā Komercsabiedrība"
+
+#: src/common/util.c:1016
+msgid "Cooperatives"
+msgstr ""
+
+#: src/common/util.c:1017
+msgid "Costa Rica"
+msgstr "Kostarika"
+
+#: src/common/util.c:1018
+msgid "Serbia and Montenegro"
+msgstr ""
+
+#: src/common/util.c:1019
+msgid "Cuba"
+msgstr "Kuba"
+
+#: src/common/util.c:1020
+msgid "Cape Verde"
+msgstr "Kapoverde"
+
+#: src/common/util.c:1021
+msgid "Christmas Island"
+msgstr "Ziemassvētku Salas"
+
+#: src/common/util.c:1022
+msgid "Cyprus"
+msgstr "Kipra"
+
+#: src/common/util.c:1023
+msgid "Czech Republic"
+msgstr "Čehija"
+
+#: src/common/util.c:1024
+#, fuzzy
+msgid "East Germany"
+msgstr "Vācija"
+
+#: src/common/util.c:1025
+msgid "Germany"
+msgstr "Vācija"
+
+#: src/common/util.c:1026
+msgid "Djibouti"
+msgstr "Džibutija"
+
+#: src/common/util.c:1027
+msgid "Denmark"
+msgstr "Dānija"
+
+#: src/common/util.c:1028
+msgid "Dominica"
+msgstr "Dominika"
+
+#: src/common/util.c:1029
+msgid "Dominican Republic"
+msgstr "Domenicānas Republika"
+
+#: src/common/util.c:1030
+msgid "Algeria"
+msgstr "Alžīrija"
+
+#: src/common/util.c:1031
+msgid "Ecuador"
+msgstr "Ekvadora"
+
+#: src/common/util.c:1032
+msgid "Educational Institution"
+msgstr "Mācību Iestāde"
+
+#: src/common/util.c:1033
+msgid "Estonia"
+msgstr "Igaunija"
+
+#: src/common/util.c:1034
+msgid "Egypt"
+msgstr "Ēģipte"
+
+#: src/common/util.c:1035
+msgid "Western Sahara"
+msgstr "Rietumsahāra"
+
+#: src/common/util.c:1036
+msgid "Eritrea"
+msgstr "Eritreja"
+
+#: src/common/util.c:1037
+msgid "Spain"
+msgstr "Spānija"
+
+#: src/common/util.c:1038
+msgid "Ethiopia"
+msgstr "Etiopija"
+
+#: src/common/util.c:1039
+msgid "European Union"
+msgstr ""
+
+#: src/common/util.c:1040
+msgid "Finland"
+msgstr "Somija"
+
+#: src/common/util.c:1041
+msgid "Fiji"
+msgstr "Fidži"
+
+#: src/common/util.c:1042
+msgid "Falkland Islands"
+msgstr "Folklenda salas"
+
+#: src/common/util.c:1043
+msgid "Micronesia"
+msgstr "Mikronēzija"
+
+#: src/common/util.c:1044
+msgid "Faroe Islands"
+msgstr "Farēru salas"
+
+#: src/common/util.c:1045
+msgid "France"
+msgstr "Francija"
+
+#: src/common/util.c:1046
+msgid "Gabon"
+msgstr "Gabona"
+
+#: src/common/util.c:1047
+msgid "Great Britain"
+msgstr "Lielbritānija"
+
+#: src/common/util.c:1048
+msgid "Grenada"
+msgstr "Grenada"
+
+#: src/common/util.c:1049
+msgid "Georgia"
+msgstr "Džordžija"
+
+#: src/common/util.c:1050
+msgid "French Guiana"
+msgstr "Franču Gviāna"
+
+#: src/common/util.c:1051
+msgid "British Channel Isles"
+msgstr "Britu Kanāla salas"
+
+#: src/common/util.c:1052
+msgid "Ghana"
+msgstr "Gana"
+
+#: src/common/util.c:1053
+msgid "Gibraltar"
+msgstr "Gibraltārs"
+
+#: src/common/util.c:1054
+msgid "Greenland"
+msgstr "Grenlande"
+
+#: src/common/util.c:1055
+msgid "Gambia"
+msgstr "Gambija"
+
+#: src/common/util.c:1056
+msgid "Guinea"
+msgstr "Gvineja"
+
+#: src/common/util.c:1057
+msgid "Government"
+msgstr "Valdība"
+
+#: src/common/util.c:1058
+msgid "Guadeloupe"
+msgstr "Gvadelupa"
+
+#: src/common/util.c:1059
+msgid "Equatorial Guinea"
+msgstr "Ekvatoriālā Gvineja"
+
+#: src/common/util.c:1060
+msgid "Greece"
+msgstr "Grieķija"
+
+#: src/common/util.c:1061
+#, fuzzy
+msgid "S. Georgia and S. Sandwich Isles"
+msgstr "Svētā Džordžija un Svētā Sendvidža salas."
+
+#: src/common/util.c:1062
+msgid "Guatemala"
+msgstr "Gvatemala"
+
+#: src/common/util.c:1063
+msgid "Guam"
+msgstr "Guama"
+
+#: src/common/util.c:1064
+msgid "Guinea-Bissau"
+msgstr "Gvineja-Bisava"
+
+#: src/common/util.c:1065
+msgid "Guyana"
+msgstr "Gajāna"
+
+#: src/common/util.c:1066
+msgid "Hong Kong"
+msgstr "Hongkonga"
+
+#: src/common/util.c:1067
+msgid "Heard and McDonald Islands"
+msgstr "Herda un Makdonalda salas"
+
+#: src/common/util.c:1068
+msgid "Honduras"
+msgstr "Hondurasa"
+
+#: src/common/util.c:1069
+msgid "Croatia"
+msgstr "Horvātija"
+
+#: src/common/util.c:1070
+msgid "Haiti"
+msgstr "Haiti"
+
+#: src/common/util.c:1071
+msgid "Hungary"
+msgstr "Ungārija"
+
+#: src/common/util.c:1072
+msgid "Indonesia"
+msgstr "Indonēzija"
+
+#: src/common/util.c:1073
+msgid "Ireland"
+msgstr "Īrija"
+
+#: src/common/util.c:1074
+msgid "Israel"
+msgstr "Izraēla"
+
+#: src/common/util.c:1075
+msgid "Isle of Man"
+msgstr ""
+
+#: src/common/util.c:1076
+msgid "India"
+msgstr "Indija"
+
+#: src/common/util.c:1077
+#, fuzzy
+msgid "Informational"
+msgstr "Starptautisks"
+
+#: src/common/util.c:1078
+msgid "International"
+msgstr "Starptautisks"
+
+#: src/common/util.c:1079
+msgid "British Indian Ocean Territory"
+msgstr "Britu Indija okeāna teritorija"
+
+#: src/common/util.c:1080
+msgid "Iraq"
+msgstr "Irāka"
+
+#: src/common/util.c:1081
+msgid "Iran"
+msgstr "Irāna"
+
+#: src/common/util.c:1082
+msgid "Iceland"
+msgstr "Islande"
+
+#: src/common/util.c:1083
+msgid "Italy"
+msgstr "Itālija"
+
+#: src/common/util.c:1084
+msgid "Jersey"
+msgstr ""
+
+#: src/common/util.c:1085
+msgid "Jamaica"
+msgstr "Jamaika"
+
+#: src/common/util.c:1086
+msgid "Jordan"
+msgstr "Jordānija"
+
+#: src/common/util.c:1087
+msgid "Company Jobs"
+msgstr ""
+
+#: src/common/util.c:1088
+msgid "Japan"
+msgstr "Japāna"
+
+#: src/common/util.c:1089
+msgid "Kenya"
+msgstr "Kenija"
+
+#: src/common/util.c:1090
+msgid "Kyrgyzstan"
+msgstr "Kirgizstāna"
+
+#: src/common/util.c:1091
+msgid "Cambodia"
+msgstr "Kambodža"
+
+#: src/common/util.c:1092
+msgid "Kiribati"
+msgstr "Kiribati"
+
+#: src/common/util.c:1093
+msgid "Comoros"
+msgstr "Komoros salas"
+
+#: src/common/util.c:1094
+msgid "St. Kitts and Nevis"
+msgstr "Svētā Kita un Nevis salas"
+
+#: src/common/util.c:1095
+msgid "North Korea"
+msgstr "Ziemeļkoreja"
+
+#: src/common/util.c:1096
+msgid "South Korea"
+msgstr "Dienvidkoreja"
+
+#: src/common/util.c:1097
+msgid "Kuwait"
+msgstr "Kuveita"
+
+#: src/common/util.c:1098
+msgid "Cayman Islands"
+msgstr "Kaimanu salas"
+
+#: src/common/util.c:1099
+msgid "Kazakhstan"
+msgstr "Kazahstāna"
+
+#: src/common/util.c:1100
+msgid "Laos"
+msgstr "Laosa"
+
+#: src/common/util.c:1101
+msgid "Lebanon"
+msgstr "Libāna"
+
+#: src/common/util.c:1102
+msgid "Saint Lucia"
+msgstr "Sentlūsija"
+
+#: src/common/util.c:1103
+msgid "Liechtenstein"
+msgstr "Lihtenšteina"
+
+#: src/common/util.c:1104
+msgid "Sri Lanka"
+msgstr "Šrilanka"
+
+#: src/common/util.c:1105
+msgid "Liberia"
+msgstr "Libērija"
+
+#: src/common/util.c:1106
+msgid "Lesotho"
+msgstr "Lesoto"
+
+#: src/common/util.c:1107
+msgid "Lithuania"
+msgstr "Lietuva"
+
+#: src/common/util.c:1108
+msgid "Luxembourg"
+msgstr "Luksemburga"
+
+#: src/common/util.c:1109
+msgid "Latvia"
+msgstr "Latvija"
+
+#: src/common/util.c:1110
+msgid "Libya"
+msgstr "Libāna"
+
+#: src/common/util.c:1111
+msgid "Morocco"
+msgstr "Maroko"
+
+#: src/common/util.c:1112
+msgid "Monaco"
+msgstr "Monako"
+
+#: src/common/util.c:1113
+msgid "Moldova"
+msgstr "Moldāvija"
+
+#: src/common/util.c:1114
+#, fuzzy
+msgid "Montenegro"
+msgstr "Montserata"
+
+#: src/common/util.c:1115
+msgid "United States Medical"
+msgstr "Savienoto Valstu Medicīnas"
+
+#: src/common/util.c:1116
+msgid "Madagascar"
+msgstr "Madagaskara"
+
+#: src/common/util.c:1117
+msgid "Marshall Islands"
+msgstr "Maršalu Salas"
+
+#: src/common/util.c:1118
+msgid "Military"
+msgstr "Militārs"
+
+#: src/common/util.c:1119
+msgid "Macedonia"
+msgstr "Maķedonija"
+
+#: src/common/util.c:1120
+msgid "Mali"
+msgstr "Mali"
+
+#: src/common/util.c:1121
+msgid "Myanmar"
+msgstr "Mjanma"
+
+#: src/common/util.c:1122
+msgid "Mongolia"
+msgstr "Mongolija"
+
+#: src/common/util.c:1123
+msgid "Macau"
+msgstr "Makao"
+
+#: src/common/util.c:1124
+msgid "Mobile Devices"
+msgstr ""
+
+#: src/common/util.c:1125
+msgid "Northern Mariana Islands"
+msgstr "Ziemeļmarina"
+
+#: src/common/util.c:1126
+msgid "Martinique"
+msgstr "Martinika"
+
+#: src/common/util.c:1127
+msgid "Mauritania"
+msgstr "Mauritānija"
+
+#: src/common/util.c:1128
+msgid "Montserrat"
+msgstr "Montserata"
+
+#: src/common/util.c:1129
+msgid "Malta"
+msgstr "Malta"
+
+#: src/common/util.c:1130
+msgid "Mauritius"
+msgstr "Mauritānija"
+
+#: src/common/util.c:1131
+msgid "Museums"
+msgstr ""
+
+#: src/common/util.c:1132
+msgid "Maldives"
+msgstr "Maldīvija"
+
+#: src/common/util.c:1133
+msgid "Malawi"
+msgstr "Malāvija"
+
+#: src/common/util.c:1134
+msgid "Mexico"
+msgstr "Mexico"
+
+#: src/common/util.c:1135
+msgid "Malaysia"
+msgstr "Malaizija"
+
+#: src/common/util.c:1136
+msgid "Mozambique"
+msgstr "Mozambika"
+
+#: src/common/util.c:1137
+msgid "Namibia"
+msgstr "Namībija"
+
+#: src/common/util.c:1138
+msgid "Individual's Names"
+msgstr ""
+
+#: src/common/util.c:1139
+msgid "New Caledonia"
+msgstr "Jaunkaldonija"
+
+#: src/common/util.c:1140
+msgid "Niger"
+msgstr "Nigēra"
+
+#: src/common/util.c:1141
+msgid "Internic Network"
+msgstr "Starptautiskais Tīkls"
+
+#: src/common/util.c:1142
+msgid "Norfolk Island"
+msgstr "Norfolkas salas"
+
+#: src/common/util.c:1143
+msgid "Nigeria"
+msgstr "Nigērija"
+
+#: src/common/util.c:1144
+msgid "Nicaragua"
+msgstr "Nikaragva"
+
+#: src/common/util.c:1145
+msgid "Netherlands"
+msgstr "Nīderlande"
+
+#: src/common/util.c:1146
+msgid "Norway"
+msgstr "Norvēģija"
+
+#: src/common/util.c:1147
+msgid "Nepal"
+msgstr "Nepāla"
+
+#: src/common/util.c:1148
+msgid "Nauru"
+msgstr "Nauru"
+
+#: src/common/util.c:1149
+msgid "Niue"
+msgstr "Niue"
+
+#: src/common/util.c:1150
+msgid "New Zealand"
+msgstr "Jaunzēlande"
+
+#: src/common/util.c:1151
+msgid "Oman"
+msgstr "Omāna"
+
+#: src/common/util.c:1152
+msgid "Internic Non-Profit Organization"
+msgstr "Starptautiska Bezpeļņas Organizācija"
+
+#: src/common/util.c:1153
+msgid "Panama"
+msgstr "Panama"
+
+#: src/common/util.c:1154
+msgid "Peru"
+msgstr "Peru"
+
+#: src/common/util.c:1155
+msgid "French Polynesia"
+msgstr "Franču Polinēzija"
+
+#: src/common/util.c:1156
+msgid "Papua New Guinea"
+msgstr "Papua Jaungvineja"
+
+#: src/common/util.c:1157
+msgid "Philippines"
+msgstr "Filipīnas"
+
+#: src/common/util.c:1158
+msgid "Pakistan"
+msgstr "Pakistāna"
+
+#: src/common/util.c:1159
+msgid "Poland"
+msgstr "Polija"
+
+#: src/common/util.c:1160
+msgid "St. Pierre and Miquelon"
+msgstr "Svētā Pjēra un Mikvelona salas"
+
+#: src/common/util.c:1161
+msgid "Pitcairn"
+msgstr "Pitkērna"
+
+#: src/common/util.c:1162
+msgid "Puerto Rico"
+msgstr "Puertoriko"
+
+#: src/common/util.c:1163
+msgid "Professions"
+msgstr ""
+
+#: src/common/util.c:1164
+#, fuzzy
+msgid "Palestinian Territory"
+msgstr "Britu Indija okeāna teritorija"
+
+#: src/common/util.c:1165
+msgid "Portugal"
+msgstr "Portugāle"
+
+#: src/common/util.c:1166
+msgid "Palau"
+msgstr "Palau"
+
+#: src/common/util.c:1167
+msgid "Paraguay"
+msgstr "Paragvaja"
+
+#: src/common/util.c:1168
+msgid "Qatar"
+msgstr "Katara"
+
+#: src/common/util.c:1169
+msgid "Reunion"
+msgstr "Reinjona"
+
+#: src/common/util.c:1170
+msgid "Romania"
+msgstr "Rumānija"
+
+#: src/common/util.c:1171
+msgid "Old School ARPAnet"
+msgstr "Vecās Skolas ARPAnet"
+
+#: src/common/util.c:1172
+msgid "Serbia"
+msgstr ""
+
+#: src/common/util.c:1173
+msgid "Russian Federation"
+msgstr "Krievijas Federācija"
+
+#: src/common/util.c:1174
+msgid "Rwanda"
+msgstr "Ruanda"
+
+#: src/common/util.c:1175
+msgid "Saudi Arabia"
+msgstr "Saudu Arābija"
+
+#: src/common/util.c:1176
+msgid "Solomon Islands"
+msgstr "Zālamana salas"
+
+#: src/common/util.c:1177
+msgid "Seychelles"
+msgstr "Seišelas"
+
+#: src/common/util.c:1178
+msgid "Sudan"
+msgstr "Sudāna"
+
+#: src/common/util.c:1179
+msgid "Sweden"
+msgstr "Zviedrija"
+
+#: src/common/util.c:1180
+msgid "Singapore"
+msgstr "Singapūra"
+
+#: src/common/util.c:1181
+msgid "St. Helena"
+msgstr "Svētās Helēnas sala"
+
+#: src/common/util.c:1182
+msgid "Slovenia"
+msgstr "Slovēnija"
+
+#: src/common/util.c:1183
+msgid "Svalbard and Jan Mayen Islands"
+msgstr "Svelbāna un Žana Maijena salas"
+
+#: src/common/util.c:1184
+msgid "Slovak Republic"
+msgstr "Slovākija"
+
+#: src/common/util.c:1185
+msgid "Sierra Leone"
+msgstr "Sjerra Leone"
+
+#: src/common/util.c:1186
+msgid "San Marino"
+msgstr "San Marino"
+
+#: src/common/util.c:1187
+msgid "Senegal"
+msgstr "Senegāla"
+
+#: src/common/util.c:1188
+msgid "Somalia"
+msgstr "Somālija"
+
+#: src/common/util.c:1189
+msgid "Suriname"
+msgstr "Surinama"
+
+#: src/common/util.c:1190
+#, fuzzy
+msgid "South Sudan"
+msgstr "Dienvidkoreja"
+
+#: src/common/util.c:1191
+msgid "Sao Tome and Principe"
+msgstr "Santome un Prinsipi"
+
+#: src/common/util.c:1192
+msgid "Former USSR"
+msgstr "Bijušā PSRS"
+
+#: src/common/util.c:1193
+msgid "El Salvador"
+msgstr "Salvadora"
+
+#: src/common/util.c:1194
+msgid "Syria"
+msgstr "Sīrija"
+
+#: src/common/util.c:1195
+msgid "Swaziland"
+msgstr "Šveice"
+
+#: src/common/util.c:1196
+msgid "Turks and Caicos Islands"
+msgstr "Tērksas un Kaikosas salas"
+
+#: src/common/util.c:1197
+msgid "Chad"
+msgstr "Čada"
+
+#: src/common/util.c:1198
+msgid "Internet Communication Services"
+msgstr ""
+
+#: src/common/util.c:1199
+msgid "French Southern Territories"
+msgstr "Francijas Dienvidu Teritorijas"
+
+#: src/common/util.c:1200
+msgid "Togo"
+msgstr "Togo"
+
+#: src/common/util.c:1201
+msgid "Thailand"
+msgstr "Taizeme"
+
+#: src/common/util.c:1202
+msgid "Tajikistan"
+msgstr "Tadžikistāna"
+
+#: src/common/util.c:1203
+msgid "Tokelau"
+msgstr "Tokelau"
+
+#: src/common/util.c:1204 src/common/util.c:1208
+msgid "East Timor"
+msgstr "Austrumtimora"
+
+#: src/common/util.c:1205
+msgid "Turkmenistan"
+msgstr "Turkmenistāna"
+
+#: src/common/util.c:1206
+msgid "Tunisia"
+msgstr "Tunisija"
+
+#: src/common/util.c:1207
+msgid "Tonga"
+msgstr "Tonga"
+
+#: src/common/util.c:1209
+msgid "Turkey"
+msgstr "Turcija"
+
+#: src/common/util.c:1210
+msgid "Travel and Tourism"
+msgstr ""
+
+#: src/common/util.c:1211
+msgid "Trinidad and Tobago"
+msgstr "Trinidada un Tobago"
+
+#: src/common/util.c:1212
+msgid "Tuvalu"
+msgstr "Tuvalu"
+
+#: src/common/util.c:1213
+msgid "Taiwan"
+msgstr "Taivāna"
+
+#: src/common/util.c:1214
+msgid "Tanzania"
+msgstr "Tanzānija"
+
+#: src/common/util.c:1215
+msgid "Ukraine"
+msgstr "Ukraina"
+
+#: src/common/util.c:1216
+msgid "Uganda"
+msgstr "Uganda"
+
+#: src/common/util.c:1217
+msgid "United Kingdom"
+msgstr "Apvienotā Karaliste"
+
+#: src/common/util.c:1218
+msgid "United States of America"
+msgstr "Amērikas Savienotās Valstis"
+
+#: src/common/util.c:1219
+msgid "Uruguay"
+msgstr "Urugvaja"
+
+#: src/common/util.c:1220
+msgid "Uzbekistan"
+msgstr "Uzbekistāna"
+
+#: src/common/util.c:1221
+msgid "Vatican City State"
+msgstr "Vatikānas Pilsētvalsts"
+
+#: src/common/util.c:1222
+#, fuzzy
+msgid "St. Vincent and the Grenadines"
+msgstr "Svētā Vincenta salas"
+
+#: src/common/util.c:1223
+msgid "Venezuela"
+msgstr "Venecuēla"
+
+#: src/common/util.c:1224
+msgid "British Virgin Islands"
+msgstr "Britu Virdžīnu Salas"
+
+#: src/common/util.c:1225
+msgid "US Virgin Islands"
+msgstr "ASV Virdžīnu Salas"
+
+#: src/common/util.c:1226
+msgid "Vietnam"
+msgstr "Vjetnama"
+
+#: src/common/util.c:1227
+msgid "Vanuatu"
+msgstr "Vanuatu"
+
+#: src/common/util.c:1228
+msgid "Wallis and Futuna Islands"
+msgstr "Volisa un Futuna salas"
+
+#: src/common/util.c:1229
+msgid "Samoa"
+msgstr "Samoa"
+
+#: src/common/util.c:1230
+msgid "Adult Entertainment"
+msgstr ""
+
+#: src/common/util.c:1231
+msgid "Yemen"
+msgstr "Jemena"
+
+#: src/common/util.c:1232
+msgid "Mayotte"
+msgstr "Majota"
+
+#: src/common/util.c:1233
+msgid "Yugoslavia"
+msgstr "Dienvidslāvija"
+
+#: src/common/util.c:1234
+msgid "South Africa"
+msgstr "Dienvidāfrija"
+
+#: src/common/util.c:1235
+msgid "Zambia"
+msgstr "Zambija"
+
+#: src/common/util.c:1236
+msgid "Zimbabwe"
+msgstr "Zimbabve"
+
+#: src/common/util.c:1246 src/common/util.c:1256 src/fe-gtk/menu.c:617
+msgid "Unknown"
+msgstr "Nezināms"
+
+#: src/common/xchat.c:743
+#, fuzzy
+msgid "_Open Dialog Window"
+msgstr "Automātiski Atvērt Dialoga Logus"
+
+#: src/common/xchat.c:744
+#, fuzzy
+msgid "_Send a File"
+msgstr "Skaņas fails:"
+
+#: src/common/xchat.c:745
+msgid "_User Info (WhoIs)"
+msgstr ""
+
+#: src/common/xchat.c:746
+#, fuzzy
+msgid "_Add to Friends List"
+msgstr "Adrese, pie kuras pieaistīties:"
+
+#: src/common/xchat.c:747
+#, fuzzy
+msgid "_Ignore"
+msgstr "Neignorēt"
+
+#: src/common/xchat.c:748
+msgid "O_perator Actions"
+msgstr ""
+
+#: src/common/xchat.c:750
+msgid "Give Ops"
+msgstr ""
+
+#: src/common/xchat.c:751
+msgid "Take Ops"
+msgstr ""
+
+#: src/common/xchat.c:752
+msgid "Give Voice"
+msgstr ""
+
+#: src/common/xchat.c:753
+msgid "Take Voice"
+msgstr ""
+
+#: src/common/xchat.c:755
+#, fuzzy
+msgid "Kick/Ban"
+msgstr "Segvārds"
+
+#: src/common/xchat.c:756 src/common/xchat.c:793
+#, fuzzy
+msgid "Kick"
+msgstr "Segvārds"
+
+#: src/common/xchat.c:757 src/common/xchat.c:758 src/common/xchat.c:759
+#: src/common/xchat.c:760 src/common/xchat.c:761 src/common/xchat.c:792
+#, fuzzy
+msgid "Ban"
+msgstr "Butāna"
+
+#: src/common/xchat.c:762 src/common/xchat.c:763 src/common/xchat.c:764
+#: src/common/xchat.c:765
+#, fuzzy
+msgid "KickBan"
+msgstr "Segvārds"
+
+#: src/common/xchat.c:775
+#, fuzzy
+msgid "Leave Channel"
+msgstr "Atstāt Kanālu"
+
+#: src/common/xchat.c:776
+#, fuzzy
+msgid "Join Channel..."
+msgstr "Pievienoties Kanālam"
+
+#: src/common/xchat.c:777 src/fe-gtk/menu.c:1336
+#, fuzzy
+msgid "Enter Channel to Join:"
+msgstr "Kanāls gatavojas"
+
+#: src/common/xchat.c:778
+#, fuzzy
+msgid "Server Links"
+msgstr "Serveru Saraksts..."
+
+#: src/common/xchat.c:779
+#, fuzzy
+msgid "Ping Server"
+msgstr "Serveris"
+
+#: src/common/xchat.c:780
+#, fuzzy
+msgid "Hide Version"
+msgstr "Versija"
+
+#: src/common/xchat.c:790
+#, fuzzy
+msgid "Op"
+msgstr "Atvērt"
+
+#: src/common/xchat.c:791
+msgid "DeOp"
+msgstr ""
+
+#: src/common/xchat.c:794
+msgid "bye"
+msgstr ""
+
+#: src/common/xchat.c:795
+#, c-format
+msgid "Enter reason to kick %s:"
+msgstr ""
+
+#: src/common/xchat.c:796
+#, fuzzy
+msgid "Sendfile"
+msgstr "Skaņas fails:"
+
+#: src/common/xchat.c:797
+msgid "Dialog"
+msgstr ""
+
+#: src/common/xchat.c:806
+msgid "WhoIs"
+msgstr ""
+
+#: src/common/xchat.c:807
+#, fuzzy
+msgid "Send"
+msgstr "Aizs"
+
+#: src/common/xchat.c:808
+#, fuzzy
+msgid "Chat"
+msgstr "Čada"
+
+#: src/common/xchat.c:809 src/fe-gtk/banlist.c:411 src/fe-gtk/ignoregui.c:383
+#: src/fe-gtk/urlgrab.c:212
+msgid "Clear"
+msgstr "Attīrīt"
+
+#: src/common/xchat.c:810
+msgid "Ping"
+msgstr ""
+
+#: src/common/dbus/dbus-client.c:72
+msgid "Couldn't connect to session bus"
+msgstr ""
+
+#: src/common/dbus/dbus-client.c:86
+msgid "Failed to complete NameHasOwner"
+msgstr ""
+
+#: src/common/dbus/dbus-client.c:112
+msgid "Failed to complete Command"
+msgstr ""
+
+#: src/common/dbus/dbus-plugin.c:30
+#, fuzzy
+msgid "remote access"
+msgstr "Nevar piekļūt %s\n"
+
+#: src/common/dbus/dbus-plugin.c:31
+msgid "plugin for remote access using DBUS"
+msgstr ""
+
+#: src/common/dbus/dbus-plugin.c:897
+#, c-format
+msgid "Couldn't connect to session bus: %s\n"
+msgstr ""
+
+#: src/common/dbus/dbus-plugin.c:914
+#, c-format
+msgid "Failed to acquire %s: %s\n"
+msgstr ""
+
+#: src/fe-gtk/about.c:83
+#, fuzzy
+msgid "About "
+msgstr "Pārtraukt"
+
+#: src/fe-gtk/about.c:111
+msgid "<b>A multiplatform IRC Client</b>"
+msgstr ""
+
+#: src/fe-gtk/ascii.c:133
+msgid "Character Chart"
+msgstr "Rakstzīmju Tabula"
+
+#: src/fe-gtk/banlist.c:149 src/fe-gtk/chanlist.c:311
+#: src/fe-gtk/plugin-tray.c:229
+#, fuzzy
+msgid "Not connected."
+msgstr "Ciklēt līdz pieslēdzas"
+
+#: src/fe-gtk/banlist.c:247 src/fe-gtk/banlist.c:327
+msgid "You must select some bans."
+msgstr ""
+
+#: src/fe-gtk/banlist.c:276
+#, c-format
+msgid "Are you sure you want to remove all bans in %s?"
+msgstr ""
+
+#: src/fe-gtk/banlist.c:342 src/fe-gtk/ignoregui.c:173
+msgid "Mask"
+msgstr "Maska"
+
+#: src/fe-gtk/banlist.c:343
+msgid "From"
+msgstr "No"
+
+#: src/fe-gtk/banlist.c:344
+msgid "Date"
+msgstr "Datums"
+
+#: src/fe-gtk/banlist.c:387
+msgid "You can only open the Ban List window while in a channel tab."
+msgstr ""
+
+#: src/fe-gtk/banlist.c:391
+#, fuzzy, c-format
+msgid ": Ban List (%s)"
+msgstr "X-Chat: Izraidīto Saraksts (%s)"
+
+#: src/fe-gtk/banlist.c:407 src/fe-gtk/notifygui.c:431
+msgid "Remove"
+msgstr "Izņemt"
+
+#: src/fe-gtk/banlist.c:409
+msgid "Crop"
+msgstr "Apcirpt"
+
+#: src/fe-gtk/banlist.c:413
+msgid "Refresh"
+msgstr "Atjaunināt"
+
+#: src/fe-gtk/chanlist.c:117
+#, fuzzy, c-format
+msgid "Displaying %d/%d users on %d/%d channels."
+msgstr "Lietotāju un Kanālu Statistika: %d/%d Lietotāji %d/%d Kanālos"
+
+#: src/fe-gtk/chanlist.c:532 src/fe-gtk/menu.c:1272 src/fe-gtk/urlgrab.c:149
+msgid "Select an output filename"
+msgstr "Izvēlies izvades failavārdu"
+
+#: src/fe-gtk/chanlist.c:639 src/fe-gtk/chanlist.c:821
+#, fuzzy
+msgid "_Join Channel"
+msgstr "Pievienoties Kanālam"
+
+#: src/fe-gtk/chanlist.c:641
+#, fuzzy
+msgid "_Copy Channel Name"
+msgstr "Kanāla Nosaukums"
+
+#: src/fe-gtk/chanlist.c:643
+msgid "Copy _Topic Text"
+msgstr ""
+
+#: src/fe-gtk/chanlist.c:732
+#, fuzzy, c-format
+msgid ": Channel List (%s)"
+msgstr "X-Chat: Kanālu Saraksts (%s)"
+
+#: src/fe-gtk/chanlist.c:803
+msgid "_Search"
+msgstr ""
+
+#: src/fe-gtk/chanlist.c:809
+#, fuzzy
+msgid "_Download List"
+msgstr "Lejuplādēt failus uz:"
+
+#: src/fe-gtk/chanlist.c:815
+#, fuzzy
+msgid "Save _List..."
+msgstr "Serveru Saraksts..."
+
+#: src/fe-gtk/chanlist.c:828
+msgid "Show only:"
+msgstr ""
+
+#: src/fe-gtk/chanlist.c:840
+#, fuzzy
+msgid "channels with"
+msgstr "Atvērt kanālus iekš:"
+
+#: src/fe-gtk/chanlist.c:853
+msgid "to"
+msgstr ""
+
+#: src/fe-gtk/chanlist.c:865
+#, fuzzy
+msgid "users."
+msgstr "Lietotāji"
+
+#: src/fe-gtk/chanlist.c:871
+msgid "Look in:"
+msgstr ""
+
+#: src/fe-gtk/chanlist.c:883
+msgid "Channel name"
+msgstr "Kanāla nosaukums"
+
+#: src/fe-gtk/chanlist.c:904
+#, fuzzy
+msgid "Search type:"
+msgstr "Meklēt Tekstu..."
+
+#: src/fe-gtk/chanlist.c:911
+msgid "Simple Search"
+msgstr ""
+
+#: src/fe-gtk/chanlist.c:912
+msgid "Pattern Match (Wildcards)"
+msgstr ""
+
+#: src/fe-gtk/chanlist.c:914
+msgid "Regular Expression"
+msgstr ""
+
+#: src/fe-gtk/chanlist.c:925
+msgid "Find:"
+msgstr "Atrast:"
+
+#: src/fe-gtk/dccgui.c:167
+#, c-format
+msgid "Send file to %s"
+msgstr "Sūtīt failu %s"
+
+#: src/fe-gtk/dccgui.c:497
+msgid "That file is not resumable."
+msgstr ""
+
+#: src/fe-gtk/dccgui.c:501
+#, c-format
+msgid ""
+"Cannot access file: %s\n"
+"%s.\n"
+"Resuming not possible."
+msgstr ""
+
+#: src/fe-gtk/dccgui.c:508
+msgid ""
+"File in download directory is larger than file offered. Resuming not "
+"possible."
+msgstr ""
+
+#: src/fe-gtk/dccgui.c:512
+msgid "Cannot resume the same file from two people."
+msgstr ""
+
+#: src/fe-gtk/dccgui.c:745
+msgid ": Uploads and Downloads"
+msgstr ""
+
+#: src/fe-gtk/dccgui.c:761 src/fe-gtk/dccgui.c:1000 src/fe-gtk/notifygui.c:137
+msgid "Status"
+msgstr "Satuss"
+
+#: src/fe-gtk/dccgui.c:762 src/fe-gtk/plugingui.c:74
+msgid "File"
+msgstr "Fails"
+
+#: src/fe-gtk/dccgui.c:767
+msgid "ETA"
+msgstr "ETA"
+
+#: src/fe-gtk/dccgui.c:792 src/fe-gtk/menu.c:1648 src/fe-gtk/setup.c:247
+msgid "Both"
+msgstr "Abi"
+
+#: src/fe-gtk/dccgui.c:798
+msgid "Uploads"
+msgstr ""
+
+#: src/fe-gtk/dccgui.c:804
+#, fuzzy
+msgid "Downloads"
+msgstr "Lejuplādēt failus uz:"
+
+#: src/fe-gtk/dccgui.c:809
+msgid "Details"
+msgstr ""
+
+#: src/fe-gtk/dccgui.c:820
+#, fuzzy
+msgid "File:"
+msgstr "Fails"
+
+#: src/fe-gtk/dccgui.c:821
+#, fuzzy
+msgid "Address:"
+msgstr "IP adrese"
+
+#: src/fe-gtk/dccgui.c:827 src/fe-gtk/dccgui.c:1024
+msgid "Abort"
+msgstr "Pārtraukt"
+
+#: src/fe-gtk/dccgui.c:828 src/fe-gtk/dccgui.c:1025
+msgid "Accept"
+msgstr "Pieņemt"
+
+#: src/fe-gtk/dccgui.c:829
+msgid "Resume"
+msgstr "Atsākt"
+
+#: src/fe-gtk/dccgui.c:830
+msgid "Open Folder..."
+msgstr ""
+
+#: src/fe-gtk/dccgui.c:990
+#, fuzzy
+msgid ": DCC Chat List"
+msgstr "X-Chat: DCC Tērzēšanas Saraksts"
+
+#: src/fe-gtk/dccgui.c:1002
+msgid "Recv"
+msgstr "Saņ"
+
+#: src/fe-gtk/dccgui.c:1003
+msgid "Sent"
+msgstr "Aizs"
+
+#: src/fe-gtk/dccgui.c:1004
+#, fuzzy
+msgid "Start Time"
+msgstr "SākšanasLaiks"
+
+#: src/fe-gtk/editlist.c:145
+msgid "*NEW*"
+msgstr "*JAUNS*"
+
+#: src/fe-gtk/editlist.c:146
+msgid "EDIT ME"
+msgstr "REDIĢĒ MANI"
+
+#: src/fe-gtk/editlist.c:316 src/fe-gtk/notifygui.c:136
+#: src/fe-gtk/plugingui.c:72
+msgid "Name"
+msgstr "Nosaukums"
+
+#: src/fe-gtk/editlist.c:317
+msgid "Command"
+msgstr "Komanda"
+
+#: src/fe-gtk/editlist.c:345
+msgid "Move Up"
+msgstr "Augšup"
+
+#: src/fe-gtk/editlist.c:349
+msgid "Move Dn"
+msgstr "Lejup"
+
+#: src/fe-gtk/editlist.c:357
+msgid "Cancel"
+msgstr "Atcelt"
+
+#: src/fe-gtk/editlist.c:361
+msgid "Save"
+msgstr "Saglabāt"
+
+#: src/fe-gtk/editlist.c:369 src/fe-gtk/fkeys.c:768
+msgid "Add New"
+msgstr "Pievienot Jaunu"
+
+#: src/fe-gtk/editlist.c:373 src/fe-gtk/fkeys.c:773 src/fe-gtk/ignoregui.c:381
+msgid "Delete"
+msgstr "Dzēst"
+
+#: src/fe-gtk/editlist.c:381
+msgid "Sort"
+msgstr "Kārtot"
+
+#: src/fe-gtk/editlist.c:385
+msgid "Help"
+msgstr "Palīdzība"
+
+#: src/fe-gtk/fe-gtk.c:132
+#, fuzzy
+msgid "Don't auto connect to servers"
+msgstr "Auto Pieslēgties Serverim"
+
+#: src/fe-gtk/fe-gtk.c:133
+msgid "Use a different config directory"
+msgstr ""
+
+#: src/fe-gtk/fe-gtk.c:134
+msgid "Don't auto load any plugins"
+msgstr ""
+
+#: src/fe-gtk/fe-gtk.c:135
+msgid "Show plugin/script auto-load directory"
+msgstr ""
+
+#: src/fe-gtk/fe-gtk.c:136
+msgid "Show user config directory"
+msgstr ""
+
+#: src/fe-gtk/fe-gtk.c:137
+msgid "Open an irc://server:port/channel URL"
+msgstr ""
+
+#: src/fe-gtk/fe-gtk.c:139 src/fe-gtk/setup.c:298
+#, fuzzy
+msgid "Execute command:"
+msgstr "Pieslēgšanās Komanda:"
+
+#: src/fe-gtk/fe-gtk.c:140
+msgid "Open URL or execute command in an existing PChat"
+msgstr ""
+
+#: src/fe-gtk/fe-gtk.c:142
+msgid "Begin minimized. Level 0=Normal 1=Iconified 2=Tray"
+msgstr ""
+
+#: src/fe-gtk/fe-gtk.c:142
+msgid "level"
+msgstr ""
+
+#: src/fe-gtk/fe-gtk.c:143
+#, fuzzy
+msgid "Show version information"
+msgstr "Serva Informācija"
+
+#: src/fe-gtk/fe-gtk.c:310
+#, c-format
+msgid ""
+"Failed to open font:\n"
+"\n"
+"%s"
+msgstr ""
+
+#: src/fe-gtk/fe-gtk.c:700
+msgid "Search buffer is empty.\n"
+msgstr "Meklēšanas buferis ir tukšs.\n"
+
+#: src/fe-gtk/fe-gtk.c:809
+#, c-format
+msgid "%d bytes"
+msgstr ""
+
+#: src/fe-gtk/fe-gtk.c:810
+#, c-format
+msgid "Network send queue: %d bytes"
+msgstr ""
+
+#: src/fe-gtk/fkeys.c:162
+msgid ""
+"The Run Command action runs the data in Data 1 as if it has been typed into "
+"the entry box where you pressed the key sequence. Thus it can contain text "
+"(which will be sent to the channel/person), commands or user commands. When "
+"run all \\n characters in Data 1 are used to deliminate seperate commands so "
+"it is possible to run more than one command. If you want a \\ in the actual "
+"text run then enter \\\\"
+msgstr ""
+"Darbība Palaist Komandu palaiž datus iekš Dati 1 tā, it kā tie būtu "
+"ierakstīti ieraksta lauciņā, kur tu nospiedi taustiņu secību. Taču tas var "
+"arī saturēt tekstu (Kas tiks sūtīts kanālam/personai), komandas vai "
+"lietotāja komandas. Kad palaiž, visas \\n rakstzīmes iekš Dati 1 tiek "
+"lietotas, lai atdalītu atsevišķas komandas, tāpēc ir iespējams palaist "
+"vairāk kā vienu komandu. Ja tu gribi panākt \\ savā tekstā, tad ievadi \\\\"
+
+#: src/fe-gtk/fkeys.c:164
+msgid ""
+"The Change Page command switches between pages in the notebook. Set Data 1 "
+"to the page you want to switch to. If Data 2 is set to anything then the "
+"switch will be relative to the current position"
+msgstr ""
+"Komanda Mainīt Lapu pārslēdzas starp lapām sadaļu režīmā. Iestati Dati 1 uz "
+"lapu, uz kuru vēlies pārslēgties. Ja Dati 2 ir iestatīti uz kaut ko, tad "
+"pārslēgšanās būs relatīva atkarībā no pašreizējās pozīcijas"
+
+#: src/fe-gtk/fkeys.c:166
+msgid ""
+"The Insert in Buffer command will insert the contents of Data 1 into the "
+"entry where the key sequence was pressed at the current cursor position"
+msgstr ""
+"Komanda Ievietot Buferī ievietos Dati 1 saturu ierakstā, kur taustiņi tika "
+"nospiesti secībā, konkrētajā kursora pozīcijā"
+
+#: src/fe-gtk/fkeys.c:168
+#, fuzzy
+msgid ""
+"The Scroll Page command scrolls the text widget up or down one page or one "
+"line. Set Data 1 to either Up, Down, +1 or -1."
+msgstr ""
+"Koamanda Ritināt Lapu ritina teksta vidžetu augšup un lejup pa vienu lapu. "
+"Ja Dati 1 ir iestatīti uz kaut ko, lapa ritināsies augšup, citādi tā "
+"ritināsies lejup"
+
+#: src/fe-gtk/fkeys.c:170
+msgid ""
+"The Set Buffer command sets the entry where the key sequence was entered to "
+"the contents of Data 1"
+msgstr ""
+"Komanda Iestatīt Buferi iestata ierakstu, kur taustiņu secība tika ievadīta "
+"atbiltoši Dati 1 saturam"
+
+#: src/fe-gtk/fkeys.c:172
+msgid ""
+"The Last Command command sets the entry to contain the last command entered "
+"- the same as pressing up in a shell"
+msgstr ""
+"Komanda Iepriekšējā Komanda iestata rindiņu, lai tā satur iepriekšējo "
+"ievadīto komandu - tas pats, kas nospiežot augšup čaulā"
+
+#: src/fe-gtk/fkeys.c:174
+msgid ""
+"The Next Command command sets the entry to contain the next command entered "
+"- the same as pressing down in a shell"
+msgstr ""
+"Komanda Nākamā Komanda iestata rindiņu, lai tā satur nākamo ievadīto komandu "
+"- tas pats, kas nospiežot lejup čaulā"
+
+#: src/fe-gtk/fkeys.c:176
+msgid ""
+"This command changes the text in the entry to finish an incomplete nickname "
+"or command. If Data 1 is set then double-tabbing in a string will select the "
+"last nick, not the next"
+msgstr ""
+"Šī komanda maina ieraksta tekstu, lai pabeigtu nepilnu segvārdu vai komandu. "
+"Ja Dati 1 ir iestatīti, tad dubult-tabulācija rindiņā izvēlēsies pēdējo "
+"segvārdu, nevis nākamo"
+
+#: src/fe-gtk/fkeys.c:178
+msgid ""
+"This command scrolls up and down through the list of nicks. If Data 1 is set "
+"to anything it will scroll up, else it scrolls down"
+msgstr ""
+"Šī komanda ritina augšup un lejup pa segvārdu sarakstu. Ja Dati 1 ir "
+"iestatīti uz kaut ko, tā ritināsies augšup, citādi tā ritināsies lejup"
+
+#: src/fe-gtk/fkeys.c:180
+#, fuzzy
+msgid ""
+"This command checks the last word entered in the entry against the replace "
+"list and replaces it if it finds a match"
+msgstr ""
+"Šī komanda pārbauda pēdējos ievadītos datus pret aizvietojumu sarakstu un "
+"aizvieto to, ja atrod atbilstību"
+
+#: src/fe-gtk/fkeys.c:182
+#, fuzzy
+msgid "This command moves the front tab left by one"
+msgstr "Šī komanda pārvieto priekšpuses sadaļu pa kreisi"
+
+#: src/fe-gtk/fkeys.c:184
+#, fuzzy
+msgid "This command moves the front tab right by one"
+msgstr "Šī komanda pārvieto priekšpuses sadaļu pa labi"
+
+#: src/fe-gtk/fkeys.c:186
+#, fuzzy
+msgid "This command moves the current tab family to the left"
+msgstr "Šī komanda pārvieto priekšpuses sadaļu pa kreisi"
+
+#: src/fe-gtk/fkeys.c:188
+#, fuzzy
+msgid "This command moves the current tab family to the right"
+msgstr "Šī komanda pārvieto priekšpuses sadaļu pa kreisi"
+
+#: src/fe-gtk/fkeys.c:190
+msgid "Push input line into history but doesn't send to server"
+msgstr "Ievietot ievades līniju vēsturē, bet nesūtīt serverim"
+
+#: src/fe-gtk/fkeys.c:201
+msgid "There was an error loading key bindings configuration"
+msgstr "Atgadījās kļūda, lādējot taustiņu atbilstību konfigurāciju"
+
+#: src/fe-gtk/fkeys.c:453 src/fe-gtk/fkeys.c:454 src/fe-gtk/fkeys.c:455
+#: src/fe-gtk/fkeys.c:456 src/fe-gtk/fkeys.c:746 src/fe-gtk/fkeys.c:752
+#: src/fe-gtk/fkeys.c:757 src/fe-gtk/maingui.c:1616 src/fe-gtk/maingui.c:1732
+#: src/fe-gtk/maingui.c:3239
+msgid "<none>"
+msgstr "<nekas>"
+
+#: src/fe-gtk/fkeys.c:710
+msgid "Mod"
+msgstr "Mod"
+
+#: src/fe-gtk/fkeys.c:711 src/fe-gtk/fkeys.c:806
+msgid "Key"
+msgstr "Taustiņš"
+
+#: src/fe-gtk/fkeys.c:712
+msgid "Action"
+msgstr "Darbība"
+
+#: src/fe-gtk/fkeys.c:721
+msgid ": Keyboard Shortcuts"
+msgstr ""
+
+#: src/fe-gtk/fkeys.c:799
+msgid "Shift"
+msgstr "Shift"
+
+#: src/fe-gtk/fkeys.c:801
+msgid "Alt"
+msgstr "Alt"
+
+#: src/fe-gtk/fkeys.c:803
+msgid "Ctrl"
+msgstr "Ctrl"
+
+#: src/fe-gtk/fkeys.c:810
+msgid "Data 1"
+msgstr "Dati 1"
+
+#: src/fe-gtk/fkeys.c:813
+msgid "Data 2"
+msgstr "Dati 2"
+
+#: src/fe-gtk/fkeys.c:855
+msgid "Error opening keys config file\n"
+msgstr "Kļūda atverot taustiņu config failu\n"
+
+#: src/fe-gtk/fkeys.c:1022
+#, fuzzy, c-format
+msgid ""
+"Unknown keyname %s in key bindings config file\n"
+"Load aborted, please fix %s"
+msgstr ""
+"Nezināms taustiņvārds %s taustiņu atbilstību konfigurācijas failā\n"
+"Ielāde pārtraukta, Lūdzu salabo ~/.xchat/keybindings\n"
+
+#: src/fe-gtk/fkeys.c:1060
+#, fuzzy, c-format
+msgid ""
+"Unknown action %s in key bindings config file\n"
+"Load aborted, Please fix %s"
+msgstr ""
+"Nezināma darbība %s taustiņu atbilstību konfigurācijas failā\n"
+"Ielāde pārtraukta, Lūdzu salabo ~/.xchat/keybindings\n"
+
+#: src/fe-gtk/fkeys.c:1081
+#, fuzzy, c-format
+msgid ""
+"Expecting Data line (beginning Dx{:|!}) but got:\n"
+"%s\n"
+"\n"
+"Load aborted, Please fix %s"
+msgstr ""
+"Gaidīju Datu līniju (sākums Dx{:|!}), bet saņēmu:\n"
+"%s\n"
+"\n"
+"Ielāde pārtraukta, Lūdzu salabo ~/.xchat/keybindings\n"
+
+#: src/fe-gtk/fkeys.c:1150
+#, fuzzy, c-format
+msgid ""
+"Key bindings config file is corrupt, load aborted\n"
+"Please fix %s"
+msgstr ""
+"Nezināms taustiņvārds %s taustiņu atbilstību konfigurācijas failā\n"
+"Ielāde pārtraukta, Lūdzu salabo ~/.xchat/keybindings\n"
+
+#: src/fe-gtk/gtkutil.c:137
+msgid "Cannot write to that file."
+msgstr "Nevar ierakstīt tajā failā."
+
+#: src/fe-gtk/gtkutil.c:139
+msgid "Cannot read that file."
+msgstr "Nevar nolasīt to failu."
+
+#: src/fe-gtk/ignoregui.c:115 src/fe-gtk/ignoregui.c:258
+msgid "That mask already exists."
+msgstr ""
+
+#: src/fe-gtk/ignoregui.c:175 src/fe-gtk/maingui.c:2113
+msgid "Private"
+msgstr "Privāts"
+
+#: src/fe-gtk/ignoregui.c:176
+msgid "Notice"
+msgstr "Paziņot"
+
+#: src/fe-gtk/ignoregui.c:177
+msgid "CTCP"
+msgstr "CTCP"
+
+#: src/fe-gtk/ignoregui.c:178
+msgid "DCC"
+msgstr ""
+
+#: src/fe-gtk/ignoregui.c:179
+msgid "Invite"
+msgstr "Ielūgt"
+
+#: src/fe-gtk/ignoregui.c:180
+msgid "Unignore"
+msgstr "Neignorēt"
+
+#: src/fe-gtk/ignoregui.c:302
+#, fuzzy
+msgid "Enter mask to ignore:"
+msgstr "Kanāls gatavojas"
+
+#: src/fe-gtk/ignoregui.c:349
+#, fuzzy
+msgid ": Ignore list"
+msgstr "X-Chat: Ignorēšanas saraksts"
+
+#: src/fe-gtk/ignoregui.c:356
+msgid "Ignore Stats:"
+msgstr "Ignorēšānas Statistika:"
+
+#: src/fe-gtk/ignoregui.c:364
+msgid "Channel:"
+msgstr "Kanāls:"
+
+#: src/fe-gtk/ignoregui.c:365
+msgid "Private:"
+msgstr "Privāts:"
+
+#: src/fe-gtk/ignoregui.c:366
+msgid "Notice:"
+msgstr "Paziņojums:"
+
+#: src/fe-gtk/ignoregui.c:367
+msgid "CTCP:"
+msgstr "CTCP:"
+
+#: src/fe-gtk/ignoregui.c:368
+msgid "Invite:"
+msgstr "Ielūgt:"
+
+#: src/fe-gtk/ignoregui.c:379 src/fe-gtk/notifygui.c:427
+msgid "Add..."
+msgstr ""
+
+#: src/fe-gtk/joind.c:87
+msgid "Channel name too short, try again."
+msgstr ""
+
+#: src/fe-gtk/joind.c:129
+#, fuzzy
+msgid ": Connection Complete"
+msgstr "Savinojuma taimauts"
+
+#: src/fe-gtk/joind.c:154
+#, fuzzy, c-format
+msgid "Connection to %s complete."
+msgstr "Savienojuma pārtraukums"
+
+#: src/fe-gtk/joind.c:163
+msgid ""
+"In the Server-List window, no channel (chat room) has been entered to be "
+"automatically joined for this network."
+msgstr ""
+
+#: src/fe-gtk/joind.c:169
+msgid "What would you like to do next?"
+msgstr ""
+
+#: src/fe-gtk/joind.c:174
+msgid "_Nothing, I'll join a channel later."
+msgstr ""
+
+#: src/fe-gtk/joind.c:183
+#, fuzzy
+msgid "_Join this channel:"
+msgstr "Pievienoties Kanāliem:"
+
+#: src/fe-gtk/joind.c:195
+msgid "If you know the name of the channel you want to join, enter it here."
+msgstr ""
+
+#: src/fe-gtk/joind.c:202
+#, fuzzy
+msgid "O_pen the Channel-List window."
+msgstr "Atvērt kanālus iekš:"
+
+#: src/fe-gtk/joind.c:209
+msgid "Retrieving the Channel-List may take a minute or two."
+msgstr ""
+
+#: src/fe-gtk/joind.c:216
+msgid "_Always show this dialog after connecting."
+msgstr ""
+
+#: src/fe-gtk/maingui.c:456
+msgid "Dialog with"
+msgstr ""
+
+#: src/fe-gtk/maingui.c:754
+#, c-format
+msgid "Topic for %s is: %s"
+msgstr "Temats %s ir: %s"
+
+#: src/fe-gtk/maingui.c:759
+msgid "No topic is set"
+msgstr "Temats nav uzstādīts"
+
+#: src/fe-gtk/maingui.c:1151
+#, c-format
+msgid ""
+"This server still has %d channels or dialogs associated with it. Close them "
+"all?"
+msgstr ""
+
+#: src/fe-gtk/maingui.c:1252
+#, fuzzy
+msgid "Quit PChat?"
+msgstr "Par X-Chat"
+
+#: src/fe-gtk/maingui.c:1273
+msgid "Don't ask next time."
+msgstr ""
+
+#: src/fe-gtk/maingui.c:1279
+#, c-format
+msgid "You are connected to %i IRC networks."
+msgstr ""
+
+#: src/fe-gtk/maingui.c:1281
+msgid "Are you sure you want to quit?"
+msgstr ""
+
+#: src/fe-gtk/maingui.c:1283
+#, fuzzy
+msgid "Some file transfers are still active."
+msgstr "Dažas failu pārsūtes joprojām aktīvas, iziet no xchat?"
+
+#: src/fe-gtk/maingui.c:1301
+msgid "_Minimize to Tray"
+msgstr ""
+
+#: src/fe-gtk/maingui.c:1521
+#, fuzzy
+msgid "Insert Attribute or Color Code"
+msgstr "Ievietot krāsas kodu"
+
+#: src/fe-gtk/maingui.c:1523
+msgid "<b>Bold</b>"
+msgstr ""
+
+#: src/fe-gtk/maingui.c:1524
+msgid "<u>Underline</u>"
+msgstr ""
+
+#: src/fe-gtk/maingui.c:1526
+msgid "Normal"
+msgstr ""
+
+#: src/fe-gtk/maingui.c:1528
+#, fuzzy
+msgid "Colors 0-7"
+msgstr "Krāsas"
+
+#: src/fe-gtk/maingui.c:1538
+#, fuzzy
+msgid "Colors 8-15"
+msgstr "Krāsas"
+
+#: src/fe-gtk/maingui.c:1581
+#, fuzzy
+msgid "_Settings"
+msgstr "U_zstādījumi"
+
+#: src/fe-gtk/maingui.c:1583
+msgid "_Log to Disk"
+msgstr ""
+
+#: src/fe-gtk/maingui.c:1584
+msgid "_Reload Scrollback"
+msgstr ""
+
+#: src/fe-gtk/maingui.c:1586
+#, fuzzy
+msgid "_Hide Join/Part Messages"
+msgstr "Pīkstiens uz privātām ziņām"
+
+#: src/fe-gtk/maingui.c:1594
+msgid "_Extra Alerts"
+msgstr ""
+
+#: src/fe-gtk/maingui.c:1596
+#, fuzzy
+msgid "Beep on _Message"
+msgstr "Pīkstiens uz ziņām"
+
+#: src/fe-gtk/maingui.c:1600
+msgid "Blink Tray _Icon"
+msgstr ""
+
+#: src/fe-gtk/maingui.c:1603
+msgid "Blink Task _Bar"
+msgstr ""
+
+#: src/fe-gtk/maingui.c:1641 src/fe-gtk/menu.c:2181
+#, fuzzy
+msgid "_Detach"
+msgstr "Atdalīt Sadaļu"
+
+#: src/fe-gtk/maingui.c:1643 src/fe-gtk/menu.c:2182 src/fe-gtk/menu.c:2187
+#: src/fe-gtk/plugingui.c:245 src/fe-gtk/search.c:234
+#, fuzzy
+msgid "_Close"
+msgstr "Aizvērt"
+
+#: src/fe-gtk/maingui.c:1981 src/fe-gtk/maingui.c:2087
+msgid "User limit must be a number!\n"
+msgstr "Lietotāju limitam ir jābūt skaitlim!\n"
+
+#: src/fe-gtk/maingui.c:2109
+msgid "Topic Protection"
+msgstr "Temata Aizsardzība"
+
+#: src/fe-gtk/maingui.c:2110
+msgid "No outside messages"
+msgstr "Bez ārējām ziņām"
+
+#: src/fe-gtk/maingui.c:2111
+msgid "Secret"
+msgstr "Slepens"
+
+#: src/fe-gtk/maingui.c:2112
+msgid "Invite Only"
+msgstr "Tikai ar ielūgumu"
+
+#: src/fe-gtk/maingui.c:2114
+msgid "Moderated"
+msgstr "Apvaldīts"
+
+#: src/fe-gtk/maingui.c:2115
+msgid "Ban List"
+msgstr "Izraidīto Saraksts"
+
+#: src/fe-gtk/maingui.c:2117
+msgid "Keyword"
+msgstr "Atslēgvārds"
+
+#: src/fe-gtk/maingui.c:2129
+msgid "User Limit"
+msgstr "Lietotāju Limits"
+
+#: src/fe-gtk/maingui.c:2238
+msgid "Show/Hide userlist"
+msgstr "Parādīt/Paslēpt lietotāju sarakstu"
+
+#: src/fe-gtk/maingui.c:2364
+msgid ""
+"Unable to set transparent background!\n"
+"\n"
+"You may be using a non-compliant window\n"
+"manager that is not currently supported.\n"
+msgstr ""
+
+#: src/fe-gtk/maingui.c:2643
+msgid "Enter new nickname:"
+msgstr "Ievadiet jaunu segvārdu:"
+
+#: src/fe-gtk/menu.c:127
+msgid "Host unknown"
+msgstr "Nezināms hostdators"
+
+#: src/fe-gtk/menu.c:616
+#, c-format
+msgid "<tt><b>%-11s</b></tt> %s"
+msgstr ""
+
+#: src/fe-gtk/menu.c:622 src/fe-gtk/menu.c:626
+msgid "Real Name:"
+msgstr "Īstais Vārds:"
+
+#: src/fe-gtk/menu.c:633
+#, fuzzy
+msgid "User:"
+msgstr "Lietotājs"
+
+#: src/fe-gtk/menu.c:640
+#, fuzzy
+msgid "Country:"
+msgstr "Valsts: %s"
+
+#: src/fe-gtk/menu.c:647
+#, fuzzy
+msgid "Server:"
+msgstr "Serveris"
+
+#: src/fe-gtk/menu.c:658
+#, c-format
+msgid "%u minutes ago"
+msgstr ""
+
+#: src/fe-gtk/menu.c:660 src/fe-gtk/menu.c:663
+#, fuzzy
+msgid "Last Msg:"
+msgstr "Pēdējā Ziņa: %s"
+
+#: src/fe-gtk/menu.c:673
+#, fuzzy
+msgid "Away Msg:"
+msgstr "Prombūtnes iemesls"
+
+#: src/fe-gtk/menu.c:731
+#, c-format
+msgid "%d nicks selected."
+msgstr ""
+
+#: src/fe-gtk/menu.c:856
+msgid ""
+"The Menubar is now hidden. You can show it again by pressing F9 or right-"
+"clicking in a blank part of the main text area."
+msgstr ""
+
+#: src/fe-gtk/menu.c:945
+msgid "Open Link in Browser"
+msgstr ""
+
+#: src/fe-gtk/menu.c:946
+msgid "Copy Selected Link"
+msgstr ""
+
+#: src/fe-gtk/menu.c:1008 src/fe-gtk/menu.c:1319
+msgid "Join Channel"
+msgstr "Pievienoties Kanālam"
+
+#: src/fe-gtk/menu.c:1012
+msgid "Part Channel"
+msgstr "Atstāt Kanālu"
+
+#: src/fe-gtk/menu.c:1014
+msgid "Cycle Channel"
+msgstr "Ciklēt Kanālā"
+
+#: src/fe-gtk/menu.c:1050
+msgid "_Remove from Favorites"
+msgstr ""
+
+#: src/fe-gtk/menu.c:1052
+msgid "_Add to Favorites"
+msgstr ""
+
+#: src/fe-gtk/menu.c:1071
+#, fuzzy
+msgid ": User menu"
+msgstr "X-Chat: Lietotāja izvēlne"
+
+#: src/fe-gtk/menu.c:1080
+msgid "Edit This Menu..."
+msgstr "Rediģēt Šo Izvēlni..."
+
+#: src/fe-gtk/menu.c:1210 src/fe-gtk/menu.c:1223 src/fe-gtk/search.c:78
+msgid "Search hit end, not found."
+msgstr ""
+
+#: src/fe-gtk/menu.c:1321
+#, fuzzy
+msgid "Retrieve channel list..."
+msgstr "Kanālu Saraksts..."
+
+#: src/fe-gtk/menu.c:1389
+#, fuzzy
+msgid ""
+"User Commands - Special codes:\n"
+"\n"
+"%c  =  current channel\n"
+"%e  =  current network name\n"
+"%m  =  machine info\n"
+"%n  =  your nick\n"
+"%t  =  time/date\n"
+"%v  =  PChat version\n"
+"%2  =  word 2\n"
+"%3  =  word 3\n"
+"&2  =  word 2 to the end of line\n"
+"&3  =  word 3 to the end of line\n"
+"\n"
+"eg:\n"
+"/cmd john hello\n"
+"\n"
+"%2 would be \"john\"\n"
+"&2 would be \"john hello\"."
+msgstr ""
+"Lietotāja Komandas - Speciālie kodi:\n"
+"\n"
+"%c  =  pašreizējais kanāls\n"
+"%m  =  datora info\n"
+"%n  =  jūsu segvārds\n"
+"%t  =  laiks/datums\n"
+"%v  =  xchat versija\n"
+"%2  =  vārds 2\n"
+"%3  =  vārds 3\n"
+"&2  =  vārds 2 līnijas beigās\n"
+"&3  =  vārds 3 līnijas beigās\n"
+"\n"
+"eg:\n"
+"/cmd john hello\n"
+"\n"
+"%2 būtu \"john\"\n"
+"&2 būtu \"john hello\"."
+
+#: src/fe-gtk/menu.c:1405
+#, fuzzy
+msgid ""
+"Userlist Buttons - Special codes:\n"
+"\n"
+"%a  =  all selected nicks\n"
+"%c  =  current channel\n"
+"%e  =  current network name\n"
+"%h  =  selected nick's hostname\n"
+"%m  =  machine info\n"
+"%n  =  your nick\n"
+"%s  =  selected nick\n"
+"%t  =  time/date\n"
+msgstr ""
+"Lietotājsaraksta Pogas - Speciālie kodi:\n"
+"\n"
+"%a  =  visi izvēlētie segvārdi\n"
+"%c  =  pašreizējai kanāls\n"
+"%h  =  izvēlētā segvārda hostdators\n"
+"%m  =  datora info\n"
+"%n  =  jusu segvārds\n"
+"%s  =  izvēlētais segvārds\n"
+"%t  =  laiks/datums\n"
+
+#: src/fe-gtk/menu.c:1415
+#, fuzzy
+msgid ""
+"Dialog Buttons - Special codes:\n"
+"\n"
+"%a  =  all selected nicks\n"
+"%c  =  current channel\n"
+"%e  =  current network name\n"
+"%h  =  selected nick's hostname\n"
+"%m  =  machine info\n"
+"%n  =  your nick\n"
+"%s  =  selected nick\n"
+"%t  =  time/date\n"
+msgstr ""
+"Dialoga Pogas - Speciālie kodi:\n"
+"\n"
+"%a  =  visi izvēlētie segvārdi\n"
+"%c  =  pašreizējai kanāls\n"
+"%h  =  izvēlētā segvārda hostdators\n"
+"%m  =  datora info\n"
+"%n  =  jusu segvārds\n"
+"%s  =  izvēlētais segvārds\n"
+"%t  =  laiks/datums\n"
+
+#: src/fe-gtk/menu.c:1425
+#, fuzzy
+msgid ""
+"CTCP Replies - Special codes:\n"
+"\n"
+"%d  =  data (the whole ctcp)\n"
+"%e  =  current network name\n"
+"%m  =  machine info\n"
+"%s  =  nick who sent the ctcp\n"
+"%t  =  time/date\n"
+"%2  =  word 2\n"
+"%3  =  word 3\n"
+"&2  =  word 2 to the end of line\n"
+"&3  =  word 3 to the end of line\n"
+"\n"
+msgstr ""
+"CTCP Atbildes - Speciālie kodi:\n"
+"\n"
+"%d  =  dati (viss ctcp)\n"
+"%m  =  datora info\n"
+"%s  =  ctcp sūtītāja segvārds\n"
+"%t  =  laiks/datums\n"
+"%2  =  vārds 2\n"
+"%3  =  vārds 3\n"
+"&2  =  vārds 2 līnijas beigās\n"
+"&3  =  vārds 3 līnijas beigās\n"
+"\n"
+
+#: src/fe-gtk/menu.c:1436
+#, fuzzy, c-format
+msgid ""
+"URL Handlers - Special codes:\n"
+"\n"
+"%s  =  the URL string\n"
+"\n"
+"Putting a ! in front of the command\n"
+"indicates it should be sent to a\n"
+"shell instead of PChat"
+msgstr ""
+"URL Noteicēji - Speciālie kodi:\n"
+"\n"
+"%s  =  URL virkne\n"
+"\n"
+"Noliekot ! komandas priekšā\n"
+"norāda, ka tā sūtāma uz\n"
+"čaulu, nevis X-Chat"
+
+#: src/fe-gtk/menu.c:1445
+#, fuzzy
+msgid ": User Defined Commands"
+msgstr "X-Chat: Lietotāja Definētās Komandas"
+
+#: src/fe-gtk/menu.c:1452
+#, fuzzy
+msgid ": Userlist Popup menu"
+msgstr "X-Chat: Lietotāju Saraksta Ātrizvēlne.."
+
+#: src/fe-gtk/menu.c:1459
+msgid "Replace with"
+msgstr ""
+
+#: src/fe-gtk/menu.c:1459
+#, fuzzy
+msgid ": Replace"
+msgstr "X-Chat: Aizvietot"
+
+#: src/fe-gtk/menu.c:1466
+#, fuzzy
+msgid ": URL Handlers"
+msgstr "URL Noteicēji..."
+
+#: src/fe-gtk/menu.c:1485
+#, fuzzy
+msgid ": Userlist buttons"
+msgstr "X-Chat: Lietotāju Saraksta Pogas"
+
+#: src/fe-gtk/menu.c:1492
+#, fuzzy
+msgid ": Dialog buttons"
+msgstr "X-Chat: Dialoga pogas"
+
+#: src/fe-gtk/menu.c:1499
+#, fuzzy
+msgid ": CTCP Replies"
+msgstr "CTCP Atbildes..."
+
+#: src/fe-gtk/menu.c:1605
+#, fuzzy
+msgid "_File"
+msgstr "Fails"
+
+#: src/fe-gtk/menu.c:1606
+#, fuzzy
+msgid "Network Li_st..."
+msgstr "Tīkla uzstādīšana"
+
+#: src/fe-gtk/menu.c:1609
+msgid "_New"
+msgstr ""
+
+#: src/fe-gtk/menu.c:1610
+msgid "Server Tab..."
+msgstr "Servera Sadaļa..."
+
+#: src/fe-gtk/menu.c:1611
+msgid "Channel Tab..."
+msgstr "Kanāla Sadaļa..."
+
+#: src/fe-gtk/menu.c:1612
+msgid "Server Window..."
+msgstr "Servera Logs..."
+
+#: src/fe-gtk/menu.c:1613
+msgid "Channel Window..."
+msgstr "Kanāla Logs..."
+
+#: src/fe-gtk/menu.c:1618 src/fe-gtk/menu.c:1620
+#, fuzzy
+msgid "_Load Plugin or Script..."
+msgstr "Ielādēt Iespraudni..."
+
+#: src/fe-gtk/menu.c:1628 src/fe-gtk/plugin-tray.c:540
+#, fuzzy
+msgid "_Quit"
+msgstr "Iziet"
+
+#: src/fe-gtk/menu.c:1630
+msgid "_View"
+msgstr ""
+
+#: src/fe-gtk/menu.c:1632
+#, fuzzy
+msgid "_Menu Bar"
+msgstr "Izvēlnes Josla"
+
+#: src/fe-gtk/menu.c:1633
+#, fuzzy
+msgid "_Topic Bar"
+msgstr "Temata Josla"
+
+#: src/fe-gtk/menu.c:1634
+#, fuzzy
+msgid "_User List"
+msgstr "Lietotāju Saraksts"
+
+#: src/fe-gtk/menu.c:1635
+#, fuzzy
+msgid "U_serlist Buttons"
+msgstr "Lietotājsaraksta Pogas..."
+
+#: src/fe-gtk/menu.c:1636
+#, fuzzy
+msgid "M_ode Buttons"
+msgstr "Dialoga Pogas..."
+
+#: src/fe-gtk/menu.c:1638
+#, fuzzy
+msgid "_Channel Switcher"
+msgstr "Kanālu Saraksts..."
+
+#: src/fe-gtk/menu.c:1640
+#, fuzzy
+msgid "_Tabs"
+msgstr "Sadaļas"
+
+#: src/fe-gtk/menu.c:1641
+msgid "T_ree"
+msgstr ""
+
+#: src/fe-gtk/menu.c:1643
+#, fuzzy
+msgid "_Network Meters"
+msgstr "Tīkla uzstādīšana"
+
+#: src/fe-gtk/menu.c:1645 src/fe-gtk/setup.c:244
+msgid "Off"
+msgstr "Izslēgt"
+
+#: src/fe-gtk/menu.c:1646
+msgid "Graph"
+msgstr "Grafika"
+
+#: src/fe-gtk/menu.c:1651
+msgid "_Server"
+msgstr "_Serveris"
+
+#: src/fe-gtk/menu.c:1652
+#, fuzzy
+msgid "_Disconnect"
+msgstr "Pieslēgties"
+
+#: src/fe-gtk/menu.c:1653
+#, fuzzy
+msgid "_Reconnect"
+msgstr "Pieslēgties"
+
+#: src/fe-gtk/menu.c:1654
+#, fuzzy
+msgid "Join a Channel..."
+msgstr "Pievienoties Kanālam"
+
+#: src/fe-gtk/menu.c:1655
+#, fuzzy
+msgid "List of Channels..."
+msgstr "Pievienoties Kanālam"
+
+#: src/fe-gtk/menu.c:1658
+msgid "Marked Away"
+msgstr "Atzīmēt kā Promesošs"
+
+#: src/fe-gtk/menu.c:1660
+#, fuzzy
+msgid "_Usermenu"
+msgstr "Lietotājvārds"
+
+#: src/fe-gtk/menu.c:1662
+msgid "S_ettings"
+msgstr "U_zstādījumi"
+
+#: src/fe-gtk/menu.c:1663
+#, fuzzy
+msgid "_Preferences"
+msgstr "Preferences..."
+
+#: src/fe-gtk/menu.c:1665
+#, fuzzy
+msgid "Auto Replace..."
+msgstr "Aizvietojamo Ātrizvēlne..."
+
+#: src/fe-gtk/menu.c:1666
+msgid "CTCP Replies..."
+msgstr "CTCP Atbildes..."
+
+#: src/fe-gtk/menu.c:1667
+msgid "Dialog Buttons..."
+msgstr "Dialoga Pogas..."
+
+#: src/fe-gtk/menu.c:1668
+msgid "Keyboard Shortcuts..."
+msgstr ""
+
+#: src/fe-gtk/menu.c:1669
+#, fuzzy
+msgid "Text Events..."
+msgstr "Notikumu Teksti..."
+
+#: src/fe-gtk/menu.c:1670
+msgid "URL Handlers..."
+msgstr "URL Noteicēji..."
+
+#: src/fe-gtk/menu.c:1671
+msgid "User Commands..."
+msgstr "Lietotāja Komandas..."
+
+#: src/fe-gtk/menu.c:1672
+msgid "Userlist Buttons..."
+msgstr "Lietotājsaraksta Pogas..."
+
+#: src/fe-gtk/menu.c:1673
+msgid "Userlist Popup..."
+msgstr "Lietotājsaraksta Ātrizvēlne..."
+
+#: src/fe-gtk/menu.c:1675
+msgid "_Window"
+msgstr "_Logs"
+
+#: src/fe-gtk/menu.c:1676
+msgid "Ban List..."
+msgstr "Izraidīto Saraksts..."
+
+#: src/fe-gtk/menu.c:1677
+msgid "Character Chart..."
+msgstr "Rakstzīmju Tabula..."
+
+#: src/fe-gtk/menu.c:1678
+msgid "Direct Chat..."
+msgstr "Tiešā Tērzēšana..."
+
+#: src/fe-gtk/menu.c:1679
+#, fuzzy
+msgid "File Transfers..."
+msgstr "Failu pārsūtīšanas"
+
+#: src/fe-gtk/menu.c:1680
+#, fuzzy
+msgid "Friends List..."
+msgstr "Izraidīto Saraksts..."
+
+#: src/fe-gtk/menu.c:1681
+msgid "Ignore List..."
+msgstr "Ignorējamo Saraks..."
+
+#: src/fe-gtk/menu.c:1682
+#, fuzzy
+msgid "Plugins and Scripts..."
+msgstr "Iespraudņu Saraksts..."
+
+#: src/fe-gtk/menu.c:1683
+msgid "Raw Log..."
+msgstr "Jēldatu Žurnāls..."
+
+#: src/fe-gtk/menu.c:1684
+msgid "URL Grabber..."
+msgstr "URL Savācējs..."
+
+#: src/fe-gtk/menu.c:1686
+msgid "Reset Marker Line"
+msgstr ""
+
+#: src/fe-gtk/menu.c:1687
+#, fuzzy
+msgid "_Copy Selection"
+msgstr "Izvēlieties fontu"
+
+#: src/fe-gtk/menu.c:1688
+msgid "C_lear Text"
+msgstr "A_ttīrīt Tekstu"
+
+#: src/fe-gtk/menu.c:1689
+msgid "Save Text..."
+msgstr "Saglabāt Tekstu..."
+
+#: src/fe-gtk/menu.c:1691
+#, fuzzy
+msgid "Search"
+msgstr "Meklēt Tekstu..."
+
+#: src/fe-gtk/menu.c:1692
+msgid "Search Text..."
+msgstr "Meklēt Tekstu..."
+
+#: src/fe-gtk/menu.c:1693
+#, fuzzy
+msgid "Reset Search"
+msgstr "X-Chat: Meklēšana"
+
+#: src/fe-gtk/menu.c:1694
+#, fuzzy
+msgid "Search Next"
+msgstr "Meklēt Tekstu..."
+
+#: src/fe-gtk/menu.c:1695
+msgid "Search Previous"
+msgstr ""
+
+#: src/fe-gtk/menu.c:1698 src/fe-gtk/menu.c:2173
+msgid "_Help"
+msgstr "_Palīdzība"
+
+#: src/fe-gtk/menu.c:1700
+#, fuzzy
+msgid "_Contents"
+msgstr "Pieslēgties"
+
+#: src/fe-gtk/menu.c:1702
+msgid "Check for updates"
+msgstr ""
+
+#: src/fe-gtk/menu.c:1704
+#, fuzzy
+msgid "_About"
+msgstr "Pārtraukt"
+
+#: src/fe-gtk/menu.c:2186
+#, fuzzy
+msgid "_Attach"
+msgstr "Atdalīt Sadaļu"
+
+#: src/fe-gtk/notifygui.c:139
+msgid "Last Seen"
+msgstr "Pēdējoreiz redzēts"
+
+#: src/fe-gtk/notifygui.c:181
+msgid "Offline"
+msgstr "Bezsaistē"
+
+#: src/fe-gtk/notifygui.c:201 src/fe-gtk/setup.c:316
+msgid "Never"
+msgstr "Nekad"
+
+#: src/fe-gtk/notifygui.c:204 src/fe-gtk/notifygui.c:229
+#, c-format
+msgid "%d minutes ago"
+msgstr ""
+
+#: src/fe-gtk/notifygui.c:219
+msgid "Online"
+msgstr "Tiešsaistē"
+
+#: src/fe-gtk/notifygui.c:348
+msgid "Enter nickname to add:"
+msgstr "Ievadiet pievienojamo segvārdu:"
+
+#: src/fe-gtk/notifygui.c:377
+msgid "Notify on these networks:"
+msgstr ""
+
+#: src/fe-gtk/notifygui.c:388
+msgid "Comma separated list of networks is accepted."
+msgstr ""
+
+#: src/fe-gtk/notifygui.c:414
+#, fuzzy
+msgid ": Friends List"
+msgstr "X-Chat: Failu Sūtīšanas Saraksts"
+
+#: src/fe-gtk/notifygui.c:435
+#, fuzzy
+msgid "Open Dialog"
+msgstr "Automātiski Atvērt Dialoga Logus"
+
+#: src/fe-gtk/plugin-tray.c:226
+#, c-format
+msgid ": Connected to %u networks and %u channels"
+msgstr ""
+
+#: src/fe-gtk/plugin-tray.c:516
+#, fuzzy
+msgid "_Restore Window"
+msgstr "Servera Logs..."
+
+#: src/fe-gtk/plugin-tray.c:518
+#, fuzzy
+msgid "_Hide Window"
+msgstr "_Logs"
+
+#: src/fe-gtk/plugin-tray.c:522
+msgid "_Blink on"
+msgstr ""
+
+#: src/fe-gtk/plugin-tray.c:523 src/fe-gtk/setup.c:662
+#, fuzzy
+msgid "Channel Message"
+msgstr "Kanāla Nosaukums"
+
+#: src/fe-gtk/plugin-tray.c:524 src/fe-gtk/setup.c:663
+#, fuzzy
+msgid "Private Message"
+msgstr "Pīkstiens uz privātām ziņām"
+
+#: src/fe-gtk/plugin-tray.c:525 src/fe-gtk/setup.c:664
+#, fuzzy
+msgid "Highlighted Message"
+msgstr "Pīkstiens uz privātām ziņām"
+
+#: src/fe-gtk/plugin-tray.c:528
+msgid "_Change status"
+msgstr ""
+
+#: src/fe-gtk/plugin-tray.c:530
+msgid "_Away"
+msgstr ""
+
+#: src/fe-gtk/plugin-tray.c:533
+msgid "_Back"
+msgstr ""
+
+#: src/fe-gtk/plugin-tray.c:586 src/fe-gtk/plugin-tray.c:594
+#, fuzzy, c-format
+msgid ": Highlighted message from: %s (%s)"
+msgstr "Pīkstiens uz privātām ziņām"
+
+#: src/fe-gtk/plugin-tray.c:589
+#, c-format
+msgid ": %u highlighted messages, latest from: %s (%s)"
+msgstr ""
+
+#: src/fe-gtk/plugin-tray.c:612 src/fe-gtk/plugin-tray.c:619
+#, c-format
+msgid ": New public message from: %s (%s)"
+msgstr ""
+
+#: src/fe-gtk/plugin-tray.c:615
+#, c-format
+msgid ": %u new public messages."
+msgstr ""
+
+#: src/fe-gtk/plugin-tray.c:641 src/fe-gtk/plugin-tray.c:648
+#, c-format
+msgid ": Private message from: %s (%s)"
+msgstr ""
+
+#: src/fe-gtk/plugin-tray.c:644
+#, c-format
+msgid ": %u private messages, latest from: %s (%s)"
+msgstr ""
+
+#: src/fe-gtk/plugin-tray.c:694 src/fe-gtk/plugin-tray.c:702
+#, c-format
+msgid ": File offer from: %s (%s)"
+msgstr ""
+
+#: src/fe-gtk/plugin-tray.c:697
+#, c-format
+msgid ": %u file offers, latest from: %s (%s)"
+msgstr ""
+
+#: src/fe-gtk/plugingui.c:73
+msgid "Version"
+msgstr "Versija"
+
+#: src/fe-gtk/plugingui.c:75 src/fe-gtk/textgui.c:424
+msgid "Description"
+msgstr "Apraksts"
+
+#: src/fe-gtk/plugingui.c:154
+msgid "Select a Plugin or Script to load"
+msgstr "Izvēlieties Iespraudni vai Skriptu, ko ielādēt"
+
+#: src/fe-gtk/plugingui.c:232
+#, fuzzy
+msgid ": Plugins and Scripts"
+msgstr "Iespraudņu Saraksts..."
+
+#: src/fe-gtk/plugingui.c:238
+msgid "_Load..."
+msgstr "_Ielādēt..."
+
+#: src/fe-gtk/plugingui.c:241
+msgid "_UnLoad"
+msgstr "I_zlādēt"
+
+#: src/fe-gtk/rawlog.c:85 src/fe-gtk/rawlog.c:156 src/fe-gtk/textgui.c:438
+#: src/fe-gtk/urlgrab.c:216
+#, fuzzy
+msgid "Save As..."
+msgstr "Saglabāt Kā"
+
+#: src/fe-gtk/rawlog.c:123
+#, fuzzy, c-format
+msgid ": Raw Log (%s)"
+msgstr "X-Chat: Jēlžurnāls (%s)"
+
+#: src/fe-gtk/rawlog.c:153
+#, fuzzy
+msgid "Clear Raw Log"
+msgstr "Attīrīt jēlžurnālu"
+
+#: src/fe-gtk/search.c:61
+msgid "The window you opened this Search for doesn't exist anymore."
+msgstr "Logs, kuram tu atvēri šo Meklēšanu, vairs neeksistē"
+
+#: src/fe-gtk/search.c:166
+#, fuzzy
+msgid ": Search"
+msgstr "X-Chat: Meklēšana"
+
+#: src/fe-gtk/search.c:193
+#, fuzzy
+msgid "_Find"
+msgstr "Atrast"
+
+#: src/fe-gtk/search.c:197
+msgid "_Match case"
+msgstr ""
+
+#: src/fe-gtk/search.c:205
+msgid "Search _backwards"
+msgstr ""
+
+#: src/fe-gtk/search.c:213
+#, fuzzy
+msgid "_Highlight all"
+msgstr "Izgaismot:"
+
+#: src/fe-gtk/search.c:221
+msgid "R_egular expression"
+msgstr ""
+
+#: src/fe-gtk/search.c:237
+msgid "Close and _Reset"
+msgstr ""
+
+#: src/fe-gtk/servlistgui.c:174 src/fe-gtk/servlistgui.c:283
+msgid "New Network"
+msgstr "Jauns Tīkls"
+
+#: src/fe-gtk/servlistgui.c:556
+#, c-format
+msgid "Really remove network \"%s\" and all its servers?"
+msgstr "Patiesi izņemt tīklu \"%s\" un visus tā serverus?"
+
+#: src/fe-gtk/servlistgui.c:738
+#, fuzzy
+msgid "#channel"
+msgstr "Kanāls"
+
+#: src/fe-gtk/servlistgui.c:848
+msgid ": Favorite Channels (Auto-Join List)"
+msgstr ""
+
+#: src/fe-gtk/servlistgui.c:861
+#, c-format
+msgid "These channels will be joined whenever you connect to %s."
+msgstr ""
+
+#: src/fe-gtk/servlistgui.c:904
+#, fuzzy
+msgid "Key (Password)"
+msgstr "Servera Parole:"
+
+#: src/fe-gtk/servlistgui.c:935 src/fe-gtk/servlistgui.c:1581
+msgid "_Edit"
+msgstr ""
+
+#: src/fe-gtk/servlistgui.c:971
+#, c-format
+msgid "%s has been removed."
+msgstr ""
+
+#: src/fe-gtk/servlistgui.c:991
+#, c-format
+msgid "%s has been added."
+msgstr ""
+
+#: src/fe-gtk/servlistgui.c:1015
+msgid "User name and Real name cannot be left blank."
+msgstr ""
+
+#: src/fe-gtk/servlistgui.c:1406
+#, fuzzy, c-format
+msgid ": Edit %s"
+msgstr "Rediģēt Notikumus"
+
+#: src/fe-gtk/servlistgui.c:1425
+#, fuzzy, c-format
+msgid "Servers for %s"
+msgstr "Serveris: %s"
+
+#: src/fe-gtk/servlistgui.c:1436
+msgid "Connect to selected server only"
+msgstr ""
+
+#: src/fe-gtk/servlistgui.c:1437
+msgid "Don't cycle through all the servers when the connection fails."
+msgstr ""
+
+#: src/fe-gtk/servlistgui.c:1439
+msgid "Your Details"
+msgstr ""
+
+#: src/fe-gtk/servlistgui.c:1445
+#, fuzzy
+msgid "Use global user information"
+msgstr "Lietot vispārīgo lietotāja info"
+
+#: src/fe-gtk/servlistgui.c:1448 src/fe-gtk/servlistgui.c:1688
+#, fuzzy
+msgid "_Nick name:"
+msgstr "Segvārds:"
+
+#: src/fe-gtk/servlistgui.c:1452 src/fe-gtk/servlistgui.c:1695
+msgid "Second choice:"
+msgstr ""
+
+#: src/fe-gtk/servlistgui.c:1456 src/fe-gtk/servlistgui.c:1709
+#, fuzzy
+msgid "_User name:"
+msgstr "Lietotājvārds"
+
+#: src/fe-gtk/servlistgui.c:1460
+#, fuzzy
+msgid "Rea_l name:"
+msgstr "Īstais Vārds:"
+
+#: src/fe-gtk/servlistgui.c:1463
+#, fuzzy
+msgid "Connecting"
+msgstr "Pieslēgties"
+
+#: src/fe-gtk/servlistgui.c:1469
+#, fuzzy
+msgid "Auto connect to this network at startup"
+msgstr "Auto pieslēgšanās pie sāknēšanas"
+
+#: src/fe-gtk/servlistgui.c:1471
+#, fuzzy
+msgid "Bypass proxy server"
+msgstr "Lietot starpniekserveri"
+
+#: src/fe-gtk/servlistgui.c:1473
+msgid "Use SSL for all the servers on this network"
+msgstr ""
+
+#: src/fe-gtk/servlistgui.c:1478
+#, fuzzy
+msgid "Accept invalid SSL certificate"
+msgstr "Akceptēt nederīgu sertif."
+
+#: src/fe-gtk/servlistgui.c:1484
+#, fuzzy
+msgid "_Favorite channels:"
+msgstr "Pievienoties Kanāliem:"
+
+#: src/fe-gtk/servlistgui.c:1486
+msgid "Channels to join, separated by commas, but not spaces!"
+msgstr "Kanāli, kuriem pievienoties, atdalīti ar komatiem, nevis atstarpēm!"
+
+#: src/fe-gtk/servlistgui.c:1489
+#, fuzzy
+msgid "Connect command:"
+msgstr "Pieslēgšanās Komanda:"
+
+#: src/fe-gtk/servlistgui.c:1491
+msgid ""
+"Extra command to execute after connecting. If you need more than one, set "
+"this to LOAD -e <filename>, where <filename> is a text-file full of commands "
+"to execute."
+msgstr ""
+
+#: src/fe-gtk/servlistgui.c:1494
+#, fuzzy
+msgid "Nickserv password:"
+msgstr "Servera Parole:"
+
+#: src/fe-gtk/servlistgui.c:1496
+msgid ""
+"If your nickname requires a password, enter it here. Not all IRC networks "
+"support this."
+msgstr ""
+
+#: src/fe-gtk/servlistgui.c:1500
+#, fuzzy
+msgid "Server password:"
+msgstr "Servera Parole:"
+
+#: src/fe-gtk/servlistgui.c:1502
+msgid "Password for the server, if in doubt, leave blank."
+msgstr ""
+
+#: src/fe-gtk/servlistgui.c:1506
+#, fuzzy
+msgid "SASL password:"
+msgstr "Servera Parole:"
+
+#: src/fe-gtk/servlistgui.c:1508
+msgid "Password for SASL authentication, if in doubt, leave blank."
+msgstr ""
+
+#: src/fe-gtk/servlistgui.c:1511
+#, fuzzy
+msgid "Character set:"
+msgstr "Rakstzīmju Kopa:"
+
+#: src/fe-gtk/servlistgui.c:1666
+#, fuzzy
+msgid ": Network List"
+msgstr "Tīkla uzstādīšana"
+
+#: src/fe-gtk/servlistgui.c:1678
+#, fuzzy
+msgid "User Information"
+msgstr "Serva Informācija"
+
+#: src/fe-gtk/servlistgui.c:1702
+msgid "Third choice:"
+msgstr ""
+
+#: src/fe-gtk/servlistgui.c:1762
+msgid "Networks"
+msgstr "Tīkli"
+
+#: src/fe-gtk/servlistgui.c:1810
+#, fuzzy
+msgid "Skip network list on startup"
+msgstr "Nav serveru saraksta pie sāknēšanas"
+
+#: src/fe-gtk/servlistgui.c:1819
+msgid "Show favorites only"
+msgstr ""
+
+#: src/fe-gtk/servlistgui.c:1849
+msgid "_Edit..."
+msgstr ""
+
+#: src/fe-gtk/servlistgui.c:1856
+#, fuzzy
+msgid "_Sort"
+msgstr "Kārtot"
+
+#: src/fe-gtk/servlistgui.c:1857
+msgid ""
+"Sorts the network list in alphabetical order. Use SHIFT-UP and SHIFT-DOWN "
+"keys to move a row."
+msgstr ""
+
+#: src/fe-gtk/servlistgui.c:1865
+msgid "_Favor"
+msgstr ""
+
+#: src/fe-gtk/servlistgui.c:1866
+msgid "Mark or unmark this network as a favorite."
+msgstr ""
+
+#: src/fe-gtk/servlistgui.c:1890
+msgid "C_onnect"
+msgstr "_Pieslēgties"
+
+#: src/fe-gtk/setup.c:105
+msgid "Afrikaans"
+msgstr ""
+
+#: src/fe-gtk/setup.c:106
+#, fuzzy
+msgid "Albanian"
+msgstr "Albānija"
+
+#: src/fe-gtk/setup.c:107
+msgid "Amharic"
+msgstr ""
+
+#: src/fe-gtk/setup.c:108
+msgid "Asturian"
+msgstr ""
+
+#: src/fe-gtk/setup.c:109
+#, fuzzy
+msgid "Azerbaijani"
+msgstr "Azerbaidžāna"
+
+#: src/fe-gtk/setup.c:110
+msgid "Basque"
+msgstr ""
+
+#: src/fe-gtk/setup.c:111
+#, fuzzy
+msgid "Belarusian"
+msgstr "Baltkrievija"
+
+#: src/fe-gtk/setup.c:112
+#, fuzzy
+msgid "Bulgarian"
+msgstr "Bulgārija"
+
+#: src/fe-gtk/setup.c:114
+msgid "Chinese (Simplified)"
+msgstr ""
+
+#: src/fe-gtk/setup.c:115
+msgid "Chinese (Traditional)"
+msgstr ""
+
+#: src/fe-gtk/setup.c:116
+msgid "Czech"
+msgstr ""
+
+#: src/fe-gtk/setup.c:117
+msgid "Danish"
+msgstr ""
+
+#: src/fe-gtk/setup.c:118
+msgid "Dutch"
+msgstr ""
+
+#: src/fe-gtk/setup.c:119
+msgid "English (Brisith)"
+msgstr ""
+
+#: src/fe-gtk/setup.c:120
+msgid "English"
+msgstr ""
+
+#: src/fe-gtk/setup.c:121
+#, fuzzy
+msgid "Estonian"
+msgstr "Igaunija"
+
+#: src/fe-gtk/setup.c:122
+msgid "Finnish"
+msgstr ""
+
+#: src/fe-gtk/setup.c:123
+#, fuzzy
+msgid "French"
+msgstr "Franču Gviāna"
+
+#: src/fe-gtk/setup.c:124
+msgid "Galician"
+msgstr ""
+
+#: src/fe-gtk/setup.c:125
+#, fuzzy
+msgid "German"
+msgstr "Vācija"
+
+#: src/fe-gtk/setup.c:126
+#, fuzzy
+msgid "Greek"
+msgstr "Grieķija"
+
+#: src/fe-gtk/setup.c:127
+msgid "Gujarati"
+msgstr ""
+
+#: src/fe-gtk/setup.c:128
+msgid "Hindi"
+msgstr ""
+
+#: src/fe-gtk/setup.c:129
+#, fuzzy
+msgid "Hungarian"
+msgstr "Ungārija"
+
+#: src/fe-gtk/setup.c:130
+#, fuzzy
+msgid "Indonesian"
+msgstr "Indonēzija"
+
+#: src/fe-gtk/setup.c:131
+#, fuzzy
+msgid "Italian"
+msgstr "Itālija"
+
+#: src/fe-gtk/setup.c:132
+#, fuzzy
+msgid "Japanese"
+msgstr "Japāna"
+
+#: src/fe-gtk/setup.c:133
+#, fuzzy
+msgid "Kannada"
+msgstr "Kanāda"
+
+#: src/fe-gtk/setup.c:134
+msgid "Kinyarwanda"
+msgstr ""
+
+#: src/fe-gtk/setup.c:135
+msgid "Korean"
+msgstr ""
+
+#: src/fe-gtk/setup.c:136
+#, fuzzy
+msgid "Latvian"
+msgstr "Latvija"
+
+#: src/fe-gtk/setup.c:137
+#, fuzzy
+msgid "Lithuanian"
+msgstr "Lietuva"
+
+#: src/fe-gtk/setup.c:138
+#, fuzzy
+msgid "Macedonian"
+msgstr "Maķedonija"
+
+#: src/fe-gtk/setup.c:139
+#, fuzzy
+msgid "Malay"
+msgstr "Malaizija"
+
+#: src/fe-gtk/setup.c:140
+#, fuzzy
+msgid "Malayalam"
+msgstr "Malaizija"
+
+#: src/fe-gtk/setup.c:141
+#, fuzzy
+msgid "Norwegian (Bokmal)"
+msgstr "Norvēģija"
+
+#: src/fe-gtk/setup.c:142
+#, fuzzy
+msgid "Norwegian (Nynorsk)"
+msgstr "Norvēģija"
+
+#: src/fe-gtk/setup.c:143
+msgid "Polish"
+msgstr ""
+
+#: src/fe-gtk/setup.c:144
+#, fuzzy
+msgid "Portuguese"
+msgstr "Portugāle"
+
+#: src/fe-gtk/setup.c:145
+msgid "Portuguese (Brazilian)"
+msgstr ""
+
+#: src/fe-gtk/setup.c:146
+msgid "Punjabi"
+msgstr ""
+
+#: src/fe-gtk/setup.c:147
+msgid "Russian"
+msgstr ""
+
+#: src/fe-gtk/setup.c:148
+msgid "Serbian"
+msgstr ""
+
+#: src/fe-gtk/setup.c:149
+#, fuzzy
+msgid "Slovak"
+msgstr "Slovēnija"
+
+#: src/fe-gtk/setup.c:150
+#, fuzzy
+msgid "Slovenian"
+msgstr "Slovēnija"
+
+#: src/fe-gtk/setup.c:151
+msgid "Spanish"
+msgstr ""
+
+#: src/fe-gtk/setup.c:152
+#, fuzzy
+msgid "Swedish"
+msgstr "Zviedrija"
+
+#: src/fe-gtk/setup.c:153
+#, fuzzy
+msgid "Thai"
+msgstr "Taizeme"
+
+#: src/fe-gtk/setup.c:154
+#, fuzzy
+msgid "Ukrainian"
+msgstr "Ukraina"
+
+#: src/fe-gtk/setup.c:155
+#, fuzzy
+msgid "Vietnamese"
+msgstr "Vjetnama"
+
+#: src/fe-gtk/setup.c:156
+msgid "Walloon"
+msgstr ""
+
+#: src/fe-gtk/setup.c:163 src/fe-gtk/setup.c:1909
+msgid "General"
+msgstr "Vispārīgi"
+
+#: src/fe-gtk/setup.c:165
+msgid "Language:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:166
+msgid "Main font:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:168
+msgid "Font:"
+msgstr "Fonts:"
+
+#: src/fe-gtk/setup.c:171
+#, fuzzy
+msgid "Text Box"
+msgstr "Teksta lodziņš"
+
+#: src/fe-gtk/setup.c:172
+#, fuzzy
+msgid "Colored nick names"
+msgstr "Krāsaini segvārdi"
+
+#: src/fe-gtk/setup.c:172
+msgid "Give each person on IRC a different color"
+msgstr ""
+
+#: src/fe-gtk/setup.c:173
+#, fuzzy
+msgid "Indent nick names"
+msgstr "Nolīdzināt segvārdus"
+
+#: src/fe-gtk/setup.c:173
+msgid "Make nick names right-justified"
+msgstr ""
+
+#: src/fe-gtk/setup.c:175
+msgid "Transparent background"
+msgstr "Caurspīdīgs fons"
+
+#: src/fe-gtk/setup.c:176 src/fe-gtk/setup.c:184
+#, fuzzy
+msgid "Show marker line"
+msgstr "Parādīt prombūtni vienreiz"
+
+#: src/fe-gtk/setup.c:176 src/fe-gtk/setup.c:184
+msgid "Insert a red line after the last read text."
+msgstr ""
+
+#: src/fe-gtk/setup.c:177 src/fe-gtk/setup.c:185
+msgid "Background image:"
+msgstr "Fona attēls:"
+
+#: src/fe-gtk/setup.c:179
+#, fuzzy
+msgid "Transparency Settings"
+msgstr "Toņa caurspīdīgums"
+
+#: src/fe-gtk/setup.c:180
+msgid "Red:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:181
+#, fuzzy
+msgid "Green:"
+msgstr "Grenlande"
+
+#: src/fe-gtk/setup.c:182
+msgid "Blue:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:188 src/fe-gtk/setup.c:562
+#, fuzzy
+msgid "Time Stamps"
+msgstr "Laika atzīmes tekstam"
+
+#: src/fe-gtk/setup.c:189
+#, fuzzy
+msgid "Enable time stamps"
+msgstr "Pretējas laikatzīmes žurnālos"
+
+#: src/fe-gtk/setup.c:190
+msgid "Time stamp format:"
+msgstr "Laika atzīmes formāts:"
+
+#: src/fe-gtk/setup.c:192 src/fe-gtk/setup.c:566
+#, fuzzy
+msgid "See the strftime MSDN article for details."
+msgstr "Apskati strftime manlapu papildus info."
+
+#: src/fe-gtk/setup.c:194 src/fe-gtk/setup.c:568
+#, fuzzy
+msgid "See the strftime manpage for details."
+msgstr "Apskati strftime manlapu papildus info."
+
+#: src/fe-gtk/setup.c:197
+#, fuzzy
+msgid "Title Bar"
+msgstr "Temata Josla"
+
+#: src/fe-gtk/setup.c:198
+#, fuzzy
+msgid "Show channel modes"
+msgstr "Kanāls"
+
+#: src/fe-gtk/setup.c:199
+#, fuzzy
+msgid "Show number of users"
+msgstr "Parādīt hostdatorus lietotājsarakstā"
+
+#: src/fe-gtk/setup.c:206 src/fe-gtk/setup.c:254
+msgid "A-Z"
+msgstr "A-Z"
+
+#: src/fe-gtk/setup.c:207
+msgid "Last-spoke order"
+msgstr ""
+
+#: src/fe-gtk/setup.c:213
+#, fuzzy
+msgid "Input Box"
+msgstr "Ievades lodziņš"
+
+#: src/fe-gtk/setup.c:214 src/fe-gtk/setup.c:286
+#, fuzzy
+msgid "Use the Text box font and colors"
+msgstr "Lietot Teksta lodziņa fontu"
+
+#: src/fe-gtk/setup.c:215
+msgid "Show nick box"
+msgstr ""
+
+#: src/fe-gtk/setup.c:216
+msgid "Show user mode icon in nick box"
+msgstr ""
+
+#: src/fe-gtk/setup.c:218
+msgid "Spell checking"
+msgstr ""
+
+#: src/fe-gtk/setup.c:219
+msgid "Dictionaries to use:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:221
+msgid ""
+"Use language codes (as in \"share\\myspell\\dicts\").\n"
+"Separate multiple entries with commas."
+msgstr ""
+
+#: src/fe-gtk/setup.c:223
+#, fuzzy
+msgid "Use language codes. Separate multiple entries with commas."
+msgstr "(Atdaliet vairākus vārdus ar komatiem)."
+
+#: src/fe-gtk/setup.c:227
+#, fuzzy
+msgid "Nick Completion"
+msgstr "Segvārdu pabeigšanas priedēklis:"
+
+#: src/fe-gtk/setup.c:228
+#, fuzzy
+msgid "Automatic nick completion (without TAB key)"
+msgstr "Automātiska segvārdu pabeigšana"
+
+#: src/fe-gtk/setup.c:230
+msgid "Nick completion suffix:"
+msgstr "Segvārdu pabeigšanas priedēklis:"
+
+#: src/fe-gtk/setup.c:231
+#, fuzzy
+msgid "Nick completion sorted:"
+msgstr "Segvārdu pabeigšanas priedēklis:"
+
+#: src/fe-gtk/setup.c:234
+#, fuzzy
+msgid "Input Box Codes"
+msgstr "Ievades lodziņš"
+
+#: src/fe-gtk/setup.c:235
+#, c-format
+msgid "Interpret %nnn as an ASCII value"
+msgstr "Interpretēt %nnn kā ASCII vērtību"
+
+#: src/fe-gtk/setup.c:236
+msgid "Interpret %C, %B as Color, Bold etc"
+msgstr ""
+
+#: src/fe-gtk/setup.c:245
+#, fuzzy
+msgid "Graphical"
+msgstr "Grafika"
+
+#: src/fe-gtk/setup.c:253
+msgid "A-Z, Ops first"
+msgstr "A-Z, Opi vispirms"
+
+#: src/fe-gtk/setup.c:255
+msgid "Z-A, Ops last"
+msgstr "Z-A, Opi pēc tam"
+
+#: src/fe-gtk/setup.c:256
+msgid "Z-A"
+msgstr "Z-A"
+
+#: src/fe-gtk/setup.c:257
+msgid "Unsorted"
+msgstr "Nesakārtoti"
+
+#: src/fe-gtk/setup.c:263 src/fe-gtk/setup.c:275
+msgid "Left (Upper)"
+msgstr ""
+
+#: src/fe-gtk/setup.c:264 src/fe-gtk/setup.c:276
+msgid "Left (Lower)"
+msgstr ""
+
+#: src/fe-gtk/setup.c:265 src/fe-gtk/setup.c:277
+msgid "Right (Upper)"
+msgstr ""
+
+#: src/fe-gtk/setup.c:266 src/fe-gtk/setup.c:278
+msgid "Right (Lower)"
+msgstr ""
+
+#: src/fe-gtk/setup.c:267
+msgid "Top"
+msgstr "Augšā"
+
+#: src/fe-gtk/setup.c:268
+msgid "Bottom"
+msgstr "Lejā"
+
+#: src/fe-gtk/setup.c:269
+msgid "Hidden"
+msgstr "Paslēpts"
+
+#: src/fe-gtk/setup.c:284
+msgid "User List"
+msgstr "Lietotāju Saraksts"
+
+#: src/fe-gtk/setup.c:285
+#, fuzzy
+msgid "Show hostnames in user list"
+msgstr "Parādīt hostdatorus lietotājsarakstā"
+
+#: src/fe-gtk/setup.c:287
+#, fuzzy
+msgid "Show icons for user modes"
+msgstr "Parādīt hostdatorus lietotājsarakstā"
+
+#: src/fe-gtk/setup.c:287
+msgid "Use graphical icons instead of text symbols in the user list."
+msgstr ""
+
+#: src/fe-gtk/setup.c:288
+msgid "Show user count in channels"
+msgstr ""
+
+#: src/fe-gtk/setup.c:290
+#, fuzzy
+msgid "User list sorted by:"
+msgstr "Lietotāju saraksts kārtots kā:"
+
+#: src/fe-gtk/setup.c:291
+#, fuzzy
+msgid "Show user list at:"
+msgstr "Parādīt/Paslēpt lietotāju sarakstu"
+
+#: src/fe-gtk/setup.c:293
+#, fuzzy
+msgid "Away Tracking"
+msgstr "Prombūtnes iemesls"
+
+#: src/fe-gtk/setup.c:294
+msgid "Track the Away status of users and mark them in a different color"
+msgstr ""
+
+#: src/fe-gtk/setup.c:295
+#, fuzzy
+msgid "On channels smaller than:"
+msgstr "Atvērt kanālus iekš:"
+
+#: src/fe-gtk/setup.c:297
+msgid "Action Upon Double Click"
+msgstr ""
+
+#: src/fe-gtk/setup.c:300
+msgid "Extra Gadgets"
+msgstr ""
+
+#: src/fe-gtk/setup.c:301
+msgid "Lag meter:"
+msgstr "Aiztures mērītājs:"
+
+#: src/fe-gtk/setup.c:302
+msgid "Throttle meter:"
+msgstr "Jaudas mērītājs:"
+
+#: src/fe-gtk/setup.c:309
+msgid "Windows"
+msgstr "Logi"
+
+#: src/fe-gtk/setup.c:310 src/fe-gtk/setup.c:324
+msgid "Tabs"
+msgstr "Sadaļas"
+
+#: src/fe-gtk/setup.c:317
+msgid "Always"
+msgstr ""
+
+#: src/fe-gtk/setup.c:318
+msgid "Only requested tabs"
+msgstr ""
+
+#: src/fe-gtk/setup.c:326
+msgid "Tree"
+msgstr ""
+
+#: src/fe-gtk/setup.c:333
+msgid "Switcher type:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:334
+#, fuzzy
+msgid "Open an extra tab for server messages"
+msgstr "Atvērt sadaļu servera paziņojumiem"
+
+#: src/fe-gtk/setup.c:335
+#, fuzzy
+msgid "Open an extra tab for server notices"
+msgstr "Atvērt sadaļu servera paziņojumiem"
+
+#: src/fe-gtk/setup.c:336
+msgid "Open a new tab when you receive a private message"
+msgstr ""
+
+#: src/fe-gtk/setup.c:337
+msgid "Sort tabs in alphabetical order"
+msgstr ""
+
+#: src/fe-gtk/setup.c:338
+msgid "Show icons in the channel tree"
+msgstr ""
+
+#: src/fe-gtk/setup.c:339
+msgid "Show dotted lines in the channel tree"
+msgstr ""
+
+#: src/fe-gtk/setup.c:340
+#, fuzzy
+msgid "Smaller text"
+msgstr "Teksts"
+
+#: src/fe-gtk/setup.c:341
+msgid "Focus new tabs:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:342
+msgid "Show channel switcher at:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:343
+#, fuzzy
+msgid "Shorten tab labels to:"
+msgstr "Parādīt sadaļas:"
+
+#: src/fe-gtk/setup.c:343
+msgid "letters."
+msgstr ""
+
+#: src/fe-gtk/setup.c:345
+#, fuzzy
+msgid "Tabs or Windows"
+msgstr "Logi"
+
+#: src/fe-gtk/setup.c:346
+msgid "Open channels in:"
+msgstr "Atvērt kanālus iekš:"
+
+#: src/fe-gtk/setup.c:347
+msgid "Open dialogs in:"
+msgstr "Atvērt dialogus iekš:"
+
+#: src/fe-gtk/setup.c:348
+msgid "Open utilities in:"
+msgstr "Atvērt utilītas iekš:"
+
+#: src/fe-gtk/setup.c:348
+msgid "Open DCC, Ignore, Notify etc, in tabs or windows?"
+msgstr "Atvērt DCC, Ignorēšanu, Paziņošanas utt. sadaļās vai logos?"
+
+#: src/fe-gtk/setup.c:355
+#, fuzzy
+msgid "Messages"
+msgstr "Ziņojums"
+
+#: src/fe-gtk/setup.c:356
+#, fuzzy
+msgid "Scrollback"
+msgstr "Atritināmas rindiņas:"
+
+#: src/fe-gtk/setup.c:364
+#, fuzzy
+msgid "Ask for confirmation"
+msgstr "Serva Informācija"
+
+#: src/fe-gtk/setup.c:365
+#, fuzzy
+msgid "Ask for download folder"
+msgstr "Izvēlies krāsu"
+
+#: src/fe-gtk/setup.c:366
+msgid "Save without interaction"
+msgstr ""
+
+#: src/fe-gtk/setup.c:372
+msgid "Files and Directories"
+msgstr ""
+
+#: src/fe-gtk/setup.c:373
+#, fuzzy
+msgid "Auto accept file offers:"
+msgstr "Auto Pieņemt Failus"
+
+#: src/fe-gtk/setup.c:374
+msgid "Download files to:"
+msgstr "Lejuplādēt failus uz:"
+
+#: src/fe-gtk/setup.c:375
+msgid "Move completed files to:"
+msgstr "Pārvietot pabeigtos failus uz:"
+
+#: src/fe-gtk/setup.c:376
+#, fuzzy
+msgid "Save nick name in filenames"
+msgstr "Saglabāt segvārdu faila nosaukumā"
+
+#: src/fe-gtk/setup.c:378
+#, fuzzy
+msgid "Network Settings"
+msgstr "Pārlādēt Uzstādījumus"
+
+#: src/fe-gtk/setup.c:379
+#, fuzzy
+msgid "Get my address from the IRC server"
+msgstr "Dabūt manu IP no IRC servera"
+
+#: src/fe-gtk/setup.c:380
+#, fuzzy
+msgid ""
+"Asks the IRC server for your real address. Use this if you have a 192.168.*."
+"* address!"
+msgstr ""
+"/WHOIS sevi, lai uzzinātu jūsu īsto adresi. Lietojiet šo, ja jums ir 192.168."
+"*.* adrese!"
+
+#: src/fe-gtk/setup.c:381
+msgid "DCC IP address:"
+msgstr "DCC IP adrese:"
+
+#: src/fe-gtk/setup.c:382
+msgid "Claim you are at this address when offering files."
+msgstr "Apgalvot, ka jūs atrodaties pēc šīs adreses, kad piedāvājat failus."
+
+#: src/fe-gtk/setup.c:383
+msgid "First DCC send port:"
+msgstr "Pirmais DCC sūtīšanas ports:"
+
+#: src/fe-gtk/setup.c:384
+msgid "Last DCC send port:"
+msgstr "Pēdējais DCC sūtīšanas ports:"
+
+#: src/fe-gtk/setup.c:385
+#, fuzzy
+msgid "!Leave ports at zero for full range."
+msgstr "(Atstāt portus pa nullēm pilnam diapazonam)."
+
+#: src/fe-gtk/setup.c:387
+msgid "Maximum File Transfer Speeds (bytes per second)"
+msgstr ""
+
+#: src/fe-gtk/setup.c:388
+msgid "One upload:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:389 src/fe-gtk/setup.c:391
+#, fuzzy
+msgid "Maximum speed for one transfer"
+msgstr "Maks. ātrums viena faila pārsūtei"
+
+#: src/fe-gtk/setup.c:390
+msgid "One download:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:392
+msgid "All uploads combined:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:393 src/fe-gtk/setup.c:395
+#, fuzzy
+msgid "Maximum speed for all files"
+msgstr "Maks. ātrums visam rafikam"
+
+#: src/fe-gtk/setup.c:394
+msgid "All downloads combined:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:422 src/fe-gtk/setup.c:455 src/fe-gtk/setup.c:1908
+msgid "Alerts"
+msgstr ""
+
+#: src/fe-gtk/setup.c:426
+#, fuzzy
+msgid "Show tray balloons on:"
+msgstr "Parādīt sadaļas:"
+
+#: src/fe-gtk/setup.c:428
+msgid "Blink tray icon on:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:429 src/fe-gtk/setup.c:458
+msgid "Blink task bar on:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:430 src/fe-gtk/setup.c:459
+msgid "Make a beep sound on:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:432 src/fe-gtk/setup.c:461
+msgid "Omit alerts when marked as being away"
+msgstr ""
+
+#: src/fe-gtk/setup.c:434
+msgid "Tray Behavior"
+msgstr ""
+
+#: src/fe-gtk/setup.c:435
+msgid "Enable system tray icon"
+msgstr ""
+
+#: src/fe-gtk/setup.c:436
+msgid "Minimize to tray"
+msgstr ""
+
+#: src/fe-gtk/setup.c:437
+#, fuzzy
+msgid "Close to tray"
+msgstr "Aizvērt Sadaļu"
+
+#: src/fe-gtk/setup.c:439
+msgid "Only show tray balloons when hidden or iconified"
+msgstr ""
+
+#: src/fe-gtk/setup.c:442 src/fe-gtk/setup.c:463
+#, fuzzy
+msgid "Highlighted Messages"
+msgstr "Pīkstiens uz privātām ziņām"
+
+#: src/fe-gtk/setup.c:443 src/fe-gtk/setup.c:464
+msgid ""
+"Highlighted messages are ones where your nickname is mentioned, but also:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:445 src/fe-gtk/setup.c:466
+#, fuzzy
+msgid "Extra words to highlight:"
+msgstr "Papildus vārdi, kurus izgaismot:"
+
+#: src/fe-gtk/setup.c:446 src/fe-gtk/setup.c:467
+#, fuzzy
+msgid "Nick names not to highlight:"
+msgstr "Papildus vārdi, kurus izgaismot:"
+
+#: src/fe-gtk/setup.c:447 src/fe-gtk/setup.c:468
+msgid "Nick names to always highlight:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:448 src/fe-gtk/setup.c:469
+#, fuzzy
+msgid ""
+"Separate multiple words with commas.\n"
+"Wildcards are accepted."
+msgstr "(Atdaliet vairākus vārdus ar komatiem)."
+
+#: src/fe-gtk/setup.c:476
+#, fuzzy
+msgid "Default Messages"
+msgstr "Noklusētais iziešanas paziņojums:"
+
+#: src/fe-gtk/setup.c:477
+#, fuzzy
+msgid "Quit:"
+msgstr "Iziet"
+
+#: src/fe-gtk/setup.c:478
+#, fuzzy
+msgid "Leave channel:"
+msgstr "Atstāt Kanālu"
+
+#: src/fe-gtk/setup.c:479
+msgid "Away:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:481
+msgid "Away"
+msgstr ""
+
+#: src/fe-gtk/setup.c:482
+msgid "Announce away messages"
+msgstr "Paziņot prombūtnes ziņojumus"
+
+#: src/fe-gtk/setup.c:483
+#, fuzzy
+msgid "Announce your away messages to all channels."
+msgstr "Paziņot jūsu prombūtnes ziņojumus visos kanālos"
+
+#: src/fe-gtk/setup.c:484
+msgid "Show away once"
+msgstr "Parādīt prombūtni vienreiz"
+
+#: src/fe-gtk/setup.c:484
+#, fuzzy
+msgid "Show identical away messages only once."
+msgstr "Parādīt identiskas prombūtnes ziņas tikai vienreiz"
+
+#: src/fe-gtk/setup.c:485
+msgid "Automatically unmark away"
+msgstr "Automāiski atstatīt prombūtni"
+
+#: src/fe-gtk/setup.c:485
+#, fuzzy
+msgid "Unmark yourself as away before sending messages."
+msgstr "Atmarķēt sevi kā promesošu pirms ziņu sūtīšanas"
+
+#: src/fe-gtk/setup.c:492 src/fe-gtk/setup.c:524
+#, fuzzy
+msgid "Advanced Settings"
+msgstr "Pārlādēt Uzstādījumus"
+
+#: src/fe-gtk/setup.c:494 src/fe-gtk/setup.c:525
+msgid "Alternative fonts:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:496 src/fe-gtk/setup.c:526
+msgid "Auto reconnect delay:"
+msgstr "Auto pārpieslēgšanās aizture:"
+
+#: src/fe-gtk/setup.c:497 src/fe-gtk/setup.c:527
+msgid "Display MODEs in raw form"
+msgstr "Parādīt MODEs jēlā formā"
+
+#: src/fe-gtk/setup.c:498 src/fe-gtk/setup.c:528
+msgid "Whois on notify"
+msgstr ""
+
+#: src/fe-gtk/setup.c:498 src/fe-gtk/setup.c:528
+msgid "Sends a /WHOIS when a user comes online in your notify list."
+msgstr ""
+
+#: src/fe-gtk/setup.c:499 src/fe-gtk/setup.c:529
+#, fuzzy
+msgid "Hide join and part messages"
+msgstr "Pīkstiens uz privātām ziņām"
+
+#: src/fe-gtk/setup.c:499 src/fe-gtk/setup.c:529
+#, fuzzy
+msgid "Hide channel join/part messages by default."
+msgstr "Pīkstiens uz privātām ziņām"
+
+#: src/fe-gtk/setup.c:500 src/fe-gtk/setup.c:531
+msgid "Display lists in compact mode"
+msgstr ""
+
+#: src/fe-gtk/setup.c:500 src/fe-gtk/setup.c:531
+msgid "Use less spacing between user list/channel tree rows."
+msgstr ""
+
+#: src/fe-gtk/setup.c:501 src/fe-gtk/setup.c:532
+#, fuzzy
+msgid "Auto Open DCC Windows"
+msgstr "Automātiski Atvērt Dialoga Logus"
+
+#: src/fe-gtk/setup.c:502 src/fe-gtk/setup.c:533
+#, fuzzy
+msgid "Send window"
+msgstr "Skaņas fails:"
+
+#: src/fe-gtk/setup.c:503 src/fe-gtk/setup.c:534
+#, fuzzy
+msgid "Receive window"
+msgstr "Saņēmējs"
+
+#: src/fe-gtk/setup.c:504 src/fe-gtk/setup.c:535
+#, fuzzy
+msgid "Chat window"
+msgstr "Kanāla Logs..."
+
+#: src/fe-gtk/setup.c:505 src/fe-gtk/setup.c:536
+msgid "Auto Copy Behavior"
+msgstr ""
+
+#: src/fe-gtk/setup.c:506 src/fe-gtk/setup.c:537
+msgid "Automatically copy selected text"
+msgstr ""
+
+#: src/fe-gtk/setup.c:507 src/fe-gtk/setup.c:538
+msgid ""
+"Copy selected text to clipboard when left mouse button is released. "
+"Otherwise, CONTROL-SHIFT-C will copy the selected text to the clipboard."
+msgstr ""
+
+#: src/fe-gtk/setup.c:510 src/fe-gtk/setup.c:541
+#, fuzzy
+msgid "Automatically include time stamps"
+msgstr "Automāiski atstatīt prombūtni"
+
+#: src/fe-gtk/setup.c:511 src/fe-gtk/setup.c:542
+msgid ""
+"Automatically include time stamps in copied lines of text. Otherwise, "
+"include time stamps if the SHIFT key is held down while selecting."
+msgstr ""
+
+#: src/fe-gtk/setup.c:513 src/fe-gtk/setup.c:544
+#, fuzzy
+msgid "Automatically include color information"
+msgstr "Automātiska segvārdu pabeigšana"
+
+#: src/fe-gtk/setup.c:514 src/fe-gtk/setup.c:545
+msgid ""
+"Automatically include color information in copied lines of text.  Otherwise, "
+"include color information if the CONTROL key is held down while selecting."
+msgstr ""
+
+#: src/fe-gtk/setup.c:555 src/fe-gtk/setup.c:1910
+msgid "Logging"
+msgstr "Iegrāmatošana"
+
+#: src/fe-gtk/setup.c:556
+msgid "Display scrollback from previous session"
+msgstr ""
+
+#: src/fe-gtk/setup.c:557
+msgid "Scrollback lines:"
+msgstr "Atritināmas rindiņas:"
+
+#: src/fe-gtk/setup.c:558
+#, fuzzy
+msgid "Enable logging of conversations to disk"
+msgstr "Aktivizēt sarunu iegrāmatošanu"
+
+#: src/fe-gtk/setup.c:559
+#, fuzzy
+msgid "Log filename:"
+msgstr "Žurnālfaila nosaukuma maska:"
+
+#: src/fe-gtk/setup.c:560
+#, fuzzy, c-format
+msgid "%s=Server %c=Channel %n=Network."
+msgstr "(%s=Serveris %c=Kanāls %n=Tīkls)."
+
+#: src/fe-gtk/setup.c:563
+msgid "Insert timestamps in logs"
+msgstr "Pretējas laikatzīmes žurnālos"
+
+#: src/fe-gtk/setup.c:564
+msgid "Log timestamp format:"
+msgstr "Žurnāla laikatzīmes formāts:"
+
+#: src/fe-gtk/setup.c:571
+msgid "URLs"
+msgstr ""
+
+#: src/fe-gtk/setup.c:572
+#, fuzzy
+msgid "Enable logging of URLs to disk"
+msgstr "Aktivizēt sarunu iegrāmatošanu"
+
+#: src/fe-gtk/setup.c:573
+#, fuzzy
+msgid "Enable URL grabber"
+msgstr "X-Chat: URL Savācējs"
+
+#: src/fe-gtk/setup.c:574
+msgid "Maximum number of URLs to grab:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:581
+msgid "(Disabled)"
+msgstr "(Atslēgts)"
+
+#: src/fe-gtk/setup.c:582
+msgid "Wingate"
+msgstr "Wingate"
+
+#: src/fe-gtk/setup.c:583
+msgid "Socks4"
+msgstr "Socks4"
+
+#: src/fe-gtk/setup.c:584
+msgid "Socks5"
+msgstr "Socks5"
+
+#: src/fe-gtk/setup.c:585
+msgid "HTTP"
+msgstr "HTTP"
+
+#: src/fe-gtk/setup.c:587
+msgid "MS Proxy (ISA)"
+msgstr ""
+
+#: src/fe-gtk/setup.c:590
+msgid "Auto"
+msgstr ""
+
+#: src/fe-gtk/setup.c:597
+#, fuzzy
+msgid "All Connections"
+msgstr "Savienojums atteikts"
+
+#: src/fe-gtk/setup.c:598
+#, fuzzy
+msgid "IRC Server Only"
+msgstr "Tikai ar ielūgumu"
+
+#: src/fe-gtk/setup.c:599
+msgid "DCC Get Only"
+msgstr ""
+
+#: src/fe-gtk/setup.c:605
+#, fuzzy
+msgid "Your Address"
+msgstr "IP adrese"
+
+#: src/fe-gtk/setup.c:606
+msgid "Bind to:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:607
+#, fuzzy
+msgid "Only useful for computers with multiple addresses."
+msgstr "(Derīgs tikai datoriem ar vairākām adresēm)."
+
+#: src/fe-gtk/setup.c:609
+#, fuzzy
+msgid "Proxy Server"
+msgstr "Starpserveris:"
+
+#: src/fe-gtk/setup.c:610
+#, fuzzy
+msgid "Hostname:"
+msgstr "Hostdatora vārds"
+
+#: src/fe-gtk/setup.c:611
+#, fuzzy
+msgid "Port:"
+msgstr "Ports"
+
+#: src/fe-gtk/setup.c:612
+#, fuzzy
+msgid "Type:"
+msgstr "DCC Tips"
+
+#: src/fe-gtk/setup.c:613
+#, fuzzy
+msgid "Use proxy for:"
+msgstr "Lietot starpniekserveri"
+
+#: src/fe-gtk/setup.c:615
+msgid "Proxy Authentication"
+msgstr ""
+
+#: src/fe-gtk/setup.c:617
+msgid "Use Authentication (MS Proxy, HTTP or Socks5 only)"
+msgstr ""
+
+#: src/fe-gtk/setup.c:619
+msgid "Use Authentication (HTTP or Socks5 only)"
+msgstr ""
+
+#: src/fe-gtk/setup.c:621
+#, fuzzy
+msgid "Username:"
+msgstr "Lietotājvārds"
+
+#: src/fe-gtk/setup.c:622
+#, fuzzy
+msgid "Password:"
+msgstr "Servera Parole:"
+
+#: src/fe-gtk/setup.c:1056
+#, fuzzy
+msgid "Select an Image File"
+msgstr "Izvēlies izvades failavārdu"
+
+#: src/fe-gtk/setup.c:1091
+#, fuzzy
+msgid "Select Download Folder"
+msgstr "Izvēlies krāsu"
+
+#: src/fe-gtk/setup.c:1100
+msgid "Select font"
+msgstr "Izvēlieties fontu"
+
+#: src/fe-gtk/setup.c:1200
+msgid "Browse..."
+msgstr "Lūkoties.."
+
+#: src/fe-gtk/setup.c:1338
+msgid "Mark identified users with:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:1340
+msgid "Mark not-identified users with:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:1347
+msgid "Open Data Folder"
+msgstr ""
+
+#: src/fe-gtk/setup.c:1401
+msgid "Select color"
+msgstr "Izvēlies krāsu"
+
+#: src/fe-gtk/setup.c:1481
+#, fuzzy
+msgid "Text Colors"
+msgstr "Krāsas"
+
+#: src/fe-gtk/setup.c:1483
+msgid "mIRC colors:"
+msgstr "mIRC krāsas:"
+
+#: src/fe-gtk/setup.c:1491
+#, fuzzy
+msgid "Local colors:"
+msgstr "mIRC krāsas:"
+
+#: src/fe-gtk/setup.c:1499 src/fe-gtk/setup.c:1504
+msgid "Foreground:"
+msgstr "Priekšplāns:"
+
+#: src/fe-gtk/setup.c:1500 src/fe-gtk/setup.c:1505
+msgid "Background:"
+msgstr "Fons:"
+
+#: src/fe-gtk/setup.c:1502
+#, fuzzy
+msgid "Selected Text"
+msgstr "Izvēlieties fontu"
+
+#: src/fe-gtk/setup.c:1507
+#, fuzzy
+msgid "Interface Colors"
+msgstr "Saskarne"
+
+#: src/fe-gtk/setup.c:1509
+#, fuzzy
+msgid "New data:"
+msgstr "Jauni Dati:"
+
+#: src/fe-gtk/setup.c:1510
+#, fuzzy
+msgid "Marker line:"
+msgstr "Iezīmēt priekšpl:"
+
+#: src/fe-gtk/setup.c:1511
+#, fuzzy
+msgid "New message:"
+msgstr "Jauna Ziņoja:"
+
+#: src/fe-gtk/setup.c:1512
+msgid "Away user:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:1513
+msgid "Highlight:"
+msgstr "Izgaismot:"
+
+#: src/fe-gtk/setup.c:1515
+msgid "Spell checker:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:1518
+#, fuzzy
+msgid "Color Stripping"
+msgstr "Kļūdas Virkne"
+
+#: src/fe-gtk/setup.c:1624 src/fe-gtk/textgui.c:389
+msgid "Event"
+msgstr "Notikums"
+
+#: src/fe-gtk/setup.c:1630
+#, fuzzy
+msgid "Sound file"
+msgstr "Skaņas fails:"
+
+#: src/fe-gtk/setup.c:1665
+#, fuzzy
+msgid "Select a sound file"
+msgstr "Izvēlies izvades failavārdu"
+
+#: src/fe-gtk/setup.c:1737
+msgid "Sound playing method:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:1745
+msgid "External sound playing _program:"
+msgstr ""
+
+#: src/fe-gtk/setup.c:1763
+msgid "_External program"
+msgstr ""
+
+#: src/fe-gtk/setup.c:1773
+msgid "_Automatic"
+msgstr ""
+
+#: src/fe-gtk/setup.c:1786
+#, fuzzy
+msgid "Sound files _directory:"
+msgstr "Lejuplādēt failus uz:"
+
+#: src/fe-gtk/setup.c:1825
+#, fuzzy
+msgid "Sound file:"
+msgstr "Skaņas fails:"
+
+#: src/fe-gtk/setup.c:1840
+#, fuzzy
+msgid "_Browse..."
+msgstr "Lūkoties.."
+
+#: src/fe-gtk/setup.c:1851
+msgid "_Play"
+msgstr ""
+
+#: src/fe-gtk/setup.c:1900
+msgid "Interface"
+msgstr "Saskarne"
+
+#: src/fe-gtk/setup.c:1901
+#, fuzzy
+msgid "Appearance"
+msgstr "Francija"
+
+#: src/fe-gtk/setup.c:1902
+msgid "Input box"
+msgstr "Ievades lodziņš"
+
+#: src/fe-gtk/setup.c:1903
+msgid "User list"
+msgstr "Lietotāja saraksts"
+
+#: src/fe-gtk/setup.c:1904
+#, fuzzy
+msgid "Channel switcher"
+msgstr "Kanālu Saraksts..."
+
+#: src/fe-gtk/setup.c:1905
+msgid "Colors"
+msgstr "Krāsas"
+
+#: src/fe-gtk/setup.c:1907
+msgid "Chatting"
+msgstr "Tērzēju"
+
+#: src/fe-gtk/setup.c:1911
+msgid "Sound"
+msgstr "Skaņa"
+
+#: src/fe-gtk/setup.c:1912
+msgid "Advanced"
+msgstr ""
+
+#: src/fe-gtk/setup.c:1915
+msgid "Network setup"
+msgstr "Tīkla uzstādīšana"
+
+#: src/fe-gtk/setup.c:1916
+msgid "File transfers"
+msgstr "Failu pārsūtīšanas"
+
+#: src/fe-gtk/setup.c:2047
+msgid "Categories"
+msgstr "Kategorijas"
+
+#: src/fe-gtk/setup.c:2256
+msgid ""
+"You cannot place the tree on the top or bottom!\n"
+"Please change to the <b>Tabs</b> layout in the <b>View</b> menu first."
+msgstr ""
+
+#: src/fe-gtk/setup.c:2283
+msgid "Invalid time stamp format! See the strftime MSDN article for details."
+msgstr ""
+
+#: src/fe-gtk/setup.c:2290
+msgid "Some settings were changed that require a restart to take full effect."
+msgstr ""
+
+#: src/fe-gtk/setup.c:2298
+msgid ""
+"*WARNING*\n"
+"Auto accepting DCC to your home directory\n"
+"can be dangerous and is exploitable. Eg:\n"
+"Someone could send you a .bash_profile"
+msgstr ""
+"*BRĪDINĀJUMS*\n"
+"Automātiski akceptēt DCC uz savu mājas direktoriju\n"
+"var būt bīstami un viegli exploitējams. Piem.:\n"
+"Kāds var atsūtīt tev .bash_profile"
+
+#: src/fe-gtk/setup.c:2331
+#, fuzzy
+msgid ": Preferences"
+msgstr "Preferences..."
+
+#: src/fe-gtk/textgui.c:180
+msgid "There was an error parsing the string"
+msgstr "Atgadījās kļūda parsējot virkni"
+
+#: src/fe-gtk/textgui.c:188
+#, c-format
+msgid "This signal is only passed %d args, $%d is invalid"
+msgstr "Šis signāls izdeva tikai %d argumentus, $%d ir nepareizs"
+
+#: src/fe-gtk/textgui.c:304 src/fe-gtk/textgui.c:327
+msgid "Print Texts File"
+msgstr "Drukāt Teksta Failu"
+
+#: src/fe-gtk/textgui.c:372
+msgid "Edit Events"
+msgstr "Rediģēt Notikumus"
+
+#: src/fe-gtk/textgui.c:423
+msgid "$ Number"
+msgstr "$ Numurs"
+
+#: src/fe-gtk/textgui.c:440
+#, fuzzy
+msgid "Load From..."
+msgstr "Ielādēt No"
+
+#: src/fe-gtk/textgui.c:441
+msgid "Test All"
+msgstr "Testēt Visus"
+
+#: src/fe-gtk/urlgrab.c:97
+msgid "URL"
+msgstr ""
+
+#: src/fe-gtk/urlgrab.c:199
+#, fuzzy
+msgid ": URL Grabber"
+msgstr "URL Savācējs..."
+
+#: src/fe-gtk/urlgrab.c:212
+#, fuzzy
+msgid "Clear list"
+msgstr "Lietotāja saraksts"
+
+#: src/fe-gtk/urlgrab.c:214
+msgid "Copy selected URL"
+msgstr ""
+
+#: src/fe-gtk/urlgrab.c:214
+#, fuzzy
+msgid "Copy"
+msgstr "Apcirpt"
+
+#: src/fe-gtk/urlgrab.c:216
+#, fuzzy
+msgid "Save list to a file"
+msgstr "Nevar ierakstīt tajā failā."
+
+#: src/fe-gtk/userlistgui.c:122
+#, c-format
+msgid "%d ops, %d total"
+msgstr ""
+
+#, fuzzy
+#~ msgid "Save Settings to Disk"
+#~ msgstr "Saglabāt Uzstādījumus pie iziešanas"
+
+#~ msgid "No"
+#~ msgstr "Nē"
+
+#~ msgid "Yes"
+#~ msgstr "Jā"
+
+#~ msgid "Cannot create ~/.xchat2"
+#~ msgstr "Nevaru izveidot ~/.xchat2"
+
+#~ msgid "LASTLOG <string>, searches for a string in the buffer"
+#~ msgstr "LASTLOG <rindiņa>, buferī meklē rindiņu"
+
+#~ msgid "PID"
+#~ msgstr "PID"
+
+#~ msgid "Servername"
+#~ msgstr "Servervārds"
+
+#~ msgid "Former Czechoslovakia"
+#~ msgstr "Bijusī Čehoslovākija"
+
+#~ msgid "France, Metropolitan"
+#~ msgstr "Francija, Galvaspilsēta"
+
+#~ msgid "Neutral Zone"
+#~ msgstr "Neitrālā Zona"
+
+#~ msgid "US Minor Outlying Islands"
+#~ msgstr "ASV Mazās Pieguļošās Salas"
+
+#~ msgid "Zaire"
+#~ msgstr "Zaira"
+
+#, fuzzy
+#~ msgid "Abort Chat"
+#~ msgstr "Par X-Chat"
+
+#, fuzzy
+#~ msgid "Userinfo"
+#~ msgstr "Lietotājs"
+
+#, fuzzy
+#~ msgid "Time"
+#~ msgstr "Laiks"
+
+#, fuzzy
+#~ msgid "Finger"
+#~ msgstr "Nigēra"
+
+#, fuzzy
+#~ msgid "Oper"
+#~ msgstr "Atvērt"
+
+#, fuzzy
+#~ msgid "Mode"
+#~ msgstr "Mod"
+
+#, fuzzy
+#~ msgid "Ignore User"
+#~ msgstr "Ignorēšanas Maska:"
+
+#, fuzzy
+#~ msgid "UnIgnore User"
+#~ msgstr "Neignorēt"
+
+#~ msgid "Info"
+#~ msgstr "Info"
+
+#, fuzzy
+#~ msgid "Trace"
+#~ msgstr "Francija"
+
+#, fuzzy
+#~ msgid "UserHost"
+#~ msgstr "Lietotāji"
+
+#, fuzzy
+#~ msgid "Telnet"
+#~ msgstr "Dzēst"
+
+#~ msgid "Unban"
+#~ msgstr "NeIzraidīt"
+
+#~ msgid "I can't save an empty list!"
+#~ msgstr "Nevaru saglabāt tukšu sarakstu!"
+
+#~ msgid "List display options:"
+#~ msgstr "Parādīt displeja opcijas:"
+
+#, fuzzy
+#~ msgid "Minimum Users:"
+#~ msgstr "Minimums Lietotāju: "
+
+#, fuzzy
+#~ msgid "Maximum Users:"
+#~ msgstr "Maksimums Lietotāju: "
+
+#, fuzzy
+#~ msgid "Regex Match:"
+#~ msgstr "Regex Atbilstība: "
+
+#~ msgid "Apply"
+#~ msgstr "Pielietot"
+
+#~ msgid "Refresh the list"
+#~ msgstr "Atjaunināt sarakstu"
+
+#~ msgid "Save the list"
+#~ msgstr "Saglabāt sarakstu"
+
+#~ msgid ""
+#~ "      File: %s\n"
+#~ "   To/From: %s\n"
+#~ "      Size: %u\n"
+#~ "      Port: %d\n"
+#~ " IP Number: %s\n"
+#~ "Start Time: %s   Max CPS: %d\n"
+#~ msgstr ""
+#~ "        Fails: %s\n"
+#~ "         Uz/No: %s\n"
+#~ "        Izmērs: %u\n"
+#~ "         Ports: %d\n"
+#~ "     IP Numurs: %s\n"
+#~ "Sākšanas Laiks: %s   Maks.CPS: %d\n"
+
+#~ msgid "MIME Type"
+#~ msgstr "MIME Tips"
+
+#~ msgid "X-Chat: File Receive List"
+#~ msgstr "X-Chat: Saņemamo Failu Saraksts"
+
+#~ msgid "Open"
+#~ msgstr "Atvērt"
+
+#~ msgid "Ack"
+#~ msgstr "Ack"
+
+#~ msgid "To"
+#~ msgstr "Uz"
+
+#~ msgid "To/From"
+#~ msgstr "Uz/No"
+
+#, fuzzy
+#~ msgid "Options"
+#~ msgstr "Kanāla Opcijas"
+
+#~ msgid "X-Chat: Edit Key Bindings"
+#~ msgstr "X-Chat: Rediģēt Taustiņu Atbilstības"
+
+#~ msgid "Add new"
+#~ msgstr "Pievienot jaunu"
+
+#~ msgid "New"
+#~ msgstr "Jauns"
+
+#, fuzzy
+#~ msgid "Delete All"
+#~ msgstr "Dzēst"
+
+#~ msgid "No other tabs open, quit xchat?"
+#~ msgstr "Nav atvērtas citas sadaļas, iziet no xchat?"
+
+#, fuzzy
+#~ msgid "Show join/part messages"
+#~ msgstr "Pīkstiens uz privātām ziņām"
+
+#~ msgid "Color paste"
+#~ msgstr "Krāsas ievietošana"
+
+#~ msgid "Close this tab/window"
+#~ msgstr "Aizvērt šo sadaļu/logu"
+
+#~ msgid "User: %s"
+#~ msgstr "Lietotājs: %s"
+
+#~ msgid "Realname: %s"
+#~ msgstr "Īstais Vārds: %s"
+
+#, fuzzy
+#~ msgid "User List Buttons"
+#~ msgstr "Lietotājsaraksta Pogas..."
+
+#~ msgid "Settings saved."
+#~ msgstr "Uzstādījumi saglabāti."
+
+#~ msgid "X-Chat: URL Handlers"
+#~ msgstr "X-Chat: URL Noteicēji"
+
+#~ msgid "X-Chat: CTCP Replies"
+#~ msgstr "X-Chat: CTCP Atbildes"
+
+#~ msgid "_X-Chat"
+#~ msgstr "_X-Chat"
+
+#~ msgid "New Shell Tab..."
+#~ msgstr "Jauna Čaulas Sadaļa..."
+
+#~ msgid "_IRC"
+#~ msgstr "_IRC"
+
+#~ msgid "Invisible"
+#~ msgstr "Neredzams"
+
+#~ msgid "Receive Wallops"
+#~ msgstr "Saņemt Wallops"
+
+#~ msgid "Receive Server Notices"
+#~ msgstr "Saņemt Servera Paziņojumus"
+
+#~ msgid "Auto Rejoin when Kicked"
+#~ msgstr "Auto Pievienoties pie Izmešanas"
+
+#~ msgid "Never-give-up ReConnect"
+#~ msgstr "Nekad nepadoties pie Pieslēgšanās"
+
+#~ msgid "Auto Accept Direct Chat"
+#~ msgstr "Auto Pieņemt Tiešo Tērzēšanu"
+
+#~ msgid "Lists"
+#~ msgstr "Saraksti"
+
+#~ msgid "Key Bindings..."
+#~ msgstr "Taustiņu Atbilstības..."
+
+#~ msgid "Save Settings now"
+#~ msgstr "Saglabāt Uzstādījumus tagad"
+
+#~ msgid "File Receive..."
+#~ msgstr "Faila Saņemšana..."
+
+#~ msgid "File Send..."
+#~ msgstr "Faila Sūtīšana..."
+
+#~ msgid "Notify List..."
+#~ msgstr "Paziņojumu Saraksts..."
+
+#~ msgid "X-Chat: Notify List"
+#~ msgstr "X-Chat: Paziņojumu Saraksts"
+
+#~ msgid "Add"
+#~ msgstr "Pievienot"
+
+#, fuzzy
+#~ msgid "X-Chat: Plugins and Scripts"
+#~ msgstr "X-Chat Iespraudņi"
+
+#~ msgid "Save rawlog"
+#~ msgstr "Saglabāt jēlžurnālu"
+
+#~ msgid "Save rawlog..."
+#~ msgstr "Saglabāt jēlžurnālu..."
+
+#~ msgid "Close"
+#~ msgstr "Aizvērt"
+
+#~ msgid "Settings for %s"
+#~ msgstr "Uzstādījumi priekš %s"
+
+#~ msgid "_Remove \"%s\""
+#~ msgstr "_Izņemt \"%s\""
+
+#~ msgid "_Add new server"
+#~ msgstr "_Pievienot jaunu serveri"
+
+#~ msgid "Move \"%s\" _down"
+#~ msgstr "Pārvietot \"%s\" _lejup"
+
+#~ msgid "Move \"%s\" _up"
+#~ msgstr "Pārvietot \"%s\" _augšup"
+
+#~ msgid "_Add new network"
+#~ msgstr "_Pievienot jaunu tīklu"
+
+#~ msgid "Global User Info"
+#~ msgstr "Vispārēja Lietotāja Info"
+
+#~ msgid "Nick Names:"
+#~ msgstr "Segvārdi:"
+
+#~ msgid "User Name:"
+#~ msgstr "Lietotāja Vārds:"
+
+#~ msgid "Connect in a _new tab"
+#~ msgstr "Pieslēgties _jaunā sadaļā"
+
+#~ msgid "Servers"
+#~ msgstr "Serveri"
+
+#~ msgid ""
+#~ "Command to execute after connecting. Can be used to authenticate to "
+#~ "NickServ"
+#~ msgstr ""
+#~ "Komanda, ko izpildīt pēc pieslēgšanās. Var tikt lietots, lai autorizētos "
+#~ "ar NickSev"
+
+#~ msgid "Use secure SSL"
+#~ msgstr "Lietot drošo SSL"
+
+#~ msgid "Settings for Selected Network"
+#~ msgstr "Uzstādījumi Izvēlētajam Tīklam"
+
+#~ msgid "Edit mode"
+#~ msgstr "Rediģēšanas režīms"
+
+#~ msgid "X-Chat: Server List"
+#~ msgstr "X-Chat: Serveru Saraksts"
+
+#~ msgid "Strip mIRC color"
+#~ msgstr "Izņemt mIRC krāsu"
+
+#~ msgid "Tint red:"
+#~ msgstr "Sarkanais tonis:"
+
+#~ msgid "Tint green:"
+#~ msgstr "Zaļais tonis:"
+
+#~ msgid "Tint blue:"
+#~ msgstr "Zilais tonis:"
+
+#~ msgid "Double-click command:"
+#~ msgstr "Dubultklikšķa komanda:"
+
+#~ msgid "Userlist buttons enabled"
+#~ msgstr "Lietotājsaraksta pogas aktivizētas"
+
+#, fuzzy
+#~ msgid "Resizable userlist"
+#~ msgstr "Parādīt/Paslēpt lietotāju sarakstu"
+
+#~ msgid "Pop new tabs to front"
+#~ msgstr "Jaunas sadaļas izlec priekšpusē"
+
+#~ msgid "Auto open DCC send list"
+#~ msgstr "Auto atvērt DCC sūtīšanas sarakstu"
+
+#~ msgid "Convert spaces to underscore"
+#~ msgstr "Konvertēt atstarpes par zemsvītrām"
+
+#~ msgid "In filenames, before sending"
+#~ msgstr "Failu nosaukumos pirms sūtīšanas"
+
+#~ msgid "Auto open DCC chat list"
+#~ msgstr "Auto atvērt DCC tērzēšanas sarakstu"
+
+#~ msgid "Auto open DCC receive list"
+#~ msgstr "Auto atvērt DCC saņemšanas sarakstu"
+
+#~ msgid "Max. send CPS:"
+#~ msgstr "Maks. sūtīšanas CPS:"
+
+#~ msgid "Max. receive CPS:"
+#~ msgstr "Maks. saņemšanas CPS:"
+
+#~ msgid "Max. global send CPS:"
+#~ msgstr "Maks. vispārīgās sūtīšanas CPS:"
+
+#~ msgid "Max. global receive CPS:"
+#~ msgstr "Maks. vispārīgās saņemšanas CPS:"
+
+#~ msgid "(Leave at zero for full speed file transfers)."
+#~ msgstr "(Atstāt nulli pilna ātruma failu pārsūtīšanai)."
+
+#~ msgid "Default part message:"
+#~ msgstr "Noklusētais pamešanas paziņojums:"
+
+#~ msgid "Default away message:"
+#~ msgstr "Noklusētais prombūtnes paziņojums:"
+
+#~ msgid "(Can be a text file relative to ~/.xchat2/)."
+#~ msgstr "(Var būt teksta fails attiecībā pret ~/.xchat2/)."
+
+#, fuzzy
+#~ msgid "(Can be a text file relative to config dir)."
+#~ msgstr "(Var būt teksta fails attiecībā pret conf\\)."
+
+#~ msgid "Beep on channel messages"
+#~ msgstr "Pīkstiens uz kanāla ziņām"
+
+#~ msgid "(See strftime manpage for details)."
+#~ msgstr "(Apskaties strftime manlapas papildus info)."
+
+#~ msgid "Mark back:"
+#~ msgstr "Iezīmēt fona:"
+
+#~ msgid "X-Chat: Preferences"
+#~ msgstr "X-Chat: Uzstādījumi"
+
+#~ msgid "Select a file to save to"
+#~ msgstr "Izvēlies fialu, kurā glabāt:"
+
+#, fuzzy
+#~ msgid "Error name"
+#~ msgstr "Kļūda"
+
+#~ msgid "Error string"
+#~ msgstr "Kļūdas virkne"
+
+#~ msgid "Proxy port:"
+#~ msgstr "Starpservera ports:"
+
+#~ msgid "Proxy type:"
+#~ msgstr "Starpservera tips:"
+
+#~ msgid ""
+#~ "Options:\n"
+#~ "  -d,  --cfgdir DIRECTORY   use a different config dir\n"
+#~ "  -a,  --no-auto            don't auto connect\n"
+#~ "  -v,  --version            show version information\n"
+#~ "\n"
+#~ "URL:\n"
+#~ "  irc://server:port/channel\n"
+#~ "\n"
+#~ msgstr ""
+#~ "Opcijas:\n"
+#~ "\n"
+#~ "  -d,  --cfgdir DIREKTORIJA  lietot citu config dir\n"
+#~ "  -a,  --noauto            nepieslēgties automātiski\n"
+#~ "  -v,  --version            parādīt versijas informāciju\n"
+#~ "\n"
+#~ "URL:\n"
+#~ "  irc://serveris:ports/kanāls\n"
+#~ "\n"
+
+#~ msgid "Wipe"
+#~ msgstr "Iztīrīt"
+
+#~ msgid "new!new@new.com"
+#~ msgstr "jauns!jauns@jauns.lv"
+
+#~ msgid "Chan"
+#~ msgstr "Kanāls"
+
+#~ msgid "Ignore Mask:"
+#~ msgstr "Ignorēšanas Maska:"
+
+#~ msgid "OK"
+#~ msgstr "Labi"
+
+#~ msgid "Attach/Detach this tab"
+#~ msgstr "Pievienot/Atdalīt šo sadaļu"
+
+#~ msgid "(%s) Channel settings"
+#~ msgstr "(%s) Kanāla uzstādījumi"
+
+#~ msgid "Hide join/parts"
+#~ msgstr "Palsēpt pievienošanos/pamešanu"
+
+#~ msgid "Only highlight tabs on channel messages"
+#~ msgstr "Izgaismot sadaļas tikai pie kanāla ziņām"
+
+#~ msgid "port"
+#~ msgstr "ports"
+
+#~ msgid "Load plugin..."
+#~ msgstr "Ielādēt iespraudni..."
+
+#~ msgid "X-Chat Homepage..."
+#~ msgstr "X-Chat Mājas lapa..."
+
+#~ msgid "Online Docs..."
+#~ msgstr "Tiešsaistes Dokumeni..."
+
+#~ msgid "About X-Chat..."
+#~ msgstr "Par X-Chat..."
+
+#~ msgid "Choose File"
+#~ msgstr "Izvēlies Failu"
