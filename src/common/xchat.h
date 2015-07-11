@@ -39,14 +39,6 @@
 
 #include "history.h"
 
-#ifndef HAVE_SNPRINTF
-#define snprintf g_snprintf
-#endif
-
-#ifndef HAVE_VSNPRINTF
-#define vsnprintf _vsnprintf
-#endif
-
 #ifdef USE_DEBUG
 #define malloc(n) xchat_malloc(n, __FILE__, __LINE__)
 #define realloc(n, m) xchat_realloc(n, m, __FILE__, __LINE__)
@@ -460,14 +452,6 @@ typedef struct session
 	gtk_xtext_search_flags lastlog_flags;
 } session;
 
-struct msproxy_state_t
-{
-	gint32				clientid;
-	gint32				serverid;
-	unsigned char		seq_recv;		/* seq number of last packet recv.	*/
-	unsigned char		seq_sent;		/* seq number of last packet sent.	*/
-};
-
 /* SASL Mechanisms */
 #define MECH_PLAIN 0
 #define MECH_BLOWFISH 1
@@ -525,7 +509,6 @@ typedef struct server
 	int proxy_sok;				/* Additional information for MS Proxy beast */
 	int proxy_sok4;
 	int proxy_sok6;
-	struct msproxy_state_t msp_state;
 	int id;					/* unique ID number (for plugin API) */
 #ifdef USE_OPENSSL
 	SSL *ssl;

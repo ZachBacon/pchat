@@ -20,7 +20,6 @@ EXTRA_DIST = \
 	inet.h \
 	make-te.c \
 	modes.h \
-	msproxy.h \
 	network.h \
 	notify.h \
 	outbound.h \
@@ -44,10 +43,6 @@ if USE_OPENSSL
 ssl_c = ssl.c
 endif
 
-if USE_MSPROXY
-msproxy_c = msproxy.c
-endif
-
 if OS_W32
 identd_c = identd.c
 endif
@@ -66,7 +61,7 @@ endif
 noinst_PROGRAMS = make-te
 
 libpchatcommon_a_SOURCES = cfgfiles.c chanopt.c ctcp.c dcc.c xchat.c \
-	history.c ignore.c $(identd_c) inbound.c marshal.c modes.c $(msproxy_c) network.c notify.c \
+	history.c ignore.c $(identd_c) inbound.c marshal.c modes.c network.c notify.c \
 	outbound.c plugin.c plugin-timer.c proto-irc.c server.c servlist.c \
 	$(ssl_c) text.c tree.c url.c userlist.c util.c
 libpchatcommon_a_CFLAGS = $(LIBPROXY_CFLAGS)

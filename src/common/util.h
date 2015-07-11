@@ -33,6 +33,7 @@
 #ifndef HEXCHAT_UTIL_H
 #define HEXCHAT_UTIL_H
 
+
 #define rfc_tolower(c) (rfc_tolowertab[(unsigned char)(c)])
 
 extern const unsigned char rfc_tolowertab[];
@@ -75,8 +76,8 @@ guint32 str_hash (const char *key);
 guint32 str_ihash (const unsigned char *key);
 void safe_strcpy (char *dest, const char *src, int bytes_left);
 void canonalize_key (char *key);
-int portable_mode ();
-int unity_mode ();
+int portable_mode (void);
+int unity_mode (void);
 GSList *get_subdirs (const char *path);
 char *encode_sasl_pass_plain (char *user, char *pass);
 char *encode_sasl_pass_blowfish (char *user, char *pass, char *data);

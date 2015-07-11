@@ -37,7 +37,6 @@ AH_VERBATIM([PREFIX],[#undef PREFIX])
 AH_VERBATIM([XCHATLIBDIR],[#undef XCHATLIBDIR])
 AH_VERBATIM([XCHATSHAREDIR],[#undef XCHATSHAREDIR])
 AH_VERBATIM([SOCKS],[#undef SOCKS])
-AH_VERBATIM([USE_MSPROXY],[#undef USE_MSPROXY])
 AH_VERBATIM([USE_LIBPROXY],[#undef USE_LIBPROXY])
 AH_VERBATIM([HAVE_ISO_CODES],[#undef HAVE_ISO_CODES])
 AH_VERBATIM([HAVE_GTK_MAC],[#undef HAVE_GTK_MAC])
@@ -141,10 +140,6 @@ AC_ARG_ENABLE(libnotify,
 AC_ARG_ENABLE(libcanberra,
 	[AS_HELP_STRING([--disable-libcanberra],[disable libcanberra support])],
 		libcanberra=$enableval, libcanberra=yes)
-
-AC_ARG_ENABLE(ntlm,
-	[AS_HELP_STRING([--enable-ntlm],[enable Microsoft\'s NTLM auth (libntlm) library support (default: no)])],
-	ntlm=$enableval, ntlm=no)
 
 AC_ARG_ENABLE(libproxy,
 	[AS_HELP_STRING([--disable-libproxy],[disable libproxy support (default: auto)])],
@@ -646,7 +641,6 @@ fi
 AM_CONDITIONAL(USE_OPENSSL, test "x$openssl" = "xyes")
 AM_CONDITIONAL(USE_LIBNOTIFY, test "x$libnotify" = "xyes")
 AM_CONDITIONAL(USE_LIBCANBERRA, test "x$libcanberra" = "xyes")
-AM_CONDITIONAL(USE_MSPROXY, test "x$ntlm" = "xyes")
 AM_CONDITIONAL(DO_TEXT, test "x$textfe" = "xyes")
 AM_CONDITIONAL(DO_GTK, test "x$gtkfe" = "xyes")
 AM_CONDITIONAL(DO_PERL, test "x$perl" = "xyes")
@@ -674,20 +668,6 @@ if test "$socks" = yes; then
 			AC_DEFINE(SOCKS)
 			LIBS="$LIBS -lsocks5"
 		fi
-	fi
-fi
-
-dnl *********************************************************************
-dnl ** MS PROXY *********************************************************
-dnl *********************************************************************
-
-have_ntlm="no"
-if test "x$ntlm" = "xyes" ; then
-	have_ntlm="no"
-	AC_CHECK_LIB(ntlm, ntlm_smb_encrypt, have_ntlm=yes)
-	if test "$have_ntlm" = yes; then
-		LIBS="$LIBS -lntlm"
-		AC_DEFINE(USE_MSPROXY)
 	fi
 fi
 
@@ -797,8 +777,7 @@ AC_TRY_COMPILE(
 	],
 	AC_MSG_RESULT(no))
 
-dnl if we don\'t have this, use g_snprintf instead
-AC_CHECK_FUNCS(snprintf vsnprintf memrchr strtoull)
+AC_CHECK_FUNCS(memrchr)
 
 AC_CHECK_FUNC(gethostbyname, ,
 	AC_CHECK_LIB(resolv, gethostbyname, ,
@@ -913,7 +892,6 @@ echo libcanberra support ... : $libcanberra
 echo Plugin interface ...... : $plugin
 echo NLS/gettext ........... : $USE_NLS
 echo IPv6 support .......... : $ipv6
-echo MS Proxy NTLM \(ISA\) ... : $have_ntlm
 echo libproxy support ...... : $libproxy
 echo
 echo Perl .................. : $perl

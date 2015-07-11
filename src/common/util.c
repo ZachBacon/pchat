@@ -68,10 +68,6 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 
-#ifndef HAVE_SNPRINTF
-#define snprintf g_snprintf
-#endif
-
 #ifdef USE_DEBUG
 
 #undef free

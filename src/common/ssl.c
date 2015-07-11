@@ -70,7 +70,7 @@ __SSL_critical_error (char *funcname)
 /* +++++ SSL functions +++++ */
 
 SSL_CTX *
-_SSL_context_init (void (*info_cb_func), int server)
+_SSL_context_init (void (*info_cb_func))
 {
 	SSL_CTX *ctx;
 #ifdef WIN32
@@ -87,15 +87,6 @@ _SSL_context_init (void (*info_cb_func), int server)
 	/* used in SSL_connect(), SSL_accept() */
 	SSL_CTX_set_info_callback (ctx, info_cb_func);
 
-#ifdef WIN32
-	/* under win32, OpenSSL needs to be seeded with some randomness */
-	for (i = 0; i < 128; i++)
-	{
-		r = rand ();
-		RAND_seed ((unsigned char *)&r, sizeof (r));
-	}
-#endif
-
 	return(ctx);
 }
 
@@ -110,8 +101,8 @@ ASN1_TIME_snprintf (char *buf, int buf_len, ASN1_TIME * tm)
 	buf[0] = 0;
 	if (expires != NULL)
 	{
-		memset (buf, 0, buf_len);
-		strncpy (buf, expires, 24);
+		/* expires is not \0 terminated */
+		safe_strcpy (buf, expires, MIN(24, buf_len));
 	}
 	BIO_free (inMem);
 }
@@ -173,17 +164,17 @@ _SSL_get_cert_info (struct cert_info *cert_info, SSL * ssl)
 
 	peer_pkey = X509_get_pubkey (peer_cert);
 
-	strncpy (cert_info->algorithm,
+	safe_strcpy (cert_info->algorithm,
 				(alg == NID_undef) ? "Unknown" : OBJ_nid2ln (alg),
 				sizeof (cert_info->algorithm));
 	cert_info->algorithm_bits = EVP_PKEY_bits (peer_pkey);
-	strncpy (cert_info->sign_algorithm,
+	safe_strcpy (cert_info->sign_algorithm,
 				(sign_alg == NID_undef) ? "Unknown" : OBJ_nid2ln (sign_alg),
 				sizeof (cert_info->sign_algorithm));
 	/* EVP_PKEY_bits(ca_pkey)); */
 	cert_info->sign_algorithm_bits = 0;
-	strncpy (cert_info->notbefore, notBefore, sizeof (cert_info->notbefore));
-	strncpy (cert_info->notafter, notAfter, sizeof (cert_info->notafter));
+	safe_strcpy (cert_info->notbefore, notBefore, sizeof (cert_info->notbefore));
+	safe_strcpy (cert_info->notafter, notAfter, sizeof (cert_info->notafter));
 
 	EVP_PKEY_free (peer_pkey);
 
@@ -212,9 +203,9 @@ _SSL_get_cipher_info (SSL * ssl)
 
 
 	c = SSL_get_current_cipher (ssl);
-	strncpy (chiper_info.version, SSL_CIPHER_get_version (c),
+	safe_strcpy (chiper_info.version, SSL_CIPHER_get_version (c),
 				sizeof (chiper_info.version));
-	strncpy (chiper_info.chiper, SSL_CIPHER_get_name (c),
+	safe_strcpy (chiper_info.chiper, SSL_CIPHER_get_name (c),
 				sizeof (chiper_info.chiper));
 	SSL_CIPHER_get_bits (c, &chiper_info.chiper_bits);
 

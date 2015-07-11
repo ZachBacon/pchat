@@ -91,7 +91,7 @@ xchat_remote (void)
 	g_object_unref (dbus);
 
 	if (!xchat_running) {
-		//dbus_g_connection_unref (connection);
+		/* dbus_g_connection_unref (connection); */
 		return;
 	}
 

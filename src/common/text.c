@@ -170,7 +170,7 @@ scrollback_shrink (session *sess)
 		p++;
 	}
 
-	fh = g_open (file, O_CREAT | O_TRUNC | O_APPEND | O_WRONLY, 0644);
+	fh = g_open (file, O_CREAT | O_TRUNC | O_APPEND | O_WRONLY | OFLAGS, 0644);
 	g_free (file);
 	if (fh == -1)
 	{
@@ -226,7 +226,7 @@ scrollback_save (session *sess, char *text)
 		if ((buf = scrollback_get_filename (sess)) == NULL)
 			return;
 
-		sess->scrollfd = g_open (buf, O_CREAT | O_APPEND | O_WRONLY, 0644);
+		sess->scrollfd = g_open (buf, O_CREAT | O_APPEND | O_WRONLY | OFLAGS, 0644);
 		g_free (buf);
 		if (sess->scrollfd == -1)
 			return;
@@ -303,9 +303,9 @@ scrollback_load (session *sess)
 			if (buf[0] == 'T')
 			{
 				if (sizeof (time_t) == 4)
-					stamp = strtoul (buf + 2, NULL, 10);
+					stamp = g_ascii_strtoul (buf + 2, NULL, 10);
 				else
-					stamp = strtoull (buf + 2, NULL, 10); /* in case time_t is 64 bits */
+					stamp = g_ascii_strtoull (buf + 2, NULL, 10); /* in case time_t is 64 bits */
 				text = strchr (buf + 3, ' ');
 				if (text)
 				{
@@ -356,7 +356,7 @@ log_close (session *sess)
 	{
 		currenttime = time (NULL);
 		write (sess->logfd, obuf,
-			 snprintf (obuf, sizeof (obuf) - 1, _("**** ENDING LOGGING AT %s\n"),
+			 g_snprintf (obuf, sizeof (obuf) - 1, _("**** ENDING LOGGING AT %s\n"),
 						  ctime (&currenttime)));
 		close (sess->logfd);
 		sess->logfd = -1;
@@ -480,34 +480,6 @@ log_insert_vars (char *buf, int bufsize, char *fmt, char *c, char *n, char *s)
 	}
 }
 
-static int
-logmask_is_fullpath ()
-{
-	/* Check if final path/filename is absolute or relative.
-	 * If one uses log mask variables, such as "%c/...", %c will be empty upon
-	 * connecting since there's no channel name yet, so we have to make sure
-	 * we won't try to write to the FS root. On Windows we can be sure it's
-	 * full path if the 2nd character is a colon since Windows doesn't allow
-	 * colons in filenames.
-	 */
-#ifdef WIN32
-	/* Treat it as full path if it
-	 * - starts with '\' which denotes the root directory of the current drive letter
-	 * - starts with a drive letter and followed by ':'
-	 */
-	if (prefs.pchat_irc_logmask[0] == '\\' || (((prefs.pchat_irc_logmask[0] >= 'A' && prefs.pchat_irc_logmask[0] <= 'Z') || (prefs.pchat_irc_logmask[0] >= 'a' && prefs.pchat_irc_logmask[0] <= 'z')) && prefs.pchat_irc_logmask[1] == ':'))
-#else
-	if (prefs.pchat_irc_logmask[0] == '/')
-#endif
-	{
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
-}
-
 static char *
 log_create_pathname (char *servname, char *channame, char *netname)
 {
@@ -544,14 +516,16 @@ log_create_pathname (char *servname, char *channame, char *netname)
 	tm = localtime (&now);
 	strftime_validated (fnametime, sizeof (fnametime), fname, tm);
 
-	/* create final path/filename */
-	if (logmask_is_fullpath ())
+	/* If one uses log mask variables, such as "%c/...", %c will be empty upon
+	 * connecting since there's no channel name yet, so we have to make sure
+	 * we won't try to write to the FS root. */
+	if (g_path_is_absolute (prefs.pchat_irc_logmask))
 	{
-		snprintf (fname, sizeof (fname), "%s", fnametime);
+		g_snprintf (fname, sizeof (fname), "%s", fnametime);
 	}
 	else	/* relative path */
 	{
-		snprintf (fname, sizeof (fname), "%s" G_DIR_SEPARATOR_S "logs" G_DIR_SEPARATOR_S "%s", get_xdir (), fnametime);
+		g_snprintf (fname, sizeof (fname), "%s" G_DIR_SEPARATOR_S "logs" G_DIR_SEPARATOR_S "%s", get_xdir (), fnametime);
 	}
 
 	/* create all the subdirectories */
@@ -572,11 +546,7 @@ log_open_file (char *servname, char *channame, char *netname)
 	if (!file)
 		return -1;
 
-#ifdef WIN32
-	fd = g_open (file, O_CREAT | O_APPEND | O_WRONLY, S_IREAD|S_IWRITE);
-#else
-	fd = g_open (file, O_CREAT | O_APPEND | O_WRONLY, 0644);
-#endif
+	fd = g_open (file, O_CREAT | O_APPEND | O_WRONLY | OFLAGS, 0644);
 	g_free (file);
 
 	if (fd == -1)
@@ -826,7 +796,7 @@ iso_8859_1_to_utf8 (unsigned char *text, int len, gsize *bytes_written)
 }
 
 char *
-text_validate (char **text, int *len)
+text_validate (char **text, gssize *len)
 {
 	char *utf;
 	gsize utf_len;
@@ -882,7 +852,7 @@ PrintTextTimeStamp (session *sess, char *text, time_t timestamp)
 		conv = NULL;
 	} else
 	{
-		int len = -1;
+		gssize len = -1;
 		conv = text_validate ((char **)&text, &len);
 	}
 
@@ -978,7 +948,7 @@ PrintTextTimeStampf (session *sess, time_t timestamp, char *format, ...)
    Each XP_TE_* signal is hard coded to call text_emit which calls
    display_event which decodes the data
 
-   This means that this system *should be faster* than snprintf because
+   This means that this system *should be faster* than g_snprintf because
    it always 'knows' that format of the string (basically is preparses much
    of the work)
 
@@ -1565,7 +1535,7 @@ pevent_make_pntevts ()
 			free (pntevts[i]);
 		if (pevt_build_string (pntevts_text[i], &(pntevts[i]), &m) != 0)
 		{
-			snprintf (out, sizeof (out),
+			g_snprintf (out, sizeof (out),
 						 _("Error parsing event %s.\nLoading default."), te[i].name);
 			fe_message (out, FE_MSG_WARN);
 			free (pntevts_text[i]);
@@ -1747,7 +1717,7 @@ pevent_check_all_loaded ()
 		if (pntevts_text[i] == NULL)
 		{
 			/*printf ("%s\n", te[i].name);
-			snprintf(out, sizeof(out), "The data for event %s failed to load. Reverting to defaults.\nThis may be because a new version of PChat is loading an old config file.\n\nCheck all print event texts are correct", evtnames[i]);
+			g_snprintf(out, sizeof(out), "The data for event %s failed to load. Reverting to defaults.\nThis may be because a new version of PChat is loading an old config file.\n\nCheck all print event texts are correct", evtnames[i]);
 			   gtkutil_simpledialog(out); */
 			/* make-te.c sets this 128 flag (DON'T call gettext() flag) */
 			if (te[i].num_args & 128)
@@ -1778,9 +1748,10 @@ load_text_events ()
 #define ARG_FLAG(argn) (1 << (argn))
 
 void
-format_event (session *sess, int index, char **args, char *o, int sizeofo, unsigned int stripcolor_args)
+format_event (session *sess, int index, char **args, char *o, gsize sizeofo, unsigned int stripcolor_args)
 {
-	int len, oi, ii, numargs;
+	int len, ii, numargs;
+	gsize oi;
 	char *i, *ar, d, a, done_all = FALSE;
 
 	i = pntevts[index];
@@ -1838,19 +1809,10 @@ format_event (session *sess, int index, char **args, char *o, int sizeofo, unsig
 			done_all = TRUE;
 			continue;
 		case 3:
-/*			if (sess->type == SESS_DIALOG)
-			{
-				if (prefs.dialog_indent_nicks)
-					o[oi++] = '\t';
-				else
-					o[oi++] = ' ';
-			} else
-			{*/
-				if (prefs.pchat_text_indent)
-					o[oi++] = '\t';
-				else
-					o[oi++] = ' ';
-			/*}*/
+		if (prefs.pchat_text_indent)
+				o[oi++] = '\t';
+		else
+				o[oi++] = ' ';
 			break;
 		}
 	}
@@ -1973,7 +1935,7 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 		}
 		if (d < '1' || d > '9')
 		{
-			snprintf (o, sizeof (o), "Error, invalid argument $%c\n", d);
+			g_snprintf (o, sizeof (o), "Error, invalid argument $%c\n", d);
 			fe_message (o, FE_MSG_WARN);
 			return 1;
 		}
@@ -2077,7 +2039,7 @@ text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
 
 	if (prefs.pchat_text_color_nicks && (index == XP_TE_CHANACTION || index == XP_TE_CHANMSG))
 	{
-		snprintf (tbuf, sizeof (tbuf), "\003%d%s", text_color_of (a), a);
+		g_snprintf (tbuf, sizeof (tbuf), "\003%d%s", text_color_of (a), a);
 		a = tbuf;
 		stripcolor_args &= ~ARG_FLAG(1);	/* don't strip color from this argument */
 	}
@@ -2203,9 +2165,9 @@ pevent_save (char *fn)
 
 	for (i = 0; i < NUM_XP; i++)
 	{
-		write (fd, buf, snprintf (buf, sizeof (buf),
+		write (fd, buf, g_snprintf (buf, sizeof (buf),
 										  "event_name=%s\n", te[i].name));
-		write (fd, buf, snprintf (buf, sizeof (buf),
+		write (fd, buf, g_snprintf (buf, sizeof (buf),
 										  "event_text=%s\n\n", pntevts_text[i]));
 	}
 
@@ -2247,12 +2209,8 @@ sound_play (const char *file, gboolean quiet)
 		return;
 	}
 
-#ifdef WIN32
 	/* check for fullpath */
-	if (file[0] == '\\' || (((file[0] >= 'A' && file[0] <= 'Z') || (file[0] >= 'a' && file[0] <= 'z')) && file[1] == ':'))
-#else
-	if (file[0] == '/')
-#endif
+	if (g_path_is_absolute (file))
 	{
 		wavfile = g_strdup (file);
 	}
@@ -2374,9 +2332,9 @@ sound_save ()
 	{
 		if (sound_files[i] && sound_files[i][0])
 		{
-			write (fd, buf, snprintf (buf, sizeof (buf),
+			write (fd, buf, g_snprintf (buf, sizeof (buf),
 											  "event=%s\n", te[i].name));
-			write (fd, buf, snprintf (buf, sizeof (buf),
+			write (fd, buf, g_snprintf (buf, sizeof (buf),
 											  "sound=%s\n\n", sound_files[i]));
 		}
 	}

@@ -744,9 +744,9 @@ plugin_emit_keypress (session *sess, unsigned int state, unsigned int keyval,
 	if (!hook_list)
 		return 0;
 
-	sprintf (keyval_str, "%u", keyval);
-	sprintf (state_str, "%u", state);
-	sprintf (len_str, "%d", len);
+	g_sprintf (keyval_str, "%u", keyval);
+	g_sprintf (state_str, "%u", state);
+	g_sprintf (len_str, "%d", len);
 
 	word[0] = "Key Press";
 	word[1] = keyval_str;
@@ -1050,7 +1050,7 @@ void
 xchat_command (xchat_plugin *ph, const char *command)
 {
 	char *conv;
-	int len = -1;
+	gssize len = -1;
 
 	if (!is_session (ph->context))
 	{
@@ -1954,7 +1954,7 @@ xchat_pluginpref_get_str (xchat_plugin *pl, const char *var, char *dest)
 
 	canon = g_strdup (pl->name);
 	canonalize_key (canon);
-	sprintf (confname, "addon_%s.conf", canon);
+	g_sprintf (confname, "addon_%s.conf", canon);
 	g_free (canon);
 
 	/* partly borrowed from palette.c */
@@ -2035,7 +2035,7 @@ xchat_pluginpref_list (xchat_plugin *pl, char* dest)
 
 	token = g_strdup (pl->name);
 	canonalize_key (token);
-	sprintf (confname, "addon_%s.conf", token);
+	g_sprintf (confname, "addon_%s.conf", token);
 	g_free (token);
 
 	fpIn = xchat_fopen_file (confname, "r", 0);

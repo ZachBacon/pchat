@@ -21,8 +21,6 @@
  *      Inferno Nettverk A/S, Norway.  All rights reserved.
  */
 
-/*#define DEBUG_MSPROXY*/
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -61,10 +59,6 @@
 #include <openssl/ssl.h>		  /* SSL_() */
 #include <openssl/err.h>		  /* ERR_() */
 #include "ssl.h"
-#endif
-
-#ifdef USE_MSPROXY
-#include "msproxy.h"
 #endif
 
 #ifdef WIN32
@@ -157,7 +151,7 @@ server_send_real (server *serv, char *buf, int len)
 {
 	fe_add_rawlog (serv, buf, len, TRUE);
 
-	url_check_line (buf, len);
+	url_check_line (buf);
 
 	return tcp_send_real (serv->ssl, serv->sok, serv->encoding, serv->using_irc,
 								 buf, len);
@@ -282,7 +276,7 @@ tcp_sendf (server *serv, char *fmt, ...)
 	int len;
 
 	va_start (args, fmt);
-	len = vsnprintf (send_buf, sizeof (send_buf) - 1, fmt, args);
+	len = g_vsnprintf (send_buf, sizeof (send_buf) - 1, fmt, args);
 	va_end (args);
 
 	send_buf[sizeof (send_buf) - 1] = '\0';
@@ -309,7 +303,7 @@ close_socket (int sok)
 /* handle 1 line of text received from the server */
 
 static void
-server_inline (server *serv, char *line, int len)
+server_inline (server *serv, char *line, gssize len)
 {
 	char *utf_line_allocated = NULL;
 
@@ -327,7 +321,8 @@ server_inline (server *serv, char *line, int len)
 
 		utf_line_allocated = text_validate (&line, &len);
 
-	} else
+	} 
+	else
 	{
 		/* Since the user has an explicit charset set, either
 		via /charset command or from his non-UTF8 locale,
@@ -345,7 +340,7 @@ server_inline (server *serv, char *line, int len)
 		if (encoding != NULL)
 		{
 			char *conv_line; /* holds a copy of the original string */
-			int conv_len; /* tells g_convert how much of line to convert */
+			gsize conv_len; /* tells g_convert how much of line to convert */
 			gsize utf_len;
 			gsize read_len;
 			GError *err;
@@ -593,7 +588,7 @@ ssl_cb_info (SSL * s, int where, int ret)
 
 	return;							  /* FIXME: make debug level adjustable in serverlist or settings */
 
-/*	snprintf (buf, sizeof (buf), "%s (%d)", SSL_state_string_long (s), where);
+/*	g_snprintf (buf, sizeof (buf), "%s (%d)", SSL_state_string_long (s), where);
 	if (g_sess)
 		EMIT_SIGNAL (XP_TE_SSLMESSAGE, g_sess, buf, NULL, NULL, NULL, 0);
 	else
@@ -613,9 +608,9 @@ ssl_cb_verify (int ok, X509_STORE_CTX * ctx)
 	X509_NAME_oneline (X509_get_issuer_name (ctx->current_cert), issuer,
 							 sizeof (issuer));
 
-	snprintf (buf, sizeof (buf), "* Subject: %s", subject);
+	g_snprintf (buf, sizeof (buf), "* Subject: %s", subject);
 	EMIT_SIGNAL (XP_TE_SSLMESSAGE, g_sess, buf, NULL, NULL, NULL, 0);
-	snprintf (buf, sizeof (buf), "* Issuer: %s", issuer);
+	g_snprintf (buf, sizeof (buf), "* Issuer: %s", issuer);
 	EMIT_SIGNAL (XP_TE_SSLMESSAGE, g_sess, buf, NULL, NULL, NULL, 0);
 
 	return (TRUE);					  /* always ok */
@@ -636,7 +631,7 @@ ssl_do_connect (server * serv)
 		if ((err = ERR_get_error ()) > 0)
 		{
 			ERR_error_string (err, err_buf);
-			snprintf (buf, sizeof (buf), "(%d) %s", err, err_buf);
+			g_snprintf (buf, sizeof (buf), "(%d) %s", err, err_buf);
 			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, buf, NULL,
 							 NULL, NULL, 0);
 
@@ -662,59 +657,59 @@ ssl_do_connect (server * serv)
 
 		if (!_SSL_get_cert_info (&cert_info, serv->ssl))
 		{
-			snprintf (buf, sizeof (buf), "* Certification info:");
+			g_snprintf (buf, sizeof (buf), "* Certification info:");
 			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
 							 NULL, 0);
-			snprintf (buf, sizeof (buf), "  Subject:");
+			g_snprintf (buf, sizeof (buf), "  Subject:");
 			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
 							 NULL, 0);
 			for (i = 0; cert_info.subject_word[i]; i++)
 			{
-				snprintf (buf, sizeof (buf), "    %s", cert_info.subject_word[i]);
+				g_snprintf (buf, sizeof (buf), "    %s", cert_info.subject_word[i]);
 				EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
 								 NULL, 0);
 			}
-			snprintf (buf, sizeof (buf), "  Issuer:");
+			g_snprintf (buf, sizeof (buf), "  Issuer:");
 			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
 							 NULL, 0);
 			for (i = 0; cert_info.issuer_word[i]; i++)
 			{
-				snprintf (buf, sizeof (buf), "    %s", cert_info.issuer_word[i]);
+				g_snprintf (buf, sizeof (buf), "    %s", cert_info.issuer_word[i]);
 				EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
 								 NULL, 0);
 			}
-			snprintf (buf, sizeof (buf), "  Public key algorithm: %s (%d bits)",
+			g_snprintf (buf, sizeof (buf), "  Public key algorithm: %s (%d bits)",
 						 cert_info.algorithm, cert_info.algorithm_bits);
 			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
 							 NULL, 0);
 			/*if (cert_info.rsa_tmp_bits)
 			{
-				snprintf (buf, sizeof (buf),
+				g_snprintf (buf, sizeof (buf),
 							 "  Public key algorithm uses ephemeral key with %d bits",
 							 cert_info.rsa_tmp_bits);
 				EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
 								 NULL, 0);
 			}*/
-			snprintf (buf, sizeof (buf), "  Sign algorithm %s",
+			g_snprintf (buf, sizeof (buf), "  Sign algorithm %s",
 						 cert_info.sign_algorithm/*, cert_info.sign_algorithm_bits*/);
 			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
 							 NULL, 0);
-			snprintf (buf, sizeof (buf), "  Valid since %s to %s",
+			g_snprintf (buf, sizeof (buf), "  Valid since %s to %s",
 						 cert_info.notbefore, cert_info.notafter);
 			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
 							 NULL, 0);
 		} else
 		{
-			snprintf (buf, sizeof (buf), " * No Certificate");
+			g_snprintf (buf, sizeof (buf), " * No Certificate");
 			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
 							 NULL, 0);
 		}
 
 		chiper_info = _SSL_get_cipher_info (serv->ssl);	/* static buffer */
-		snprintf (buf, sizeof (buf), "* Cipher info:");
+		g_snprintf (buf, sizeof (buf), "* Cipher info:");
 		EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL, NULL,
 						 0);
-		snprintf (buf, sizeof (buf), "  Version: %s, cipher %s (%u bits)",
+		g_snprintf (buf, sizeof (buf), "  Version: %s, cipher %s (%u bits)",
 					 chiper_info->version, chiper_info->chiper,
 					 chiper_info->chiper_bits);
 		EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL, NULL,
@@ -724,7 +719,7 @@ ssl_do_connect (server * serv)
 		switch (verify_error)
 		{
 		case X509_V_OK:
-			/* snprintf (buf, sizeof (buf), "* Verify OK (?)"); */
+			/* g_snprintf (buf, sizeof (buf), "* Verify OK (?)"); */
 			/* EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL, NULL, 0); */
 			break;
 		case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY:
@@ -734,7 +729,7 @@ ssl_do_connect (server * serv)
 		case X509_V_ERR_CERT_HAS_EXPIRED:
 			if (serv->accept_invalid_cert)
 			{
-				snprintf (buf, sizeof (buf), "* Verify E: %s.? (%d) -- Ignored",
+				g_snprintf (buf, sizeof (buf), "* Verify E: %s.? (%d) -- Ignored",
 							 X509_verify_cert_error_string (verify_error),
 							 verify_error);
 				EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
@@ -742,7 +737,7 @@ ssl_do_connect (server * serv)
 				break;
 			}
 		default:
-			snprintf (buf, sizeof (buf), "%s.? (%d)",
+			g_snprintf (buf, sizeof (buf), "%s.? (%d)",
 						 X509_verify_cert_error_string (verify_error),
 						 verify_error);
 			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, buf, NULL, NULL,
@@ -763,7 +758,7 @@ ssl_do_connect (server * serv)
 	{
 		if (serv->ssl->session && serv->ssl->session->time + SSLTMOUT < time (NULL))
 		{
-			snprintf (buf, sizeof (buf), "SSL handshake timed out");
+			g_snprintf (buf, sizeof (buf), "SSL handshake timed out");
 			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, buf, NULL,
 							 NULL, NULL, 0);
 			server_cleanup (serv); /* ->connecting = FALSE */
@@ -894,9 +889,6 @@ server_read_child (GIOChannel *source, GIOCondition condition, server *serv)
 	char outbuf[512];
 	char host[100];
 	char ip[100];
-#ifdef USE_MSPROXY
-	char *p;
-#endif
 
 	waitline2 (source, tbuf, sizeof tbuf);
 
@@ -958,11 +950,11 @@ server_read_child (GIOChannel *source, GIOCondition condition, server *serv)
 			}
 		}
 #else
-		snprintf (outbuf, sizeof (outbuf), "%s/auth/xchat_auth",
+		g_snprintf (outbuf, sizeof (outbuf), "%s/auth/xchat_auth",
 					 g_get_home_dir ());
 		if (access (outbuf, X_OK) == 0)
 		{
-			snprintf (outbuf, sizeof (outbuf), "exec -d %s/auth/xchat_auth %s",
+			g_snprintf (outbuf, sizeof (outbuf), "exec -d %s/auth/xchat_auth %s",
 						 g_get_home_dir (), prefs.pchat_irc_user_name);
 			handle_command (serv->server_session, outbuf, FALSE);
 		}
@@ -970,23 +962,7 @@ server_read_child (GIOChannel *source, GIOCondition condition, server *serv)
 		break;
 	case '4':						  /* success */
 		waitline2 (source, tbuf, sizeof (tbuf));
-#ifdef USE_MSPROXY
-		serv->sok = strtol (tbuf, &p, 10);
-		if (*p++ == ' ')
-		{
-			serv->proxy_sok = strtol (p, &p, 10);
-			serv->msp_state.clientid = strtol (++p, &p, 10);
-			serv->msp_state.serverid = strtol (++p, &p, 10);
-			serv->msp_state.seq_sent = atoi (++p);
-		} else
-			serv->proxy_sok = -1;
-#ifdef DEBUG_MSPROXY
-		printf ("Parent got main socket: %d, proxy socket: %d\n", serv->sok, serv->proxy_sok);
-		printf ("Client ID 0x%08x server ID 0x%08x seq_sent %d\n", serv->msp_state.clientid, serv->msp_state.serverid, serv->msp_state.seq_sent);
-#endif
-#else
 		serv->sok = atoi (tbuf);
-#endif
 #ifdef USE_IPV6
 		/* close the one we didn't end up using */
 		if (serv->sok == serv->sok4)
@@ -1186,7 +1162,7 @@ traverse_socks (int print_fd, int sok, char *serverAddr, int port)
 	if (buf[1] == 90)
 		return 0;
 
-	snprintf (buf, sizeof (buf), "SOCKS\tServer reported error %d,%d.\n", buf[0], buf[1]);
+	g_snprintf (buf, sizeof (buf), "SOCKS\tServer reported error %d,%d.\n", buf[0], buf[1]);
 	proxy_error (print_fd, buf);
 	return 1;
 }
@@ -1287,9 +1263,9 @@ traverse_socks5 (int print_fd, int sok, char *serverAddr, int port)
 	if (buf[0] != 5 || buf[1] != 0)
 	{
 		if (buf[1] == 2)
-			snprintf (buf, sizeof (buf), "SOCKS\tProxy refused to connect to host (not allowed).\n");
+			g_snprintf (buf, sizeof (buf), "SOCKS\tProxy refused to connect to host (not allowed).\n");
 		else
-			snprintf (buf, sizeof (buf), "SOCKS\tProxy failed to connect to host (error %d).\n", buf[1]);
+			g_snprintf (buf, sizeof (buf), "SOCKS\tProxy failed to connect to host (error %d).\n", buf[1]);
 		proxy_error (print_fd, buf);
 		return 1;
 	}
@@ -1322,7 +1298,7 @@ traverse_wingate (int print_fd, int sok, char *serverAddr, int port)
 {
 	char buf[128];
 
-	snprintf (buf, sizeof (buf), "%s %d\r\n", serverAddr, port);
+	g_snprintf (buf, sizeof (buf), "%s %d\r\n", serverAddr, port);
 	send (sok, buf, strlen (buf), 0);
 
 	return 0;
@@ -1410,16 +1386,16 @@ traverse_http (int print_fd, int sok, char *serverAddr, int port)
 	char auth_data2[252];
 	int n, n2;
 
-	n = snprintf (buf, sizeof (buf), "CONNECT %s:%d HTTP/1.0\r\n",
+	n = g_snprintf (buf, sizeof (buf), "CONNECT %s:%d HTTP/1.0\r\n",
 					  serverAddr, port);
 	if (prefs.pchat_net_proxy_auth)
 	{
-		n2 = snprintf (auth_data2, sizeof (auth_data2), "%s:%s",
+		n2 = g_snprintf (auth_data2, sizeof (auth_data2), "%s:%s",
 							prefs.pchat_net_proxy_user, prefs.pchat_net_proxy_pass);
 		base64_encode (auth_data, auth_data2, n2);
-		n += snprintf (buf+n, sizeof (buf)-n, "Proxy-Authorization: Basic %s\r\n", auth_data);
+		n += g_snprintf (buf+n, sizeof (buf)-n, "Proxy-Authorization: Basic %s\r\n", auth_data);
 	}
-	n += snprintf (buf+n, sizeof (buf)-n, "\r\n");
+	n += g_snprintf (buf+n, sizeof (buf)-n, "\r\n");
 	send (sok, buf, n, 0);
 
 	n = http_read_line (print_fd, sok, buf, sizeof (buf));
@@ -1439,7 +1415,7 @@ traverse_http (int print_fd, int sok, char *serverAddr, int port)
 }
 
 static int
-traverse_proxy (int proxy_type, int print_fd, int sok, char *ip, int port, struct msproxy_state_t *state, netstore *ns_proxy, int csok4, int csok6, int *csok, char bound)
+traverse_proxy (int proxy_type, int print_fd, int sok, char *ip, int port, netstore *ns_proxy, int csok4, int csok6, int *csok, char bound)
 {
 	switch (proxy_type)
 	{
@@ -1451,10 +1427,6 @@ traverse_proxy (int proxy_type, int print_fd, int sok, char *ip, int port, struc
 		return traverse_socks5 (print_fd, sok, ip, port);
 	case 4:
 		return traverse_http (print_fd, sok, ip, port);
-#ifdef USE_MSPROXY
-	case 5:
-		return traverse_msproxy (sok, ip, port, state, ns_proxy, csok4, csok6, csok, bound);
-#endif
 	}
 
 	return 1;
@@ -1492,7 +1464,7 @@ server_child (server * serv)
 		local_ip = net_resolve (ns_local, prefs.pchat_net_bind_host, 0, &real_hostname);
 		if (local_ip != NULL)
 		{
-			snprintf (buf, sizeof (buf), "5\n%s\n", local_ip);
+			g_snprintf (buf, sizeof (buf), "5\n%s\n", local_ip);
 			write (serv->childwrite, buf, strlen (buf));
 			net_bind (ns_local, serv->sok4, serv->sok6);
 			bound = 1;
@@ -1557,7 +1529,7 @@ server_child (server * serv)
 	/* first resolve where we want to connect to */
 	if (proxy_type > 0)
 	{
-		snprintf (buf, sizeof (buf), "9\n%s\n", proxy_host);
+		g_snprintf (buf, sizeof (buf), "9\n%s\n", proxy_host);
 		write (serv->childwrite, buf, strlen (buf));
 		ip = net_resolve (ns_server, proxy_host, proxy_port, &real_hostname);
 		free (proxy_host);
@@ -1591,7 +1563,7 @@ server_child (server * serv)
 		connect_port = port;
 	}
 
-	snprintf (buf, sizeof (buf), "3\n%s\n%s\n%d\n",
+	g_snprintf (buf, sizeof (buf), "3\n%s\n%s\n%d\n",
 				 real_hostname, ip, connect_port);
 	write (serv->childwrite, buf, strlen (buf));
 
@@ -1605,23 +1577,17 @@ server_child (server * serv)
 
 	if (error != 0)
 	{
-		snprintf (buf, sizeof (buf), "2\n%d\n", sock_error ());
+		g_snprintf (buf, sizeof (buf), "2\n%d\n", sock_error ());
 		write (serv->childwrite, buf, strlen (buf));
 	} else
 	{
 		/* connect succeeded */
 		if (proxy_ip)
 		{
-			switch (traverse_proxy (proxy_type, serv->childwrite, psok, proxy_ip, port, &serv->msp_state, ns_proxy, serv->sok4, serv->sok6, &sok, bound))
+			switch (traverse_proxy (proxy_type, serv->childwrite, psok, proxy_ip, port, ns_proxy, serv->sok4, serv->sok6, &sok, bound))
 			{
 			case 0:	/* success */
-#ifdef USE_MSPROXY
-				if (!serv->dont_use_proxy && (proxy_type == 5))
-					snprintf (buf, sizeof (buf), "4\n%d %d %d %d %d\n", sok, psok, serv->msp_state.clientid, serv->msp_state.serverid,
-						serv->msp_state.seq_sent);
-				else
-#endif
-					snprintf (buf, sizeof (buf), "4\n%d\n", sok);	/* success */
+				g_snprintf (buf, sizeof (buf), "4\n%d\n", sok);	/* success */
 				write (serv->childwrite, buf, strlen (buf));
 				break;
 			case 1:	/* socks traversal failed */
@@ -1630,7 +1596,7 @@ server_child (server * serv)
 			}
 		} else
 		{
-			snprintf (buf, sizeof (buf), "4\n%d\n", sok);	/* success */
+			g_snprintf (buf, sizeof (buf), "4\n%d\n", sok);	/* success */
 			write (serv->childwrite, buf, strlen (buf));
 		}
 	}
@@ -1754,16 +1720,8 @@ server_connect (server *serv, char *hostname, int port, int no_login)
 
 	/* create both sockets now, drop one later */
 	net_sockets (&serv->sok4, &serv->sok6);
-#ifdef USE_MSPROXY
-	/* In case of MS Proxy we have a separate UDP control connection */
-	if (!serv->dont_use_proxy && (serv->proxy_type == 5))
-		udp_sockets (&serv->proxy_sok4, &serv->proxy_sok6);
-	else
-#endif
-	{
-		serv->proxy_sok4 = -1;
-		serv->proxy_sok6 = -1;
-	}
+	serv->proxy_sok4 = -1;
+	serv->proxy_sok6 = -1;
 
 #ifdef WIN32
 	CloseHandle (CreateThread (NULL, 0,

@@ -58,10 +58,6 @@
 
 #ifdef HAVE_CONFIG_H
 #include "../../config.h"
-#else
-#ifdef WIN32
-#include "../../config-win32.h"
-#endif
 #endif
 
 #ifdef WIN32

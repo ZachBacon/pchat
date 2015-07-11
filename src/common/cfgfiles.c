@@ -224,18 +224,18 @@ cfg_put_str (int fh, char *var, char *value)
 	char buf[512];
 	int len;
 
-	snprintf (buf, sizeof buf, "%s = %s\n", var, value);
+	g_snprintf (buf, sizeof buf, "%s = %s\n", var, value);
 	len = strlen (buf);
 	return (write (fh, buf, len) == len);
 }
 
 int
-cfg_put_color (int fh, int r, int g, int b, char *var)
+cfg_put_color (int fh, guint16 r, guint16 g, guint16 b, char *var)
 {
 	char buf[400];
 	int len;
 
-	snprintf (buf, sizeof buf, "%s = %04x %04x %04x\n", var, r, g, b);
+	g_snprintf (buf, sizeof buf, "%s = %04"G_GUINT16_FORMAT" %04"G_GUINT16_FORMAT" %04"G_GUINT16_FORMAT"\n", var, r, g, b);
 	len = strlen (buf);
 	return (write (fh, buf, len) == len);
 }
@@ -249,20 +249,20 @@ cfg_put_int (int fh, int value, char *var)
 	if (value == -1)
 		value = 1;
 
-	snprintf (buf, sizeof buf, "%s = %d\n", var, value);
+	g_snprintf (buf, sizeof buf, "%s = %d\n", var, value);
 	len = strlen (buf);
 	return (write (fh, buf, len) == len);
 }
 
 int
-cfg_get_color (char *cfg, char *var, int *r, int *g, int *b)
+cfg_get_color (char *cfg, char *var, guint16 *r, guint16 *g, guint16 *b)
 {
 	char str[128];
 
 	if (!cfg_get_str (cfg, var, str, sizeof (str)))
 		return 0;
 
-	sscanf (str, "%04x %04x %04x", r, g, b);
+	sscanf (str, "%04"G_GUINT16_FORMAT" %04"G_GUINT16_FORMAT" %04"G_GUINT16_FORMAT, r, g, b);
 	return 1;
 }
 
@@ -333,11 +333,8 @@ get_xdir (void)
 		if (portable_mode () || !get_reg_str ("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "AppData", out, sizeof (out)))
 		{
 			char *path;
-			char file[MAX_PATH];
-			HMODULE hModule;
-			
-			hModule = GetModuleHandle (NULL);
-			if (GetModuleFileName (hModule, file, sizeof(file)))
+			path = g_win32_get_package_installation_directory_of_module (NULL);
+			if (path)
 			{
 				path = g_path_get_dirname (file);
 				xdir = g_build_filename (path, "config", NULL);
@@ -860,7 +857,7 @@ load_default_config(void)
 #ifdef WIN32
 	if (portable_mode () || !get_reg_str ("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Personal", out, sizeof (out)))
 	{
-		snprintf (prefs.pchat_dcc_dir, sizeof (prefs.pchat_dcc_dir), "%s\\downloads", get_xdir ());
+		g_snprintf (prefs.pchat_dcc_dir, sizeof (prefs.pchat_dcc_dir), "%s\\downloads", get_xdir ());
 	}
 	else
 	{
@@ -1354,7 +1351,7 @@ xchat_fopen_file (const char *file, const char *mode, int xof_flags)
 	FILE *fh;
 
 	if (xof_flags & XOF_FULLPATH)
-		return fopen (file, mode);
+		return g_fopen (file, mode);
 
 	buf = g_build_filename (get_xdir (), file, NULL);
 	fh = g_fopen (buf, mode);

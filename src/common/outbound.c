@@ -486,19 +486,19 @@ create_mask (session * sess, char *mask, char *mode, char *typestr, int deop)
 			switch (type)
 			{
 			case 0:
-				snprintf (buf, sizeof (buf), "%s %s *!*@%s.*", mode, p2, domain);
+				g_snprintf (buf, sizeof (buf), "%s %s *!*@%s.*", mode, p2, domain);
 				break;
 
 			case 1:
-				snprintf (buf, sizeof (buf), "%s %s *!*@%s", mode, p2, fullhost);
+				g_snprintf (buf, sizeof (buf), "%s %s *!*@%s", mode, p2, fullhost);
 				break;
 
 			case 2:
-				snprintf (buf, sizeof (buf), "%s %s *!%s@%s.*", mode, p2, username, domain);
+				g_snprintf (buf, sizeof (buf), "%s %s *!%s@%s.*", mode, p2, username, domain);
 				break;
 
 			case 3:
-				snprintf (buf, sizeof (buf), "%s %s *!%s@%s", mode, p2, username, fullhost);
+				g_snprintf (buf, sizeof (buf), "%s %s *!%s@%s", mode, p2, username, fullhost);
 				break;
 			}
 		} else
@@ -506,26 +506,26 @@ create_mask (session * sess, char *mask, char *mode, char *typestr, int deop)
 			switch (type)
 			{
 			case 0:
-				snprintf (buf, sizeof (buf), "%s %s *!*@*%s", mode, p2, domain);
+				g_snprintf (buf, sizeof (buf), "%s %s *!*@*%s", mode, p2, domain);
 				break;
 
 			case 1:
-				snprintf (buf, sizeof (buf), "%s %s *!*@%s", mode, p2, fullhost);
+				g_snprintf (buf, sizeof (buf), "%s %s *!*@%s", mode, p2, fullhost);
 				break;
 
 			case 2:
-				snprintf (buf, sizeof (buf), "%s %s *!%s@*%s", mode, p2, username, domain);
+				g_snprintf (buf, sizeof (buf), "%s %s *!%s@*%s", mode, p2, username, domain);
 				break;
 
 			case 3:
-				snprintf (buf, sizeof (buf), "%s %s *!%s@%s", mode, p2, username, fullhost);
+				g_snprintf (buf, sizeof (buf), "%s %s *!%s@%s", mode, p2, username, fullhost);
 				break;
 			}
 		}
 
 	} else
 	{
-		snprintf (buf, sizeof (buf), "%s %s", mode, mask);
+		g_snprintf (buf, sizeof (buf), "%s %s", mode, mask);
 	}
 	
 	return g_strdup (buf);
@@ -1122,9 +1122,9 @@ menu_del_children (char *path, char *label)
 	if (!label)
 		label = "";
 	if (path[0])
-		snprintf (buf, sizeof (buf), "%s/%s", path, label);
+		g_snprintf (buf, sizeof (buf), "%s/%s", path, label);
 	else
-		snprintf (buf, sizeof (buf), "%s", label);
+		g_snprintf (buf, sizeof (buf), "%s", label);
 
 	list = menu_list;
 	while (list)
@@ -1945,7 +1945,7 @@ get_bool_cb (int val, getvalinfo *info)
 {
 	char buf[512];
 
-	snprintf (buf, sizeof (buf), "%s %d", info->cmd, val);
+	g_snprintf (buf, sizeof (buf), "%s %d", info->cmd, val);
 	if (is_session (info->sess))
 		handle_command (info->sess, buf, FALSE);
 
@@ -1977,7 +1977,7 @@ get_int_cb (int cancel, int val, getvalinfo *info)
 
 	if (!cancel)
 	{
-		snprintf (buf, sizeof (buf), "%s %d", info->cmd, val);
+		g_snprintf (buf, sizeof (buf), "%s %d", info->cmd, val);
 		if (is_session (info->sess))
 			handle_command (info->sess, buf, FALSE);
 	}
@@ -2012,7 +2012,7 @@ get_file_cb (char *cmd, char *file)
       no args */
 	if (file)
 	{
-		snprintf (buf, sizeof (buf), "%s %s", cmd, file);
+		g_snprintf (buf, sizeof (buf), "%s %s", cmd, file);
 		handle_command (current_sess, buf, FALSE);
 	}
 	else
@@ -2061,7 +2061,7 @@ get_str_cb (int cancel, char *val, getvalinfo *info)
 
 	if (!cancel)
 	{
-		snprintf (buf, sizeof (buf), "%s %s", info->cmd, val);
+		g_snprintf (buf, sizeof (buf), "%s %s", info->cmd, val);
 		if (is_session (info->sess))
 			handle_command (info->sess, buf, FALSE);
 	}
@@ -2298,7 +2298,7 @@ cmd_ignore (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 			    strchr (mask, '*') == NULL)
 			{
 				mask = tbuf;
-				snprintf (tbuf, TBUFSIZE, "%s!*@*", word[2]);
+				g_snprintf (tbuf, TBUFSIZE, "%s!*@*", word[2]);
 			}
 
 			i = ignore_add (mask, type, TRUE);
@@ -2666,7 +2666,7 @@ cmd_me (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		return TRUE;
 	}
 
-	snprintf (tbuf, TBUFSIZE, "\001ACTION %s\001\r", act);
+	g_snprintf (tbuf, TBUFSIZE, "\001ACTION %s\001\r", act);
 	/* first try through DCC CHAT */
 	if (dcc_write_chat (sess->channel, tbuf))
 	{
@@ -3006,7 +3006,7 @@ cmd_ping (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 	tim = make_ping_time ();
 
-	snprintf (timestring, sizeof (timestring), "%lu", tim);
+	g_snprintf (timestring, sizeof (timestring), "%lu", tim);
 	sess->server->p_ping (sess->server, to, timestring);
 
 	return TRUE;
@@ -3246,9 +3246,9 @@ cmd_send (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	if ((addr & 0xffff0000) == 0xc0a80000 ||	/* 192.168.x.x */
 		 (addr & 0xff000000) == 0x0a000000)		/* 10.x.x.x */
 		/* we got a private net address, let's PSEND or it'll fail */
-		snprintf (tbuf, 512, "DCC PSEND %s", word_eol[2]);
+		g_snprintf (tbuf, 512, "DCC PSEND %s", word_eol[2]);
 	else
-		snprintf (tbuf, 512, "DCC SEND %s", word_eol[2]);
+		g_snprintf (tbuf, 512, "DCC SEND %s", word_eol[2]);
 
 	handle_command (sess, tbuf, FALSE);
 
@@ -3548,7 +3548,7 @@ cmd_unignore (struct session *sess, char *tbuf, char *word[],
 		if (strchr (mask, '?') == NULL && strchr (mask, '*') == NULL)
 		{
 			mask = tbuf;
-			snprintf (tbuf, TBUFSIZE, "%s!*@*", word[2]);
+			g_snprintf (tbuf, TBUFSIZE, "%s!*@*", word[2]);
 		}
 		
 		if (ignore_del (mask, NULL))
@@ -4129,7 +4129,7 @@ usercommand_show_help (session *sess, char *name)
 		pop = (struct popup *) list->data;
 		if (!g_ascii_strcasecmp (pop->name, name))
 		{
-			snprintf (buf, sizeof(buf), _("User Command for: %s\n"), pop->cmd);
+			g_snprintf (buf, sizeof(buf), _("User Command for: %s\n"), pop->cmd);
 			PrintText (sess, buf);
 
 			found = TRUE;
@@ -4156,7 +4156,7 @@ help (session *sess, char *tbuf, char *helpcmd, int quiet)
 	{
 		if (cmd->help)
 		{
-			snprintf (tbuf, TBUFSIZE, _("Usage: %s\n"), _(cmd->help));
+			g_snprintf (tbuf, TBUFSIZE, _("Usage: %s\n"), _(cmd->help));
 			PrintText (sess, tbuf);
 		} else
 		{
@@ -4178,7 +4178,7 @@ help (session *sess, char *tbuf, char *helpcmd, int quiet)
  * - this beast is used for UserCommands, UserlistButtons and CTCP replies   */
 
 int
-auto_insert (char *dest, int destlen, unsigned char *src, char *word[],
+auto_insert (char *dest, gsize destlen, unsigned char *src, char *word[],
 				 char *word_eol[], char *a, char *c, char *d, char *e, char *h,
 				 char *n, char *s, char *u)
 {
@@ -4250,7 +4250,7 @@ auto_insert (char *dest, int destlen, unsigned char *src, char *word[],
 				switch (src[0])
 				{
 				case '%':
-					if ((dest - orig) + 2 >= destlen)
+					if ((dest - orig) + 2u >= destlen)
 						return 2;
 					dest[0] = '%';
 					dest[1] = 0;
@@ -4285,7 +4285,7 @@ auto_insert (char *dest, int destlen, unsigned char *src, char *word[],
 				case 'y':
 					now = time (0);
 					tm_ptr = localtime (&now);
-					snprintf (buf, sizeof (buf), "%4d%02d%02d", 1900 +
+					g_snprintf (buf, sizeof (buf), "%4d%02d%02d", 1900 +
 								 tm_ptr->tm_year, 1 + tm_ptr->tm_mon, tm_ptr->tm_mday);
 					utf = buf;
 					break;
@@ -4441,7 +4441,7 @@ nick_comp_cb (struct User *user, nickdata *data)
 		lenu = strlen (user->nick);
 		if (lenu == data->len)
 		{
-			snprintf (data->tbuf, TBUFSIZE, "%s%s", user->nick, data->space);
+			g_snprintf (data->tbuf, TBUFSIZE, "%s%s", user->nick, data->space);
 			data->len = -1;
 			return FALSE;
 		} else if (lenu < data->bestlen)
@@ -4485,7 +4485,7 @@ perform_nick_completion (struct session *sess, char *cmd, char *tbuf)
 
 				if (data.best)
 				{
-					snprintf (tbuf, TBUFSIZE, "%s%s", data.best->nick, space - 1);
+					g_snprintf (tbuf, TBUFSIZE, "%s%s", data.best->nick, space - 1);
 					return;
 				}
 			}
