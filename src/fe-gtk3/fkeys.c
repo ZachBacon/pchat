@@ -274,10 +274,10 @@ key_free (gpointer data)
    * key bindings are stored in a linked list of key_binding structs
    * which looks like {
    int keyval;  GDK keynumber
-   char *keyname;  String with the name of the function 
-   int action;  Index into key_actions 
-   int mod; Flags of STATE_* above 
-   char *data1, *data2;  Pointers to strings, these must be freed 
+   char *keyname;  String with the name of the function
+   int action;  Index into key_actions
+   int mod; Flags of STATE_* above
+   char *data1, *data2;  Pointers to strings, these must be freed
    struct key_binding *next;
    }
    * remember that is (data1 || data2) != NULL then they need to be free()'ed
@@ -401,7 +401,7 @@ key_dialog_print_text (GtkXText *xtext, char *text)
 }
 
 static void
-key_dialog_set_key (GtkCellRendererAccel *accel, gchar *pathstr, guint accel_key, 
+key_dialog_set_key (GtkCellRendererAccel *accel, gchar *pathstr, guint accel_key,
 					GdkModifierType accel_mods, guint hardware_keycode, gpointer userdata)
 {
 	GtkTreeModel *model = get_store ();
@@ -651,14 +651,14 @@ key_dialog_treeview_new (GtkWidget *box)
 	render = gtk_cell_renderer_combo_new ();
 	g_object_set (G_OBJECT (render), "model", combostore,
 									"has-entry", FALSE,
-									"editable", TRUE, 
+									"editable", TRUE,
 									"text-column", 0,
 									NULL);
 	g_signal_connect (G_OBJECT (render), "edited",
 					G_CALLBACK (key_dialog_entry_edited), GINT_TO_POINTER (ACTION_COLUMN));
 	gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (view), ACTION_COLUMN,
 													"Action", render,
-													"text", ACTION_COLUMN, 
+													"text", ACTION_COLUMN,
 													NULL);
 
 	render = gtk_cell_renderer_text_new ();
@@ -895,7 +895,7 @@ key_load_kbs (void)
 	}
 
 	while (buf_get_line (ibuf, &buf, &pnt, size))
-	{		
+	{
 		if (buf[0] == '#')
 			continue;
 		if (strlen (buf) == 0)
@@ -913,7 +913,7 @@ key_load_kbs (void)
 
 				kb->accel = g_strdup (buf);
 
-				state = KBSTATE_ACT; 
+				state = KBSTATE_ACT;
 				continue;
 			}
 
@@ -1332,10 +1332,22 @@ key_action_tab_clean(void)
 /* Used in the followig completers */
 #define COMP_BUF 2048
 
-/* For use in sorting the user list for completion */
+/* For use in sorting the user list for completion
+
+This sorts everyone by the last talked time except your own nick
+which is forced to the bottom of the list to avoid completing your
+own name, which is very unlikely.
+*/
+
 static int
 talked_recent_cmp (struct User *a, struct User *b)
 {
+    if (a->me)
+        return -1;
+
+    if (b->me)
+       return 1;
+
 	if (a->lasttalk < b->lasttalk)
 		return -1;
 
@@ -1380,7 +1392,7 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 			return 2;
 
 		cursor_pos = g_utf8_pointer_to_offset(text, ch);
-		if (cursor_pos && (g_utf8_get_char_validated(ch, -1) == ':' || 
+		if (cursor_pos && (g_utf8_get_char_validated(ch, -1) == ':' ||
 					g_utf8_get_char_validated(ch, -1) == ',' ||
 					g_utf8_get_char_validated (ch, -1) == g_utf8_get_char_validated (prefs.pchat_completion_suffix, -1)))
 		{
@@ -1391,7 +1403,7 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 	}
 
 	comp = skip_len;
-	
+
 	/* store the text following the cursor for reinsertion later */
 	if ((cursor_pos + skip_len) < len)
 		postfix = g_utf8_offset_to_pointer(text, cursor_pos + skip_len);
@@ -1410,14 +1422,14 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 		ent_start++;
 		is_cmd = 1;
 	}
-	
+
 	prefix_len = ent_start;
 	elen = cursor_pos - ent_start;
 
 	g_utf8_strncpy (ent, g_utf8_offset_to_pointer (text, prefix_len), elen);
 
 	is_nick = (ent[0] == '#' || ent[0] == '&' || is_cmd) ? 0 : 1;
-	
+
 	if (sess->type == SESS_DIALOG && is_nick)
 	{
 		/* tab in a dialog completes the other person's name */
@@ -1466,9 +1478,9 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 			key_action_tab_clean ();
 			comp = 0;
 		}
-	
+
 		list = g_completion_complete_utf8 (gcomp, comp ? old_gcomp.data : ent, &result);
-		
+
 		if (result == NULL) /* No matches found */
 		{
 			g_completion_free(gcomp);
@@ -1571,7 +1583,7 @@ key_action_tab_comp (GtkWidget *t, GdkEventKey *entry, char *d1, char *d2,
 			}
 		}
 	}
-	
+
 	if(result)
 	{
 		if (prefix_len)
