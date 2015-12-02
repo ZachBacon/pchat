@@ -268,7 +268,7 @@ backend_init (GtkXText *xtext)
 {
 	if (xtext->layout == NULL)
 	{
-		xtext->layout = gtk_widget_create_pango_layout (GTK_WIDGET (xtext), 0); 
+		xtext->layout = gtk_widget_create_pango_layout (GTK_WIDGET (xtext), 0);
 		if (xtext->font)
 			pango_layout_set_font_description (xtext->layout, xtext->font->font);
 	}
@@ -462,7 +462,7 @@ gtk_xtext_init (GtkXText * xtext)
 		static const GtkTargetEntry targets[] = {
 			{ "UTF8_STRING", 0, TARGET_UTF8_STRING },
 			{ "STRING", 0, TARGET_STRING },
-			{ "TEXT",   0, TARGET_TEXT }, 
+			{ "TEXT",   0, TARGET_TEXT },
 			{ "COMPOUND_TEXT", 0, TARGET_COMPOUND_TEXT }
 		};
 		static const gint n_targets = sizeof (targets) / sizeof (targets[0]);
@@ -766,7 +766,7 @@ find_x (GtkXText *xtext, textentry *ent, int x, int subline, int indent)
 	{
 		suboff = 0;
 		list = ent->slp;
-	} 
+	}
 	/* Step to the first character of the subline */
 	meta = list->data;
 	off = meta->off;
@@ -1755,7 +1755,7 @@ gtk_xtext_set_clip_owner (GtkWidget * xtext, GdkEventButton * event)
 		if (str[0])
 		{
 			gtk_clipboard_set_text (gtk_widget_get_clipboard (xtext, GDK_SELECTION_CLIPBOARD), str, len);
-			
+
 			gtk_selection_owner_set (xtext, GDK_SELECTION_PRIMARY, event ? event->time : GDK_CURRENT_TIME);
 			gtk_selection_owner_set (xtext, GDK_SELECTION_SECONDARY, event ? event->time : GDK_CURRENT_TIME);
 		}
@@ -2463,7 +2463,7 @@ gtk_xtext_render_flush (GtkXText * xtext, int x, int y, unsigned char *str,
 
 			y++;
 			dest_x = x;
-			
+
 			xtext_draw_line (xtext, cr, &xtext->fgc, dest_x + 1, y + 1, dest_x + str_width - 1, y + 1);
 			cairo_destroy (cr);
 
@@ -3175,7 +3175,7 @@ gtk_xtext_render_stamp (GtkXText * xtext, textentry * ent,
 	if (xtext->mark_stamp)
 	{
 		/* if this line is marked, mark this stamp too */
-		if (ent->mark_start == 0)	
+		if (ent->mark_start == 0)
 		{
 			ent->mark_start = 0;
 			ent->mark_end = len;
@@ -3897,7 +3897,7 @@ gtk_xtext_check_ent_visibility (GtkXText * xtext, textentry *find_ent, int add)
 	}
 	/* Loop through line positions looking for find_ent */
 	lines = ((height + xtext->pixel_offset) / xtext->fontsize) + buf->pagetop_subline + add;
-	while (ent)	
+	while (ent)
 	{
 		lines -= g_slist_length (ent->sublines);
 		if (lines <= 0)
@@ -4386,8 +4386,8 @@ gtk_xtext_append_entry (xtext_buffer *buf, textentry * ent, time_t stamp)
 	ent->sublines = NULL;
 	buf->num_lines += gtk_xtext_lines_taken (buf, ent);
 
-	if (buf->reset_marker_pos || 
-		((buf->marker_pos == NULL || buf->marker_seen) && (buf->xtext->buffer != buf || 
+	if (buf->reset_marker_pos ||
+		((buf->marker_pos == NULL || buf->marker_seen) && (buf->xtext->buffer != buf ||
 		!gtk_window_has_toplevel_focus (GTK_WINDOW (gtk_widget_get_toplevel (GTK_WIDGET (buf->xtext)))))))
 	{
 		buf->marker_pos = ent;
@@ -4455,8 +4455,8 @@ gtk_xtext_append_indent (xtext_buffer *buf,
 	if (right_len == -1)
 		right_len = strlen (right_text);
 
-	if (right_len >= sizeof (buf->xtext->scratch_buffer))
-		right_len = sizeof (buf->xtext->scratch_buffer) - 1;
+	if (left_len + right_len + 2 >= sizeof (buf->xtext->scratch_buffer))
+		right_len = sizeof (buf->xtext->scratch_buffer) - left_len - 2;
 
 	if (right_text[right_len-1] == '\n')
 		right_len--;
@@ -4474,7 +4474,7 @@ gtk_xtext_append_indent (xtext_buffer *buf,
 	ent->left_len = left_len;
 	ent->str = str;
 	ent->str_len = left_len + 1 + right_len;
-	ent->indent = (buf->indent - left_width) - buf->xtext->space_width;
+	g_assert (ent->str_len < sizeof (buf->xtext->scratch_buffer));
 
 	if (buf->time_stamp)
 		space = buf->xtext->stamp_width;
