@@ -195,15 +195,15 @@ fe_set_tab_color (struct session *sess, int col)
 				server_sess->nick_said = FALSE;
 				chan_set_color (chan_get_parent (sess->res->tab), newdata_list);
 			}
-				
+
 			break;
 		case 2:	/* new message arrived in channel (light red) */
 			sess->new_data = FALSE;
 			sess->msg_said = TRUE;
 			sess->nick_said = FALSE;
 			chan_set_color (sess->res->tab, newmsg_list);
-			
-			if (chan_is_collapsed (sess->res->tab) 
+
+			if (chan_is_collapsed (sess->res->tab)
 				&& !server_sess->nick_said
 				&& !(server_sess == current_tab))
 			{
@@ -212,7 +212,7 @@ fe_set_tab_color (struct session *sess, int col)
 				server_sess->nick_said = FALSE;
 				chan_set_color (chan_get_parent (sess->res->tab), newmsg_list);
 			}
-			
+
 			break;
 		case 3:	/* your nick has been seen (blue) */
 			sess->new_data = FALSE;
@@ -227,7 +227,7 @@ fe_set_tab_color (struct session *sess, int col)
 				server_sess->nick_said = TRUE;
 				chan_set_color (chan_get_parent (sess->res->tab), nickseen_list);
 			}
-				
+
 			break;
 		}
 		lastact_update (sess);
@@ -802,7 +802,7 @@ mg_decide_userlist (session *sess, gboolean switch_to_current)
 		else
 			mg_userlist_showhide (sess, FALSE);	/* hide */
 		break;
-	default:		
+	default:
 		mg_userlist_showhide (sess, TRUE);	/* show */
 	}
 }
@@ -1112,7 +1112,7 @@ mg_tab_close (session *sess)
 		}
 		else
 		{
-			gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER_ON_PARENT);		
+			gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER_ON_PARENT);
 		}
 		gtk_widget_show (dialog);
 	}
@@ -1959,7 +1959,7 @@ flagk_hit (GtkWidget * wid, struct session *sess)
 
 	if (serv->connected && sess->channel[0])
 	{
-		snprintf (modes, sizeof (modes), "-k %s", 
+		snprintf (modes, sizeof (modes), "-k %s",
 			  gtk_entry_get_text (GTK_ENTRY (sess->gui->key_entry)));
 
 		if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (wid)))
@@ -2048,7 +2048,7 @@ mg_limit_entry_cb (GtkWidget * igad, gpointer userdata)
 			gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (sess->gui->flag_l), FALSE);
 			return;
 		}
-		snprintf (modes, sizeof(modes), "+l %d", 
+		snprintf (modes, sizeof(modes), "+l %d",
 				atoi (gtk_entry_get_text (GTK_ENTRY (igad))));
 		serv->p_mode (serv, sess->channel, modes);
 		serv->p_join_info (serv, sess->channel);
@@ -2892,7 +2892,7 @@ search_handle_esc (GtkWidget *win, GdkEventKey *key, session *sess)
 {
 	if (key->keyval == GDK_KEY_Escape)
 		mg_search_toggle(sess);
-			
+
 	return FALSE;
 }
 
@@ -3849,18 +3849,16 @@ mg_drag_drop_cb (GtkWidget *widget, GdkDragContext *context, int x, int y, guint
 gboolean
 mg_drag_motion_cb (GtkWidget *widget, GdkDragContext *context, int x, int y, guint time, gpointer scbar)
 {
-#if 0
-	GdkGC *gc;
-	GdkColor col;
-	GdkGCValues val;
+	cairo_t *cr;
 	int half, width, height;
 	int ox, oy;
-	GdkDrawable *draw;
 	GtkAllocation allocation;
 
 	/* ignore file drops */
 	if (!mg_is_gui_target (context))
 		return FALSE;
+
+    gtk_widget_set_app_paintable (widget, TRUE);
 
 	if (scbar)	/* scrollbar */
 	{
@@ -3869,56 +3867,33 @@ mg_drag_motion_cb (GtkWidget *widget, GdkDragContext *context, int x, int y, gui
 		oy = allocation.y;
 		width = allocation.width;
 		height = allocation.height;
-		draw = gtk_widget_get_window (widget);
 	}
 	else
 	{
 		ox = oy = 0;
 		width = gdk_window_get_width (gtk_widget_get_window (widget));
 		height = gdk_window_get_height (gtk_widget_get_window (widget));
-		draw = gtk_widget_get_window (widget);
 	}
 
 	val.subwindow_mode = GDK_INCLUDE_INFERIORS;
 	val.graphics_exposures = 0;
 	val.function = GDK_XOR;
 
-	gc = gdk_gc_new_with_values (gtk_widget_get_window (widget), &val, GDK_GC_EXPOSURES | GDK_GC_SUBWINDOW | GDK_GC_FUNCTION);
-	col.red = rand() % 0xffff;
-	col.green = rand() % 0xffff;
-	col.blue = rand() % 0xffff;
-	gdk_colormap_alloc_color (gtk_widget_get_colormap (widget), &col, FALSE, TRUE);
-	gdk_gc_set_foreground (gc, &col);
+	cr = gdk_cairo_create (gtk_widget_get_window (widget));
+	cairo_set_source_rgb (cr, 0, 0, 1.0);
+	cairo_set_line_width (cr, 0.1);
 
 	half = height / 2;
 
-#if 0
-	/* are both tree/userlist on the same side? */
-	paned = (GtkPaned *)widget->parent->parent;
-	if (paned->child1 != NULL && paned->child2 != NULL)
-	{
-		gdk_draw_rectangle (draw, gc, 0, 1, 2, width - 3, height - 4);
-		gdk_draw_rectangle (draw, gc, 0, 0, 1, width - 1, height - 2);
-		g_object_unref (gc);
-		return TRUE;
-	}
-#endif
-
 	if (y < half)
-	{
-		gdk_draw_rectangle (draw, gc, FALSE, 1 + ox, 2 + oy, width - 3, half - 4);
-		gdk_draw_rectangle (draw, gc, FALSE, 0 + ox, 1 + oy, width - 1, half - 2);
-		gtk_widget_queue_draw_area (widget, ox, half + oy, width, height - half);
-	}
+	    cairo_rectangle (cr, ox, oy, width, half);
 	else
-	{
-		gdk_draw_rectangle (draw, gc, FALSE, 0 + ox, half + 1 + oy, width - 1, half - 2);
-		gdk_draw_rectangle (draw, gc, FALSE, 1 + ox, half + 2 + oy, width - 3, half - 4);
-		gtk_widget_queue_draw_area (widget, ox, oy, width, half);
-	}
+	    cairo_rectangle (cr, ox, half + oy, width, half);
 
-	g_object_unref (gc);
-#endif
+	cairo_stroke (cr);
+    cairo_destroy (cr);
+
+	gtk_widget_queue_draw_area (widget, ox, oy, width, height);
 
 	return TRUE;
 }

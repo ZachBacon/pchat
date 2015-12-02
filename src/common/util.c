@@ -192,7 +192,7 @@ xchat_mem_list (void)
 		cur = cur->next;
 	}
 
-	fprintf (stderr, "file              line   size    num  total\n");  
+	fprintf (stderr, "file              line   size    num  total\n");
 	list = totals;
 	while (list)
 	{
@@ -766,7 +766,7 @@ get_sys_str (int with_cpu)
 	{
 		sprintf (verbuf, "Windows %s", winver);
 	}
-	
+
 	return verbuf;
 }
 
@@ -1459,15 +1459,15 @@ make_ping_time (void)
 
 
 /************************************************************************
- *    This technique was borrowed in part from the source code to 
+ *    This technique was borrowed in part from the source code to
  *    ircd-hybrid-5.3 to implement case-insensitive string matches which
  *    are fully compliant with Section 2.2 of RFC 1459, the copyright
  *    of that code being (C) 1990 Jarkko Oikarinen and under the GPL.
- *    
+ *
  *    A special thanks goes to Mr. Okarinen for being the one person who
  *    seems to have ever noticed this section in the original RFC and
  *    written code for it.  Shame on all the rest of you (myself included).
- *    
+ *
  *        --+ Dagmar d'Surreal
  */
 
@@ -1853,14 +1853,24 @@ int
 portable_mode ()
 {
 #ifdef WIN32
-	if ((_access( "portable-mode", 0 )) != -1)
+	static int is_portable = -1;
+
+	if (G_UNLIKELY(is_portable == -1))
 	{
-		return 1;
+		char *path = g_win32_get_package_installation_directory_of_module (NULL);
+		char *filename;
+
+		if (path == NULL)
+		    path = g_strdup (".");
+
+		filename = g_build_filename (path, "portable-mode", NULL);
+		is_portable = g_file_test (filename, G_FILE_TEST_EXISTS);
+
+		g_free (path);
+		g_free (filename);
 	}
-	else
-	{
-		return 0;
-	}
+
+	return is_portable;
 #else
 	return 0;
 #endif
@@ -2000,7 +2010,7 @@ parse_dh (char *str, DH **dh_out, unsigned char **secret_out, int *keysize_out)
 	size = ntohs (size16);
 	data += 2;
 	data_len -= 2;
-	
+
 	if (size > data_len)
 		goto fail;
 
@@ -2086,7 +2096,7 @@ encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 
 	/* pass */
 	memcpy (out_ptr, encrypted_pass, pass_len);
-	
+
 	ret = g_base64_encode ((const guchar*)response, length);
 
 	DH_free (dh);
@@ -2169,7 +2179,7 @@ encode_sasl_pass_aes (char *user, char *pass, char *data)
 
 	/* userpass */
 	memcpy (out_ptr, encrypted_userpass, userpass_len);
-	
+
 	ret = g_base64_encode ((const guchar*)response, length);
 
 end:

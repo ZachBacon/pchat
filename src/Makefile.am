@@ -7,7 +7,7 @@ text_fe = fe-text
 endif
 
 if DO_GTK
-gtk_fe = fe-gtk
+gtk_fe = fe-gtk3
 endif
 
 SUBDIRS = common $(gtk_fe) $(text_fe)
