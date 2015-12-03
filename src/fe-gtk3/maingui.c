@@ -3875,10 +3875,6 @@ mg_drag_motion_cb (GtkWidget *widget, GdkDragContext *context, int x, int y, gui
 		height = gdk_window_get_height (gtk_widget_get_window (widget));
 	}
 
-	val.subwindow_mode = GDK_INCLUDE_INFERIORS;
-	val.graphics_exposures = 0;
-	val.function = GDK_XOR;
-
 	cr = gdk_cairo_create (gtk_widget_get_window (widget));
 	cairo_set_source_rgb (cr, 0, 0, 1.0);
 	cairo_set_line_width (cr, 0.1);

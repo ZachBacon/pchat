@@ -207,7 +207,7 @@ tcp_send_queue (server *serv)
 
 				buf--;
 				serv->outbound_queue = g_slist_remove (serv->outbound_queue, buf);
-				free (buf);
+				g_free (buf);
 				list = serv->outbound_queue;
 			} else
 			{
@@ -229,7 +229,7 @@ tcp_send_len (server *serv, char *buf, int len)
 	if (!prefs.pchat_net_throttle)
 		return server_send_real (serv, buf, len);
 
-	dbuf = malloc (len + 2);	/* first byte is the priority */
+	dbuf = g_malloc (len + 2);	/* first byte is the priority */
 	dbuf[0] = 2;	/* pri 2 for most things */
 	memcpy (dbuf + 1, buf, len);
 	dbuf[len + 1] = 0;
@@ -321,7 +321,7 @@ server_inline (server *serv, char *line, gssize len)
 
 		utf_line_allocated = text_validate (&line, &len);
 
-	} 
+	}
 	else
 	{
 		/* Since the user has an explicit charset set, either
@@ -524,7 +524,7 @@ server_close_pipe (int *pipefd)	/* see comments below */
 {
 	close (pipefd[0]);	/* close WRITE end first to cause an EOF on READ */
 	close (pipefd[1]);	/* in giowin32, and end that thread. */
-	free (pipefd);
+	g_free (pipefd);
 	return FALSE;
 }
 
@@ -557,7 +557,7 @@ server_stopconnecting (server * serv)
 
 	{
 		/* if we close the pipe now, giowin32 will crash. */
-		int *pipefd = malloc (sizeof (int) * 2);
+		int *pipefd = g_new (int, 2);
 		pipefd[0] = serv->childwrite;
 		pipefd[1] = serv->childread;
 		g_idle_add ((GSourceFunc)server_close_pipe, pipefd);
@@ -1246,7 +1246,7 @@ traverse_socks5 (int print_fd, int sok, char *serverAddr, int port)
 
 	addrlen = strlen (serverAddr);
 	packetlen = 4 + 1 + addrlen + 2;
-	sc2 = malloc (packetlen);
+	sc2 = g_malloc (packetlen);
 	sc2[0] = 5;						  /* version */
 	sc2[1] = 1;						  /* command */
 	sc2[2] = 0;						  /* reserved */
@@ -1255,7 +1255,7 @@ traverse_socks5 (int print_fd, int sok, char *serverAddr, int port)
 	memcpy (sc2 + 5, serverAddr, addrlen);
 	*((unsigned short *) (sc2 + 5 + addrlen)) = htons (port);
 	send (sok, sc2, packetlen, 0);
-	free (sc2);
+	g_free (sc2);
 
 	/* consume all of the reply */
 	if (recv (sok, buf, 4, 0) != 4)
@@ -1504,7 +1504,7 @@ server_child (server * serv)
 			if (proxy_type) {
 				char *c;
 				c = strchr (proxy, ':') + 3;
-				proxy_host = strdup (c);
+				proxy_host = g_strdup (c);
 				c = strchr (proxy_host, ':');
 				*c = '\0';
 				proxy_port = atoi (c + 1);
@@ -1519,7 +1519,7 @@ server_child (server * serv)
 			   prefs.pchat_net_proxy_use != 2) /* proxy is NOT dcc-only */
 		{
 			proxy_type = prefs.pchat_net_proxy_type;
-			proxy_host = strdup (prefs.pchat_net_proxy_host);
+			proxy_host = g_strdup (prefs.pchat_net_proxy_host);
 			proxy_port = prefs.pchat_net_proxy_port;
 		}
 	}
@@ -1532,7 +1532,7 @@ server_child (server * serv)
 		g_snprintf (buf, sizeof (buf), "9\n%s\n", proxy_host);
 		write (serv->childwrite, buf, strlen (buf));
 		ip = net_resolve (ns_server, proxy_host, proxy_port, &real_hostname);
-		free (proxy_host);
+		g_free (proxy_host);
 		if (!ip)
 		{
 			write (serv->childwrite, "1\n", 2);
@@ -1551,7 +1551,7 @@ server_child (server * serv)
 				goto xit;
 			}
 		} else						  /* otherwise we can just use the hostname */
-			proxy_ip = strdup (hostname);
+			proxy_ip = g_strdup (hostname);
 	} else
 	{
 		ip = net_resolve (ns_server, hostname, port, &real_hostname);
@@ -1613,12 +1613,9 @@ xit:
 	/* no need to free ip/real_hostname, this process is exiting */
 #ifdef WIN32
 	/* under win32 we use a thread -> shared memory, must free! */
-	if (proxy_ip)
-		free (proxy_ip);
-	if (ip)
-		free (ip);
-	if (real_hostname)
-		free (real_hostname);
+	g_free (proxy_ip);
+	g_free (ip);
+	g_free (real_hostname);
 #endif
 
 	return 0;
@@ -1634,7 +1631,7 @@ server_connect (server *serv, char *hostname, int port, int no_login)
 #ifdef USE_OPENSSL
 	if (!ctx && serv->use_ssl)
 	{
-		if (!(ctx = _SSL_context_init (ssl_cb_info, FALSE)))
+		if (!(ctx = _SSL_context_init (ssl_cb_info)))
 		{
 			fprintf (stderr, "_SSL_context_init failed\n");
 			exit (1);
@@ -1775,7 +1772,7 @@ server_set_encoding (server *serv, char *new_encoding)
 
 	if (serv->encoding)
 	{
-		free (serv->encoding);
+		g_free (serv->encoding);
 		/* can be left as NULL to indicate system encoding */
 		serv->encoding = NULL;
 		serv->using_cp1255 = FALSE;
@@ -1784,8 +1781,8 @@ server_set_encoding (server *serv, char *new_encoding)
 
 	if (new_encoding)
 	{
-		serv->encoding = strdup (new_encoding);
-		/* the serverlist GUI might have added a space 
+		serv->encoding = g_strdup (new_encoding);
+		/* the serverlist GUI might have added a space
 			and short description - remove it. */
 		space = strchr (serv->encoding, ' ');
 		if (space)
@@ -1806,8 +1803,7 @@ server_new (void)
 	static int id = 0;
 	server *serv;
 
-	serv = malloc (sizeof (struct server));
-	memset (serv, 0, sizeof (struct server));
+	serv = g_new0 (struct server, 1);
 
 	/* use server.c and proto-irc.c functions */
 	server_fill_her_up (serv);
@@ -1833,19 +1829,15 @@ is_server (server *serv)
 void
 server_set_defaults (server *serv)
 {
-	if (serv->chantypes)
-		free (serv->chantypes);
-	if (serv->chanmodes)
-		free (serv->chanmodes);
-	if (serv->nick_prefixes)
-		free (serv->nick_prefixes);
-	if (serv->nick_modes)
-		free (serv->nick_modes);
+	g_free (serv->chantypes);
+	g_free (serv->chanmodes);
+	g_free (serv->nick_prefixes);
+	g_free (serv->nick_modes);
 
-	serv->chantypes = strdup ("#&!+");
-	serv->chanmodes = strdup ("beI,k,l");
-	serv->nick_prefixes = strdup ("@%+");
-	serv->nick_modes = strdup ("ohv");
+	serv->chantypes = g_strdup ("#&!+");
+	serv->chanmodes = g_strdup ("beI,k,l");
+	serv->nick_prefixes = g_strdup ("@%+");
+	serv->nick_modes = g_strdup ("ohv");
 
 	serv->nickcount = 1;
 	serv->end_of_motd = FALSE;
@@ -1949,9 +1941,8 @@ server_away_free_messages (server *serv)
 		if (away->server == serv)
 		{
 			away_list = g_slist_remove (away_list, away);
-			if (away->message)
-				free (away->message);
-			free (away);
+			g_free (away->message);
+			g_free (away);
 			next = away_list;
 		}
 		list = next;
@@ -1965,20 +1956,17 @@ server_away_save_message (server *serv, char *nick, char *msg)
 
 	if (away)						  /* Change message for known user */
 	{
-		if (away->message)
-			free (away->message);
-		away->message = strdup (msg);
-	} else
-		/* Create brand new entry */
+		g_free (away->message);
+		away->message = g_strdup (msg);
+	}
+	else
 	{
-		away = malloc (sizeof (struct away_msg));
-		if (away)
-		{
-			away->server = serv;
-			safe_strcpy (away->nick, nick, sizeof (away->nick));
-			away->message = strdup (msg);
-			away_list = g_slist_prepend (away_list, away);
-		}
+		/* Create brand new entry */
+		away = g_new(struct away_msg, 1);
+		away->server = serv;
+		safe_strcpy (away->nick, nick, sizeof (away->nick));
+		away->message = g_strdup (msg);
+		away_list = g_slist_prepend (away_list, away);
 	}
 }
 
@@ -1993,22 +1981,19 @@ server_free (server *serv)
 	serv->flush_queue (serv);
 	server_away_free_messages (serv);
 
-	free (serv->nick_modes);
-	free (serv->nick_prefixes);
-	free (serv->chanmodes);
-	free (serv->chantypes);
-	if (serv->bad_nick_prefixes)
-		free (serv->bad_nick_prefixes);
-	if (serv->last_away_reason)
-		free (serv->last_away_reason);
-	if (serv->encoding)
-		free (serv->encoding);
+	g_free (serv->nick_modes);
+	g_free (serv->nick_prefixes);
+    g_free (serv->chanmodes);
+    g_free (serv->chantypes);
+    g_free (serv->bad_nick_prefixes);
+    g_free (serv->last_away_reason);
+    g_free (serv->encoding);
 	if (serv->favlist)
 		g_slist_free_full (serv->favlist, (GDestroyNotify) servlist_favchan_free);
 
 	fe_server_callback (serv);
 
-	free (serv);
+	g_free (serv);
 
 	notify_cleanup ();
 }

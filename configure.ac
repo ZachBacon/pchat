@@ -10,7 +10,7 @@ AC_CONFIG_SRCDIR([configure.ac])
 
 AC_CONFIG_MACRO_DIR([m4])
 
-AM_INIT_AUTOMAKE([1.11 dist-bzip2 subdir-objects no-define foreign])
+AM_INIT_AUTOMAKE([1.11 dist-xz subdir-objects no-define foreign])
 AM_SILENT_RULES([yes])
 
 AC_USE_SYSTEM_EXTENSIONS
@@ -773,7 +773,7 @@ AC_TRY_COMPILE(
 	 act.sa_sigaction = 0;],
 	[
 		AC_MSG_RESULT(yes)
-		AC_DEFINE(USE_SIGACTION) 
+		AC_DEFINE(USE_SIGACTION)
 	],
 	AC_MSG_RESULT(no))
 
@@ -868,13 +868,13 @@ src/Makefile
 src/common/Makefile
 src/common/dbus/Makefile
 src/fe-text/Makefile
-src/fe-gtk/Makefile
+src/fe-gtk3/Makefile
+src/fe-gtk3/pchat.rc
 osx/Info.plist
 plugins/Makefile
 plugins/python/Makefile
 plugins/perl/Makefile
 po/Makefile.in
-src/fe-gtk/pchat.rc
 ])
 
 AC_OUTPUT

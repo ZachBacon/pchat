@@ -336,7 +336,6 @@ get_xdir (void)
 			path = g_win32_get_package_installation_directory_of_module (NULL);
 			if (path)
 			{
-				path = g_path_get_dirname (file);
 				xdir = g_build_filename (path, "config", NULL);
 				g_free (path);
 			}
@@ -606,7 +605,7 @@ const struct prefs vars[] =
 };
 
 static char *
-convert_with_fallback (char *str, const char *fallback)
+convert_with_fallback (const char *str, const char *fallback)
 {
 	char *utf;
 
