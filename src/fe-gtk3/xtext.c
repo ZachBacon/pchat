@@ -49,7 +49,7 @@
 
 #define charlen(str) g_utf8_skip[*(guchar *)(str)]
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 #include <windows.h>
 #include <io.h>
 #include <gdk/gdk.h>
@@ -1970,7 +1970,7 @@ gtk_xtext_button_press (GtkWidget * widget, GdkEventButton * event)
 static gboolean
 gtk_xtext_selection_kill (GtkXText *xtext, GdkEventSelection *event)
 {
-#ifndef WIN32
+#ifndef G_OS_WIN32
 	if (xtext->buffer->last_ent_start)
 		gtk_xtext_unselect (xtext);
 #endif

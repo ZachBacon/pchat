@@ -31,7 +31,7 @@
 #include "xchatc.h"
 #include "typedef.h"
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 #include <io.h>
 #else
 #include <unistd.h>
@@ -294,7 +294,7 @@ cfg_get_int (char *cfg, char *var)
 
 char *xdir = NULL;	/* utf-8 encoding */
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 
 #include <windows.h>
 
@@ -327,7 +327,7 @@ get_xdir (void)
 {
 	if (!xdir)
 	{
-#ifdef WIN32
+#ifdef G_OS_WIN32
 		char out[256];
 
 		if (portable_mode () || !get_reg_str ("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "AppData", out, sizeof (out)))
@@ -395,7 +395,7 @@ const struct prefs vars[] =
 	{"dcc_blocksize", P_OFFINT (pchat_dcc_blocksize), TYPE_INT},
 	{"dcc_completed_dir", P_OFFSET (pchat_dcc_completed_dir), TYPE_STR},
 	{"dcc_dir", P_OFFSET (pchat_dcc_dir), TYPE_STR},
-#ifndef WIN32
+#ifndef G_OS_WIN32
 	{"dcc_fast_send", P_OFFINT (pchat_dcc_fast_send), TYPE_BOOL},
 #endif
 	{"dcc_global_max_get_cps", P_OFFINT (pchat_dcc_global_max_get_cps), TYPE_INT},
@@ -547,7 +547,7 @@ const struct prefs vars[] =
 	{"irc_whois_front", P_OFFINT (pchat_irc_whois_front), TYPE_BOOL},
 
 	{"net_auto_reconnect", P_OFFINT (pchat_net_auto_reconnect), TYPE_BOOL},
-#ifndef WIN32	/* FIXME fix reconnect crashes and remove this ifdef! */
+#ifndef G_OS_WIN32	/* FIXME fix reconnect crashes and remove this ifdef! */
 	{"net_auto_reconnectonfail", P_OFFINT (pchat_net_auto_reconnectonfail), TYPE_BOOL},
 #endif
 	{"net_bind_host", P_OFFSET (pchat_net_bind_host), TYPE_STR},
@@ -729,7 +729,7 @@ load_default_config(void)
 {
 	const char *username, *realname, *font;
 	char *sp;
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	char out[256];
 #endif
 
@@ -754,7 +754,7 @@ load_default_config(void)
 	prefs.pchat_away_show_once = 1;
 	prefs.pchat_away_track = 1;
 	prefs.pchat_dcc_auto_resume = 1;
-#ifndef WIN32
+#ifndef G_OS_WIN32
 	prefs.pchat_dcc_fast_send = 1;
 #endif
 	prefs.pchat_gui_autoopen_chat = 1;
@@ -853,7 +853,7 @@ load_default_config(void)
 	/* STRINGS */
 	strcpy (prefs.pchat_away_reason, _("I'm busy"));
 	strcpy (prefs.pchat_completion_suffix, ",");
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	if (portable_mode () || !get_reg_str ("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Personal", out, sizeof (out)))
 	{
 		g_snprintf (prefs.pchat_dcc_dir, sizeof (prefs.pchat_dcc_dir), "%s\\downloads", get_xdir ());
@@ -1057,7 +1057,7 @@ save_config (void)
 		return 0;
 	}
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	g_unlink (config);	/* win32 can't rename to an existing file */
 #endif
 	if (g_rename (new_config, config) == -1)

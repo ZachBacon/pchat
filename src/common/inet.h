@@ -26,7 +26,7 @@
 #include "../../config.h"
 #endif
 
-#ifndef WIN32
+#ifndef G_OS_WIN32
 
 #ifdef WANTSOCKET
 #include <sys/types.h>

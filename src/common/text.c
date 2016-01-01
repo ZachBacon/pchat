@@ -25,7 +25,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 #include <io.h>
 #else
 #include <unistd.h>
@@ -43,7 +43,7 @@
 #include "xchatc.h"
 #include "text.h"
 #include "typedef.h"
-#ifdef WIN32
+#ifdef G_OS_WIN32
 #include <windows.h>
 #endif
 
@@ -290,7 +290,7 @@ scrollback_load (session *sess)
 		GIOStatus io_status;
 
 		io_status = g_io_channel_read_line (io, &buf, &n_bytes, NULL, &io_err);
-		
+
 		if (io_status == G_IO_STATUS_NORMAL)
 		{
 			char *buf_tmp;
@@ -367,7 +367,7 @@ static void
 mkdir_p (char *filename)
 {
 	char *dirname;
-	
+
 	dirname = g_path_get_dirname (filename);
 
 	g_mkdir_with_parents (dirname, 0700);
@@ -387,7 +387,7 @@ log_create_filename (char *channame)
 		mbl = g_utf8_skip[((unsigned char *)tmp)[0]];
 		if (mbl == 1)
 		{
-#ifndef WIN32
+#ifndef G_OS_WIN32
 			*tmp = rfc_tolower (*tmp);
 			if (*tmp == '/')
 #else
@@ -805,7 +805,7 @@ text_validate (char **text, gssize *len)
 	if (g_utf8_validate (*text, *len, 0))
 		return NULL;
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	if (GetACP () == 1252) /* our routine is better than iconv's 1252 */
 #else
 	if (prefs.utf8_locale)
@@ -820,7 +820,7 @@ text_validate (char **text, gssize *len)
 			utf = iso_8859_1_to_utf8 (*text, *len, &utf_len);
 	}
 
-	if (!utf) 
+	if (!utf)
 	{
 		*text = g_strdup ("%INVALID%");
 		*len = 9;
@@ -1822,7 +1822,7 @@ format_event (session *sess, int index, char **args, char *o, gsize sizeofo, uns
 }
 
 static void
-display_event (session *sess, int event, char **args, 
+display_event (session *sess, int event, char **args,
 					unsigned int stripcolor_args, time_t timestamp)
 {
 	char o[4096];
@@ -2154,7 +2154,7 @@ pevent_save (char *fn)
 	if (fd == -1)
 	{
 		/*
-		   fe_message ("Error opening config file\n", FALSE); 
+		   fe_message ("Error opening config file\n", FALSE);
 		   If we get here when X-Chat is closing the fe-message causes a nice & hard crash
 		   so we have to use perror which doesn't rely on GTK
 		 */
@@ -2199,7 +2199,7 @@ sound_play (const char *file, gboolean quiet)
 {
 	char *buf;
 	char *wavfile;
-#ifndef WIN32
+#ifndef G_OS_WIN32
 	char *cmd;
 #endif
 
@@ -2221,7 +2221,7 @@ sound_play (const char *file, gboolean quiet)
 
 	if (g_access (wavfile, R_OK) == 0)
 	{
-#ifdef WIN32
+#ifdef G_OS_WIN32
 		PlaySound (wavfile, NULL, SND_NODEFAULT|SND_FILENAME|SND_ASYNC);
 #else
 #ifdef USE_LIBCANBERRA
@@ -2238,7 +2238,7 @@ sound_play (const char *file, gboolean quiet)
 #endif
 		{
 			cmd = g_find_program_in_path ("play");
-	
+
 			if (cmd)
 			{
 				buf = g_strdup_printf ("%s \"%s\"", cmd, wavfile);

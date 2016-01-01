@@ -22,7 +22,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#ifndef WIN32
+#ifndef G_OS_WIN32
 #include <unistd.h>
 #endif
 
@@ -246,7 +246,7 @@ static const struct defaultserver def[] =
 
 	{"GameSurge", 0},
 	{0,			"irc.gamesurge.net"},
-	
+
 	{"GeekShed",	0},
 	{0,			"irc.geekshed.net"},
 
@@ -270,7 +270,7 @@ static const struct defaultserver def[] =
 	{0,			"irc.indirectirc.com/+6697"},
 #endif
 	{0,			"irc.indirectirc.com"},
-	
+
 	{"Interlinked", 0, 0, 0, LOGIN_SASL},
 #ifdef USE_OPENSSL
 	{0,			"irc.interlinked.me/+6697"},
@@ -293,7 +293,7 @@ static const struct defaultserver def[] =
 	{"IRCNet",		0},
 	{0,				"open.ircnet.net"},
 	{0,				"irc.de.ircnet.net"},
-	
+
 	{"IRCNode", 0, 0, 0, LOGIN_SASL},
 #ifdef USE_OPENSSL
 	{0,			"irc.ircnode.org/+6697"},
@@ -344,9 +344,9 @@ static const struct defaultserver def[] =
 	{0,			"universe.nevernet.net"},
 	{0,			"wayland.nevernet.net"},
 	{0,			"forte.nevernet.net"},
-	
+
 	{"ObsidianIRC",  0},
-	{0,      "irc.obsidianirc.net"}, 
+	{0,      "irc.obsidianirc.net"},
 
 	{"Oceanius", 0, 0, 0, LOGIN_SASL},
 	{0,			"irc.oceanius.com"},
@@ -362,7 +362,7 @@ static const struct defaultserver def[] =
 
 	{"PIRC.PL",	0},
 	{0,			"irc.pirc.pl"},
-	
+
 	{"PonyChat", 0, 0, 0, LOGIN_SASL},
 #ifdef USE_OPENSSL
 	{0, 		"irc.ponychat.net/+6697"},
@@ -438,7 +438,7 @@ static const struct defaultserver def[] =
 	{0,			"irc.sorcery.net/9000"},
 	{0,			"irc.us.sorcery.net/9000"},
 	{0,			"irc.eu.sorcery.net/9000"},
-	
+
 	{"SpotChat", 0, 0, 0, LOGIN_SASL},
 #ifdef USE_OPENSSL
 	{0,			"irc.spotchat.org/+6697"},
@@ -462,7 +462,7 @@ static const struct defaultserver def[] =
 	{0,			"irc.station51.net/+6697"},
 #endif
 	{0,			"irc.station51.net"},
-	
+
 	{"SwiftIRC", 0},
 #ifdef USE_OPENSSL
 	{0,			"irc.swiftirc.net/+6697"},
@@ -500,7 +500,7 @@ static const struct defaultserver def[] =
 	{0,			"irc.techno-link.com"},
 	{0,			"irc.telecoms.bg"},
 	{0,			"irc.tu-varna.edu"},
-	
+
 	{"ValleyNode", 0, 0, 0, LOGIN_SASL},
 	{0,			"irc.valleynode.net"},
 
@@ -1333,7 +1333,7 @@ servlist_save (void)
 	GSList *netlist;
 	GSList *cmdlist;
 	GSList *favlist;
-#ifndef WIN32
+#ifndef G_OS_WIN32
 	int first = FALSE;
 
 	buf = g_build_filename (get_xdir (), "servlist.conf", NULL);
@@ -1344,13 +1344,13 @@ servlist_save (void)
 	fp = xchat_fopen_file ("servlist.conf", "w", 0);
 	if (!fp)
 	{
-#ifndef WIN32
+#ifndef G_OS_WIN32
 		g_free (buf);
 #endif
 		return FALSE;
 	}
 
-#ifndef WIN32
+#ifndef G_OS_WIN32
 	if (first)
 		g_chmod (buf, 0600);
 

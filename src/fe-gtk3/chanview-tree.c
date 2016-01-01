@@ -122,7 +122,7 @@ cv_tree_init (chanview *cv)
 	{
 		gtk_tree_view_set_enable_tree_lines (GTK_TREE_VIEW (view), TRUE);
 	}
-	
+
 	/* Indented channels with no server looks silly, but we still want expanders */
 	if (!prefs.pchat_gui_tab_server)
 	{
@@ -152,7 +152,7 @@ cv_tree_init (chanview *cv)
 	gtk_cell_renderer_text_set_fixed_height_from_font (GTK_CELL_RENDERER_TEXT (renderer), 1);
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes (col, renderer, "text", COL_NAME, "attributes", COL_ATTR, NULL);
-	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);									
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 
 	g_signal_connect (G_OBJECT (gtk_tree_view_get_selection (GTK_TREE_VIEW (view))),
 							"changed", G_CALLBACK (cv_tree_sel_cb), cv);
@@ -167,7 +167,7 @@ cv_tree_init (chanview *cv)
 							 GDK_ACTION_MOVE | GDK_ACTION_COPY | GDK_ACTION_LINK);
 	gtk_drag_source_set (view, GDK_BUTTON1_MASK, dnd_src_target, 1, GDK_ACTION_COPY);
 
-#ifndef WIN32
+#ifndef G_OS_WIN32
 	g_signal_connect (G_OBJECT (view), "drag_begin",
 							G_CALLBACK (mg_drag_begin_cb), NULL);
 	g_signal_connect (G_OBJECT (view), "drag_drop",
@@ -389,6 +389,6 @@ cv_tree_is_collapsed (chan *ch)
 											  &parent->iter);
 	ret = !gtk_tree_view_row_expanded (((treeview *)parent->cv)->tree, path);
 	gtk_tree_path_free (path);
-	
+
 	return ret;
 }

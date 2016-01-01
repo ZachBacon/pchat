@@ -22,7 +22,7 @@
 
 #include "fe-gtk.h"
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 #include <gdk/gdkwin32.h>
 #include <windows.h>
 #else
@@ -75,7 +75,7 @@ static gint arg_show_config = 0;
 static gint arg_show_version = 0;
 static gint arg_minimize = 0;
 
-static const GOptionEntry gopt_entries[] = 
+static const GOptionEntry gopt_entries[] =
 {
  {"no-auto",	'a', 0, G_OPTION_ARG_NONE,	&arg_dont_autoconnect, N_("Don't auto connect to servers"), NULL},
  {"cfgdir",	'd', 0, G_OPTION_ARG_STRING,	&arg_cfgdir, N_("Use a different config directory"), "PATH"},
@@ -93,7 +93,7 @@ static const GOptionEntry gopt_entries[] =
  {NULL}
 };
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 static void
 create_msg_dialog (gchar *title, gchar *message)
 {
@@ -103,7 +103,7 @@ create_msg_dialog (gchar *title, gchar *message)
 	gtk_window_set_title (GTK_WINDOW (dialog), title);
 
 /* On Win32 we automatically have the icon. If we try to load it explicitly, it will look ugly for some reason. */
-#ifndef WIN32
+#ifndef G_OS_WIN32
 	pixmaps_init ();
 	gtk_window_set_icon (GTK_WINDOW (dialog), pix_xchat);
 #endif
@@ -127,14 +127,14 @@ fe_args (int argc, char *argv[])
 #endif
 
 	context = g_option_context_new (NULL);
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	g_option_context_set_help_enabled (context, FALSE);	/* disable stdout help as stdout is unavailable for subsystem:windows */
 #endif
 	g_option_context_add_main_entries (context, gopt_entries, GETTEXT_PACKAGE);
 	g_option_context_add_group (context, gtk_get_option_group (FALSE));
 	g_option_context_parse (context, &argc, &argv, &error);
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	if (error)											/* workaround for argv not being available when using subsystem:windows */
 	{
 		if (error->message)								/* the error message contains argv so search for patterns in that */
@@ -155,7 +155,7 @@ fe_args (int argc, char *argv[])
 				g_free (buffer);
 				return 0;
 			}
-			else 
+			else
 			{
 				buffer = g_strdup_printf ("%s\n", error->message);
 				gtk_init (&argc, &argv);
@@ -179,7 +179,7 @@ fe_args (int argc, char *argv[])
 	if (arg_show_version)
 	{
 		buffer = g_strdup_printf ("%s %s", PACKAGE_NAME, PACKAGE_VERSION);
-#ifdef WIN32
+#ifdef G_OS_WIN32
 		gtk_init (&argc, &argv);
 		create_msg_dialog ("Version Information", buffer);
 #else
@@ -193,7 +193,7 @@ fe_args (int argc, char *argv[])
 	if (arg_show_autoload)
 	{
 		buffer = g_strdup_printf ("%s%caddons%c", get_xdir(), G_DIR_SEPARATOR, G_DIR_SEPARATOR);
-#ifdef WIN32
+#ifdef G_OS_WIN32
 		gtk_init (&argc, &argv);
 		create_msg_dialog ("Plugin/Script Auto-load Directory", buffer);
 #else
@@ -207,7 +207,7 @@ fe_args (int argc, char *argv[])
 	if (arg_show_config)
 	{
 		buffer = g_strdup_printf ("%s%c", get_xdir(), G_DIR_SEPARATOR);
-#ifdef WIN32
+#ifdef G_OS_WIN32
 		gtk_init (&argc, &argv);
 		create_msg_dialog ("User Config Directory", buffer);
 #else
@@ -218,7 +218,7 @@ fe_args (int argc, char *argv[])
 		return 0;
 	}
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	/* this is mainly for irc:// URL handling. When windows calls us from */
 	/* I.E, it doesn't give an option of "Start in" directory, like short */
 	/* cuts can. So we have to set the current dir manually, to the path  */
@@ -340,7 +340,7 @@ fe_timeout_remove (int tag)
 	g_source_remove (tag);
 }
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 
 static void
 log_handler (const gchar   *log_domain,
@@ -398,7 +398,7 @@ fe_new_window (session *sess, int focus)
 
 	mg_changui_new (sess, NULL, tab, focus);
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	g_log_set_handler ("GLib", G_LOG_LEVEL_CRITICAL|G_LOG_LEVEL_WARNING, (GLogFunc)log_handler, 0);
 	g_log_set_handler ("GLib-GObject", G_LOG_LEVEL_CRITICAL|G_LOG_LEVEL_WARNING, (GLogFunc)log_handler, 0);
 	g_log_set_handler ("Gdk", G_LOG_LEVEL_CRITICAL|G_LOG_LEVEL_WARNING, (GLogFunc)log_handler, 0);
@@ -459,7 +459,7 @@ fe_input_add (int sok, int flags, void *func, void *data)
 	int tag, type = 0;
 	GIOChannel *channel;
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	if (flags & FIA_FD)
 		channel = g_io_channel_win32_new_fd (sok);
 	else
@@ -643,7 +643,7 @@ fe_print_text (struct session *sess, char *text, time_t stamp,
 void
 fe_beep (session *sess)
 {
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	if (!PlaySound ("Notification.IM", NULL, SND_ALIAS|SND_ASYNC))
 	{
 		/* This is really just a fallback attempt, may or may not work on new Windows releases, especially on x64.
@@ -908,7 +908,7 @@ fe_gui_info_ptr (session *sess, int info_type)
 	switch (info_type)
 	{
 	case 0:	/* native window pointer (for plugins) */
-#ifdef WIN32
+#ifdef G_OS_WIN32
 		return gdk_win32_window_get_impl_hwnd (gtk_widget_get_window (sess->gui->window));
 #else
 		return sess->gui->window;
@@ -974,7 +974,7 @@ fe_set_inputbox_contents (session *sess, char *text)
 static void
 fe_open_url_inner (const char *url)
 {
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	ShellExecute (0, "open", url, NULL, NULL, SW_SHOWNORMAL);
 #elif defined __APPLE__
 	/* on Mac you can just 'open http://foo.bar/' */
@@ -995,7 +995,7 @@ fe_open_url_locale (const char *url)
 	/* gvfs likes file:// */
 	if (url_type == WORD_PATH)
 	{
-#ifndef WIN32
+#ifndef G_OS_WIN32
 		uri = g_strconcat ("file://", url, NULL);
 		fe_open_url_inner (uri);
 		g_free (uri);
@@ -1101,7 +1101,7 @@ void
 fe_get_file (const char *title, char *initial,
 				 void (*callback) (void *userdata, char *file), void *userdata,
 				 int flags)
-				
+
 {
 	/* OK: Call callback once per file, then once more with file=NULL. */
 	/* CANCEL: Call callback once with file=NULL. */
@@ -1117,7 +1117,7 @@ fe_open_chan_list (server *serv, char *filter, int do_refresh)
 const char *
 fe_get_default_font (void)
 {
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	if (gtkutil_find_font ("Consolas"))
 		return "Consolas 10";
 	else

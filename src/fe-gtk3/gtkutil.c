@@ -27,7 +27,7 @@
 #include "fe-gtk.h"
 
 #include <gdk/gdkkeysyms.h>
-#if defined (WIN32) || defined (__APPLE__)
+#if defined (G_OS_WIN32) || defined (__APPLE__)
 #include <pango/pangocairo.h>
 #endif
 
@@ -40,7 +40,7 @@
 #include "gtkutil.h"
 #include "pixmaps.h"
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 #include <io.h>
 #else
 #include <unistd.h>
@@ -256,7 +256,7 @@ gtkutil_esc_destroy (GtkWidget * win, GdkEventKey * key, gpointer userdata)
 
 	if (key->keyval == GDK_KEY_Escape)
 		gtk_widget_destroy (wid);
-			
+
 	return FALSE;
 }
 
@@ -537,7 +537,7 @@ show_and_unfocus (GtkWidget * wid)
 void
 gtkutil_set_icon (GtkWidget *win)
 {
-#ifndef WIN32
+#ifndef G_OS_WIN32
 	/* FIXME: Magically breaks icon rendering in most
 	 * (sub)windows, but OFC only on Windows. GTK <3
 	 */
@@ -554,7 +554,7 @@ gtkutil_window_new (char *title, char *role, int width, int height, int flags)
 
 	win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 	gtkutil_set_icon (win);
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	gtk_window_set_wmclass (GTK_WINDOW (win), "PChat", "pchat");
 #endif
 	gtk_window_set_title (GTK_WINDOW (win), title);
@@ -678,7 +678,7 @@ gtkutil_treeview_get_selected_iter (GtkTreeView *view, GtkTreeIter *iter_ret)
 {
 	GtkTreeModel *store;
 	GtkTreeSelection *select;
-	
+
 	select = gtk_tree_view_get_selection (view);
 	return gtk_tree_selection_get_selected (select, &store, iter_ret);
 }*/
@@ -690,7 +690,7 @@ gtkutil_treeview_get_selected (GtkTreeView *view, GtkTreeIter *iter_ret, ...)
 	GtkTreeSelection *select;
 	gboolean has_selected;
 	va_list args;
-	
+
 	select = gtk_tree_view_get_selection (view);
 	has_selected = gtk_tree_selection_get_selected (select, &store, iter_ret);
 
@@ -703,7 +703,7 @@ gtkutil_treeview_get_selected (GtkTreeView *view, GtkTreeIter *iter_ret, ...)
 	return has_selected;
 }
 
-#if defined (WIN32) || defined (__APPLE__)
+#if defined (G_OS_WIN32) || defined (__APPLE__)
 gboolean
 gtkutil_find_font (const char *fontname)
 {

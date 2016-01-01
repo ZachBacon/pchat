@@ -230,7 +230,7 @@ fe_userlist_set_selected (struct session *sess)
 				user->selected = 1;
 			else
 				user->selected = 0;
-				
+
 		} while (gtk_tree_model_iter_next (GTK_TREE_MODEL (store), &iter));
 	}
 }
@@ -643,7 +643,7 @@ userlist_create (GtkWidget *box)
 							G_CALLBACK (userlist_key_cb), 0);
 
 	/* tree/chanview DND */
-#ifndef WIN32	/* leaks GDI pool memory, don't enable */
+#ifndef G_OS_WIN32	/* leaks GDI pool memory, don't enable */
 	g_signal_connect (G_OBJECT (treeview), "drag_begin",
 							G_CALLBACK (mg_drag_begin_cb), NULL);
 	g_signal_connect (G_OBJECT (treeview), "drag_drop",

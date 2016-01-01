@@ -161,7 +161,7 @@ plugingui_load (void)
 	sub_dir = g_build_filename (get_xdir(), "addons", NULL);
 
 	gtkutil_file_req (_("Select a Plugin or Script to load"), plugingui_load_cb, current_sess,
-#ifdef WIN32
+#ifdef G_OS_WIN32
 							sub_dir, "*.dll;*.lua;*.pl;*.py;*.tcl;*.js", FRF_FILTERISINITIAL|FRF_EXTENSIONS);
 #else
 							sub_dir, "*.so;*.lua;*.pl;*.py;*.tcl;*.js", FRF_FILTERISINITIAL|FRF_EXTENSIONS);
@@ -183,14 +183,14 @@ plugingui_unload (GtkWidget * wid, gpointer unused)
 	char *modname, *file, *buf;
 	GtkTreeView *view;
 	GtkTreeIter iter;
-	
+
 	view = g_object_get_data (G_OBJECT (plugin_window), "view");
 	if (!gtkutil_treeview_get_selected (view, &iter, NAME_COLUMN, &modname,
 	                                    FILE_COLUMN, &file, -1))
 		return;
 
 	len = strlen (file);
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	if (len > 4 && g_ascii_strcasecmp (file + len - 4, ".dll") == 0)
 #else
 #if defined(__hpux)

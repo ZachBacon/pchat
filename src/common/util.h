@@ -18,15 +18,15 @@
  */
 
 /************************************************************************
- *    This technique was borrowed in part from the source code to 
+ *    This technique was borrowed in part from the source code to
  *    ircd-hybrid-5.3 to implement case-insensitive string matches which
  *    are fully compliant with Section 2.2 of RFC 1459, the copyright
  *    of that code being (C) 1990 Jarkko Oikarinen and under the GPL.
- *    
+ *
  *    A special thanks goes to Mr. Okarinen for being the one person who
  *    seems to have ever noticed this section in the original RFC and
  *    written code for it.  Shame on all the rest of you (myself included).
- *    
+ *
  *        --+ Dagmar d'Surreal
  */
 
@@ -63,7 +63,7 @@ int strip_color2 (const char *src, int len, char *dst, int flags);
 int strip_hidden_attribute (char *src, char *dst);
 char *errorstring (int err);
 int waitline (int sok, char *buf, int bufsize, int);
-#ifdef WIN32
+#ifdef G_OS_WIN32
 int waitline2 (GIOChannel *source, char *buf, int bufsize);
 int get_cpu_arch (void);
 #else

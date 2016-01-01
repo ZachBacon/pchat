@@ -26,7 +26,7 @@
 
 #define DISPLAY_NAME "PChat"
 
-#ifndef WIN32
+#ifndef G_OS_WIN32
 #include <sys/types.h>
 #include <regex.h>
 #endif
@@ -100,7 +100,7 @@ struct server_gui
 	gboolean chanlist_match_wants_channel;	/* match in channel name */
 	gboolean chanlist_match_wants_topic;	/* match in topic */
 
-#ifndef WIN32
+#ifndef G_OS_WIN32
 	regex_t chanlist_match_regex;	/* compiled regular expression here */
 	unsigned int have_regex;
 #endif
@@ -108,7 +108,7 @@ struct server_gui
 	guint chanlist_users_found_count;	/* users total for all channels */
 	guint chanlist_users_shown_count;	/* users total for displayed channels */
 	guint chanlist_channels_found_count;	/* channel total for /LIST operation */
-	guint chanlist_channels_shown_count;	/* total number of displayed 
+	guint chanlist_channels_shown_count;	/* total number of displayed
 														   channels */
 
 	int chanlist_maxusers;

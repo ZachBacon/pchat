@@ -25,7 +25,7 @@
 
 #include <gdk/gdkkeysyms.h>
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 #include <io.h>
 #else
 #include <unistd.h>
@@ -283,7 +283,7 @@ editlist_treeview_new (GtkWidget *box, char *title1, char *title2)
 	view = gtk_tree_view_new_with_model (GTK_TREE_MODEL (store));
 	gtk_tree_view_set_fixed_height_mode (GTK_TREE_VIEW (view), TRUE);
 	gtk_tree_view_set_enable_search (GTK_TREE_VIEW (view), FALSE);
-	
+
 	g_signal_connect (G_OBJECT (view), "key_press_event",
 						G_CALLBACK (editlist_keypress), NULL);
 

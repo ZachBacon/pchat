@@ -21,7 +21,7 @@
 #include <fcntl.h>
 #include <string.h>
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 #include <windows.h>
 #include <io.h>
 #else
@@ -620,35 +620,35 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 	}
 	item = menu_quick_item (0, buf, submenu, XCMENU_MARKUP, 0, 0);
 	g_signal_connect (G_OBJECT (item), "activate",
-							G_CALLBACK (copy_to_clipboard_cb), 
+							G_CALLBACK (copy_to_clipboard_cb),
 							user->realname ? user->realname : unknown);
 
 	snprintf (buf, sizeof (buf), fmt, _("User:"),
 				 user->hostname ? user->hostname : unknown);
 	item = menu_quick_item (0, buf, submenu, XCMENU_MARKUP, 0, 0);
 	g_signal_connect (G_OBJECT (item), "activate",
-							G_CALLBACK (copy_to_clipboard_cb), 
+							G_CALLBACK (copy_to_clipboard_cb),
 							user->hostname ? user->hostname : unknown);
-	
+
 	snprintf (buf, sizeof (buf), fmt, _("Account:"),
 				 user->account ? user->account : unknown);
 	item = menu_quick_item (0, buf, submenu, XCMENU_MARKUP, 0, 0);
 	g_signal_connect (G_OBJECT (item), "activate",
-							G_CALLBACK (copy_to_clipboard_cb), 
+							G_CALLBACK (copy_to_clipboard_cb),
 							user->account ? user->account : unknown);
 
 	snprintf (buf, sizeof (buf), fmt, _("Country:"),
 				 user->hostname ? country(user->hostname) : unknown);
 	item = menu_quick_item (0, buf, submenu, XCMENU_MARKUP, 0, 0);
 	g_signal_connect (G_OBJECT (item), "activate",
-							G_CALLBACK (copy_to_clipboard_cb), 
+							G_CALLBACK (copy_to_clipboard_cb),
 							user->hostname ? country(user->hostname) : unknown);
 
 	snprintf (buf, sizeof (buf), fmt, _("Server:"),
 				 user->servername ? user->servername : unknown);
 	item = menu_quick_item (0, buf, submenu, XCMENU_MARKUP, 0, 0);
 	g_signal_connect (G_OBJECT (item), "activate",
-							G_CALLBACK (copy_to_clipboard_cb), 
+							G_CALLBACK (copy_to_clipboard_cb),
 							user->servername ? user->servername : unknown);
 
 	if (user->lasttalk)
@@ -674,7 +674,7 @@ menu_create_nickinfo_menu (struct User *user, GtkWidget *submenu)
 			g_free (msg);
 			item = menu_quick_item (0, buf, submenu, XCMENU_MARKUP, 0, 0);
 			g_signal_connect (G_OBJECT (item), "activate",
-									G_CALLBACK (copy_to_clipboard_cb), 
+									G_CALLBACK (copy_to_clipboard_cb),
 									away->message ? away->message : unknown);
 		}
 		else
@@ -899,7 +899,7 @@ menu_fullscreen_toggle (GtkWidget *wid, gpointer ud)
 	{
 		gtk_window_unfullscreen (GTK_WINDOW(parent_window));
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 		/* other window managers seem to handle this */
 		gtk_window_resize (GTK_WINDOW(parent_window),
 					prefs.pchat_gui_win_width, prefs.pchat_gui_win_height);
@@ -1056,7 +1056,7 @@ void
 menu_addfavoritemenu (server *serv, GtkWidget *menu, char *channel, gboolean istree)
 {
 	char *str;
-	
+
 	if (!serv->network)
 		return;
 
@@ -1066,7 +1066,7 @@ menu_addfavoritemenu (server *serv, GtkWidget *menu, char *channel, gboolean ist
 			free (str_copy);
 		str_copy = strdup (channel);
 	}
-	
+
 	if (istree)
 		str = _("_Autojoin");
 	else
@@ -1668,12 +1668,12 @@ menu_about (GtkWidget *wid, gpointer sess)
 					"along with this program. If not, see <http://www.gnu.org/licenses/>";
 
 	g_snprintf  (comment, sizeof(comment), "Compiled: "__DATE__"\n"
-#ifdef WIN32
+#ifdef G_OS_WIN32
 				"Portable Mode: %s\n"
 				"Build Type: x%d\n"
 #endif
 				"OS: %s",
-#ifdef WIN32
+#ifdef G_OS_WIN32
 				(portable_mode () ? "Yes" : "No"),
 				get_cpu_arch (),
 #endif
@@ -1691,7 +1691,7 @@ menu_about (GtkWidget *wid, gpointer sess)
 	gtk_window_set_transient_for (GTK_WINDOW(dialog), GTK_WINDOW(parent_window));
 	g_signal_connect (G_OBJECT(dialog), "response", G_CALLBACK(about_dialog_close), NULL);
 	g_signal_connect (G_OBJECT(dialog), "activate-link", G_CALLBACK(about_dialog_openurl), NULL);
-	
+
 	gtk_widget_show_all (GTK_WIDGET(dialog));
 }
 

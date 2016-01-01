@@ -33,7 +33,7 @@
 #include "sexy-iso-codes.h"
 #include "../common/marshal.h"
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 #include "../common/typedef.h"
 #include <io.h>
 #else
@@ -153,14 +153,14 @@ initialize_enchant ()
 	GModule *enchant;
 	gpointer funcptr;
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	enchant = g_module_open("libenchant.dll", 0);
 #else
 	enchant = g_module_open("libenchant", 0);
 #endif
 	if (enchant == NULL)
 	{
-#ifndef WIN32
+#ifndef G_OS_WIN32
 		enchant = g_module_open("libenchant.so.1", 0);
 				if (enchant == NULL)
 					return;
@@ -216,7 +216,7 @@ sexy_spell_entry_class_init(SexySpellEntryClass *klass)
 
 	object_class->dispose = sexy_spell_entry_destroy;
 
-	/* widget_class->expose_event = sexy_spell_entry_expose; FIXME: replace with draw */ 
+	/* widget_class->expose_event = sexy_spell_entry_expose; FIXME: replace with draw */
 	widget_class->button_press_event = sexy_spell_entry_button_press;
 
 	/**
@@ -349,7 +349,7 @@ insert_italic (SexySpellEntry *entry, guint start, gboolean toggle)
 {
 	PangoAttribute *iattr;
 
-	iattr  = pango_attr_style_new (toggle ? PANGO_STYLE_NORMAL : PANGO_STYLE_ITALIC); 
+	iattr  = pango_attr_style_new (toggle ? PANGO_STYLE_NORMAL : PANGO_STYLE_ITALIC);
 	iattr->start_index = start;
 	iattr->end_index = PANGO_ATTR_INDEX_TO_TEXT_END;
 	pango_attr_list_change (entry->priv->attr_list, iattr);
@@ -647,7 +647,7 @@ build_spelling_menu(SexySpellEntry *entry, const gchar *word)
 				submi = gtk_menu_item_new_with_label(lang_name);
 				g_free (lang_name);
 			}
-			else 
+			else
 			{
 				submi = gtk_menu_item_new_with_label(lang);
 			}
@@ -1056,7 +1056,7 @@ sexy_spell_entry_recheck_all(SexySpellEntry *entry)
 	if (gtk_widget_get_realized (GTK_WIDGET(entry)))
 	{
 		gtk_widget_get_allocation (GTK_WIDGET(entry), &allocation);
-		
+
 		rect.x = 0; rect.y = 0;
 		rect.width  = allocation.width;
 		rect.height = allocation.height;
@@ -1072,7 +1072,7 @@ sexy_spell_entry_expose(GtkWidget *widget, GdkEventExpose *event)
 	GtkEntry *gtk_entry = GTK_ENTRY(widget);
 	PangoLayout *layout;
 
-	
+
 	layout = gtk_entry_get_layout(gtk_entry);
 	pango_layout_set_attributes(layout, entry->priv->attr_list);
 
@@ -1182,7 +1182,7 @@ enchant_has_lang(const gchar *lang, GSList *langs) {
  * sexy_spell_entry_activate_default_languages:
  * @entry: A #SexySpellEntry.
  *
- * Activate spell checking for languages specified in the 
+ * Activate spell checking for languages specified in the
  * text_spell_langs setting. These languages are
  * activated by default, so this function need only be called
  * if they were previously deactivated.
@@ -1334,7 +1334,7 @@ sexy_spell_entry_get_language_name(const SexySpellEntry *entry,
 
 	if (codetable_ref == 0)
 		codetable_init ();
-		
+
 	codetable_lookup (lang, &lang_name, &country_name);
 
 	if (codetable_ref == 0)

@@ -27,7 +27,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#ifndef WIN32
+#ifndef G_OS_WIN32
 #include <unistd.h>
 #endif
 
@@ -245,7 +245,7 @@ joind_show_dialog (server *serv)
 							G_CALLBACK (joind_radio2_cb), serv);
 	g_signal_connect (G_OBJECT (okbutton1), "clicked",
 							G_CALLBACK (joind_ok_cb), serv);
-							
+
 	if (serv->network)
 		if (g_ascii_strcasecmp(((ircnet*)serv->network)->name, "freenode") == 0)
 		{

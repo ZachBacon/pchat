@@ -23,7 +23,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 #include <io.h>
 #else
 #include <unistd.h>
@@ -218,7 +218,7 @@ xchat_dummy (xchat_plugin *ph)
 	return NULL;
 }
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 static int
 xchat_read_fd (xchat_plugin *ph, GIOChannel *source, char *buf, int *len)
 {
@@ -282,7 +282,7 @@ plugin_add (session *sess, char *filename, void *handle, void *init_func,
 		pl->xchat_plugingui_add = xchat_plugingui_add;
 		pl->xchat_plugingui_remove = xchat_plugingui_remove;
 		pl->xchat_emit_print = xchat_emit_print;
-#ifdef WIN32
+#ifdef G_OS_WIN32
 		pl->xchat_read_fd = (void *) xchat_read_fd;
 #else
 		pl->xchat_read_fd = xchat_dummy;
@@ -466,7 +466,7 @@ plugin_auto_load_cb (char *filename)
 {
 	char *pMsg;
 
-#ifndef WIN32	/* black listed */
+#ifndef G_OS_WIN32	/* black listed */
 	if (!strcmp (file_part (filename), "dbus.so"))
 		return;
 #endif
@@ -494,14 +494,14 @@ plugin_get_libdir ()
 void
 plugin_auto_load (session *sess)
 {
-	char *lib_dir; 
+	char *lib_dir;
 	char *sub_dir;
 	ps = sess;
 
 	lib_dir = plugin_get_libdir ();
 	sub_dir = g_build_filename (get_xdir (), "addons", NULL);
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	/* a long list of bundled plugins that should be loaded automatically,
 	 * user plugins should go to <config>, leave Program Files alone! */
 	for_files (lib_dir, "hcchecksum.dll", plugin_auto_load_cb);
@@ -701,7 +701,7 @@ plugin_emit_server (session *sess, char *name, char *word[], char *word_eol[],
 
 	attrs.server_time_utc = server_time;
 
-	return plugin_hook_run (sess, name, word, word_eol, &attrs, 
+	return plugin_hook_run (sess, name, word, word_eol, &attrs,
 							HOOK_SERVER | HOOK_SERVER_ATTRS);
 }
 
@@ -791,7 +791,7 @@ plugin_insert_hook (xchat_hook *new_hook)
 	GSList *list;
 	xchat_hook *hook;
 	int new_hook_type;
- 
+
 	switch (new_hook->type)
 	{
 		case HOOK_PRINT:
@@ -1284,7 +1284,7 @@ xchat_get_prefs (xchat_plugin *ph, const char *name, const char **string, int *i
 			*integer = ph->context->server->id;
 			return 2;
 	}
-	
+
 	do
 	{
 		if (!g_ascii_strcasecmp (name, vars[i].name))
@@ -1654,7 +1654,7 @@ xchat_list_int (xchat_plugin *ph, xchat_list *xlist, const char *name)
 			tmp <<= 1;
 			tmp |= ((struct session *)data)->server->is_away;    /* 2 */
 			tmp <<= 1;
-			tmp |= ((struct session *)data)->server->connecting; /* 1 */ 
+			tmp |= ((struct session *)data)->server->connecting; /* 1 */
 			tmp <<= 1;
 			tmp |= ((struct session *)data)->server->connected;  /* 0 */
 			return tmp;
@@ -1843,7 +1843,7 @@ xchat_pluginpref_set_str_real (xchat_plugin *pl, const char *var, const char *va
 			buffer_tmp = g_build_filename (get_xdir (), confname_tmp, NULL);
 			g_free (confname_tmp);
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 			g_unlink (buffer);
 #endif
 
@@ -1917,7 +1917,7 @@ xchat_pluginpref_set_str_real (xchat_plugin *pl, const char *var, const char *va
 		buffer_tmp = g_build_filename (get_xdir (), confname_tmp, NULL);
 		g_free (confname_tmp);
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 		g_unlink (buffer);
 #endif
 

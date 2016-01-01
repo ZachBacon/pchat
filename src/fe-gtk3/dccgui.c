@@ -78,7 +78,7 @@ struct dccwindow
 	GtkWidget *accept_button;
 	GtkWidget *resume_button;
 	GtkWidget *open_button;
-	GtkWidget *clear_button; /* clears aborted and completed requests */	
+	GtkWidget *clear_button; /* clears aborted and completed requests */
 
 	GtkWidget *file_label;
 	GtkWidget *address_label;
@@ -142,7 +142,7 @@ fe_dcc_send_filereq (struct session *sess, char *nick, int maxcps, int passive)
 {
 	char tbuf[128];
 	struct my_dcc_send *mdc;
-	
+
 	mdc = malloc (sizeof (*mdc));
 	mdc->sess = sess;
 	mdc->nick = strdup (nick);
@@ -387,7 +387,7 @@ dcc_get_completed (void)
 {
 	struct DCC *dcc;
 	GtkTreeIter iter;
-	GtkTreeModel *model;	
+	GtkTreeModel *model;
 	GSList *completed = NULL;
 
 	model = GTK_TREE_MODEL (dccfwin.store);
@@ -398,7 +398,7 @@ dcc_get_completed (void)
 			gtk_tree_model_get (model, &iter, COL_DCC, &dcc, -1);
 			if (is_dcc_completed (dcc))
 				completed = g_slist_prepend (completed, dcc);
-				
+
 		} while (gtk_tree_model_iter_next (model, &iter));
 	}
 
@@ -410,11 +410,11 @@ dcc_completed_transfer_exists (void)
 {
 	gboolean exist;
 	GSList *comp_list;
-	
-	comp_list = dcc_get_completed (); 
+
+	comp_list = dcc_get_completed ();
 	exist = comp_list != NULL;
-	
-	g_slist_free (comp_list);	
+
+	g_slist_free (comp_list);
 	return exist;
 }
 
@@ -471,7 +471,7 @@ dcc_fill_window (int flags)
 		gtk_tree_model_get_iter_first (GTK_TREE_MODEL (dccfwin.store), &iter);
 		gtk_tree_selection_select_iter (dccfwin.sel, &iter);
 	}
-	
+
 	update_clear_button_sensitivity ();
 }
 
@@ -531,7 +531,7 @@ resume_clicked (GtkWidget * wid, gpointer none)
 			snprintf (buf, sizeof (buf),
 						_(	"Cannot access file: %s\n"
 							"%s.\n"
-							"Resuming not possible."), dcc->destfile,	
+							"Resuming not possible."), dcc->destfile,
 							errorstring (dcc->resume_errno));
 			fe_message (buf, FE_MSG_ERROR);
 			break;
@@ -558,7 +558,7 @@ abort_clicked (GtkWidget * wid, gpointer none)
 		dcc_abort (dcc->serv->front_session, dcc);
 	}
 	g_slist_free (start);
-	
+
 	/* Enable the clear button if it wasn't already enabled */
 	update_clear_button_sensitivity ();
 }
@@ -603,7 +603,7 @@ clear_completed (GtkWidget * wid, gpointer none)
 static void
 browse_folder (char *dir)
 {
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	/* no need for file:// in ShellExecute() */
 	fe_open_url (dir);
 #else

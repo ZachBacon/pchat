@@ -25,7 +25,7 @@
 #include "inet.h"				  /* make it first to avoid macro redefinitions */
 #include <openssl/ssl.h>		  /* SSL_() */
 #include <openssl/err.h>		  /* ERR_() */
-#ifdef WIN32
+#ifdef G_OS_WIN32
 #include <openssl/rand.h>		  /* RAND_seed() */
 #endif
 #include <time.h>				  /* asctime() */
@@ -73,7 +73,7 @@ SSL_CTX *
 _SSL_context_init (void (*info_cb_func))
 {
 	SSL_CTX *ctx;
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	int i, r;
 #endif
 

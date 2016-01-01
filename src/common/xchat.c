@@ -26,7 +26,7 @@
 #define WANTSOCKET
 #include "inet.h"
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 #include <windows.h>
 #else
 #include <sys/wait.h>
@@ -191,7 +191,7 @@ lastact_getfirst(int (*filter) (session *sess))
 			sess->lastact_idx = LACT_NONE;
 		}
 	}
-	
+
 	return sess;
 }
 
@@ -243,7 +243,7 @@ lagcheck_update (void)
 {
 	server *serv;
 	GSList *list = serv_list;
-	
+
 	if (!prefs.pchat_gui_lagometer)
 		return;
 
@@ -286,7 +286,7 @@ lag_check (void)
 			{
 				g_snprintf (tbuf, sizeof (tbuf), "LAG%lu", tim);
 				serv->p_ping (serv, "", tbuf);
-				
+
 				if (!serv->lag_sent)
 				{
 					serv->lag_sent = tim;
@@ -420,7 +420,7 @@ irc_init (session *sess)
 		handle_command (sess, buf, FALSE);
 		g_free (buf);
 	}
-	
+
 	if (arg_urls != NULL)
 	{
 		for (i = 0; i < g_strv_length(arg_urls); i++)
@@ -519,7 +519,7 @@ new_ircwindow (server *serv, char *name, int type, int focus)
 static void
 exec_notify_kill (session * sess)
 {
-#ifndef WIN32
+#ifndef G_OS_WIN32
 	struct nbexec *re;
 	if (sess->running_exec != NULL)
 	{
@@ -728,7 +728,7 @@ static char defaultconf_urlhandlers[] =
 #ifdef USE_SIGACTION
 /* Close and open log files on SIGUSR1. Usefull for log rotating */
 
-static void 
+static void
 sigusr1_handler (int signal, siginfo_t *si, void *un)
 {
 	GSList *list = sess_list;
@@ -767,7 +767,7 @@ xchat_init (void)
 	char buf[3068];
 	const char *cs = NULL;
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	WSADATA wsadata;
 
 #ifdef USE_IPV6
@@ -779,7 +779,7 @@ xchat_init (void)
 #else
 	WSAStartup(0x0101, &wsadata);
 #endif	/* !USE_IPV6 */
-#endif	/* !WIN32 */
+#endif	/* !G_OS_WIN32 */
 
 #ifdef USE_SIGACTION
 	struct sigaction act;
@@ -801,7 +801,7 @@ xchat_init (void)
 	sigemptyset (&act.sa_mask);
 	sigaction (SIGUSR2, &act, NULL);
 #else
-#ifndef WIN32
+#ifndef G_OS_WIN32
 	/* good enough for these old systems */
 	signal (SIGPIPE, SIG_IGN);
 #endif
@@ -972,7 +972,7 @@ xchat_exit (void)
 	fe_exit ();
 }
 
-#ifndef WIN32
+#ifndef G_OS_WIN32
 
 static int
 child_handler (gpointer userdata)
@@ -989,7 +989,7 @@ child_handler (gpointer userdata)
 void
 xchat_exec (const char *cmd)
 {
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	util_exec (cmd);
 #else
 	int pid = util_exec (cmd);
@@ -1003,7 +1003,7 @@ xchat_exec (const char *cmd)
 void
 xchat_execv (char * const argv[])
 {
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	util_execv (argv);
 #else
 	int pid = util_execv (argv);
@@ -1017,7 +1017,7 @@ xchat_execv (char * const argv[])
 static void
 set_locale (void)
 {
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	char xchat_lang[13];	/* LC_ALL= plus 5 chars of pchat_gui_lang and trailing \0 */
 
 	strcpy (xchat_lang, "LC_ALL=");
@@ -1090,7 +1090,7 @@ main (int argc, char *argv[])
 	ret = fe_args (argc, argv);
 	if (ret != -1)
 		return ret;
-	
+
 #ifdef USE_DBUS
 	xchat_remote ();
 #endif
@@ -1113,14 +1113,14 @@ main (int argc, char *argv[])
 		fe_message (buf, FE_MSG_ERROR);
 	}
 
-#ifndef WIN32
+#ifndef G_OS_WIN32
 #ifndef __EMX__
 	/* OS/2 uses UID 0 all the time */
 	if (getuid () == 0)
 		fe_message (_("* Running IRC as root is stupid! You should\n"
 			      "  create a User Account and use that to login.\n"), FE_MSG_WARN|FE_MSG_WAIT);
 #endif
-#endif /* !WIN32 */
+#endif /* !G_OS_WIN32 */
 
 	xchat_init ();
 
@@ -1139,7 +1139,7 @@ main (int argc, char *argv[])
 	xchat_mem_list ();
 #endif
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	WSACleanup ();
 #endif
 

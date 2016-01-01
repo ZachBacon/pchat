@@ -24,7 +24,7 @@
 #include <ctype.h>
 #include <stdarg.h>
 
-#ifndef WIN32
+#ifndef G_OS_WIN32
 #include <unistd.h>
 #endif
 
@@ -465,7 +465,7 @@ process_numeric (session * sess, int n,
 	server *serv = sess->server;
 	/* show whois is the server tab */
 	session *whois_sess = serv->server_session;
-	
+
 	/* unless this setting is on */
 	if (prefs.pchat_irc_whois_front)
 		whois_sess = serv->front_session;
@@ -650,7 +650,7 @@ process_numeric (session * sess, int n,
 
 	case 323:
 		if (!fe_is_chanwindow (sess->server))
-			EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, serv->server_session, text, 
+			EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, serv->server_session, text,
 										  word[1], word[2], NULL, 0, tags_data->timestamp);
 		else
 			fe_chan_list_end (sess->server);
@@ -681,7 +681,7 @@ process_numeric (session * sess, int n,
 		if (sess)
 		{
 			EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANURL, sess, word[4], word[5] + 1,
-									NULL, NULL, 0, tags_data->timestamp); 
+									NULL, NULL, 0, tags_data->timestamp);
 		}
 		break;
 
@@ -717,7 +717,7 @@ process_numeric (session * sess, int n,
 
 #if 0
 	case 338:  /* Undernet Real user@host, Real IP */
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS_REALHOST, sess, word[4], word[5], word[6], 
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_WHOIS_REALHOST, sess, word[4], word[5], word[6],
 									  (word_eol[7][0]==':') ? word_eol[7]+1 : word_eol[7],
 									  0, tags_data->timestamp);
 		break;
@@ -948,7 +948,7 @@ process_numeric (session * sess, int n,
 		break;
 
 	case 900:	/* successful SASL 'logged in as ' */
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, serv->server_session, 
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, serv->server_session,
 									  word_eol[6]+1, word[1], word[2], NULL, 0,
 									  tags_data->timestamp);
 		break;
@@ -987,7 +987,7 @@ process_numeric (session * sess, int n,
 	def:
 		{
 			session *sess;
-		
+
 			if (is_channel (serv, word[4]))
 			{
 				sess = find_channel (serv, word[4]);
@@ -998,7 +998,7 @@ process_numeric (session * sess, int n,
 				;
 			else
 				sess=serv->server_session;
-			
+
 			EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVTEXT, sess, text, word[1], word[2],
 										  NULL, 0, tags_data->timestamp);
 		}
@@ -1034,7 +1034,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 	{
 		guint32 t;
 
-		t = WORDL((guint8)type[0], (guint8)type[1], (guint8)type[2], (guint8)type[3]); 	
+		t = WORDL((guint8)type[0], (guint8)type[1], (guint8)type[2], (guint8)type[3]);
 		/* this should compile to a bunch of: CMP.L, JE ... nice & fast */
 		switch (t)
 		{
@@ -1080,7 +1080,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 			return;
 
 		case WORDL('N','I','C','K'):
-			inbound_newnick (serv, nick, 
+			inbound_newnick (serv, nick,
 								  (word_eol[3][0] == ':') ? word_eol[3] + 1 : word_eol[3],
 								  FALSE, tags_data);
 			return;
@@ -1127,7 +1127,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 	{
 		guint32 t;
 
-		t = WORDL((guint8)type[0], (guint8)type[1], (guint8)type[2], (guint8)type[3]); 	
+		t = WORDL((guint8)type[0], (guint8)type[1], (guint8)type[2], (guint8)type[3]);
 		/* this should compile to a bunch of: CMP.L, JE ... nice & fast */
 		switch (t)
 		{
@@ -1135,11 +1135,11 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 		case WORDL('A','C','C','O'):
 			inbound_account (serv, nick, word[3], tags_data);
 			return;
-			
+
 		case WORDL('I','N','V','I'):
 			if (ignore_check (word[1], IG_INVI))
 				return;
-			
+
 			if (word[4][0] == ':')
 				EMIT_SIGNAL_TIMESTAMP (XP_TE_INVITED, sess, word[4] + 1, nick,
 											  serv->servername, NULL, 0,
@@ -1148,7 +1148,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 				EMIT_SIGNAL_TIMESTAMP (XP_TE_INVITED, sess, word[4], nick,
 											  serv->servername, NULL, 0,
 											  tags_data->timestamp);
-				
+
 			return;
 
 		case WORDL('N','O','T','I'):
@@ -1203,7 +1203,7 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 					if (strchr (serv->chantypes, to[0]) == NULL
 						&& strchr (serv->nick_prefixes, to[0]) != NULL)
 						to++;
-						
+
 					text = word_eol[4];
 					if (*text == ':')
 						text++;
@@ -1273,13 +1273,13 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 			case WORDL('C','A','P','\0'):
 				if (strncasecmp (word[4], "ACK", 3) == 0)
 				{
-					inbound_cap_ack (serv, word[1], 
+					inbound_cap_ack (serv, word[1],
 										  word[5][0] == ':' ? word_eol[5] + 1 : word_eol[5],
 										  tags_data);
 				}
 				else if (strncasecmp (word[4], "LS", 2) == 0)
 				{
-					inbound_cap_ls (serv, word[1], 
+					inbound_cap_ls (serv, word[1],
 										 word[5][0] == ':' ? word_eol[5] + 1 : word_eol[5],
 										 tags_data);
 				}
@@ -1287,9 +1287,9 @@ process_named_msg (session *sess, char *type, char *word[], char *word_eol[],
 				{
 					inbound_cap_nak (serv, tags_data);
 				}
-				else if (strncasecmp (word[4], "LIST", 4) == 0)	
+				else if (strncasecmp (word[4], "LIST", 4) == 0)
 				{
-					inbound_cap_list (serv, word[1], 
+					inbound_cap_list (serv, word[1],
 											word[5][0] == ':' ? word_eol[5] + 1 : word_eol[5],
 											tags_data);
 				}
@@ -1327,7 +1327,7 @@ process_named_servermsg (session *sess, char *buf, char *rawname, char *word_eol
 		buf = word_eol[3];
 		if (*buf == ':')
 			buf++;
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVNOTICE, sess, buf, 
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVNOTICE, sess, buf,
 									  sess->server->servername, NULL, NULL, 0,
 									  tags_data->timestamp);
 		return;
@@ -1356,7 +1356,7 @@ get_timezone(void)
 	/* gmtime() and localtime() are thread-safe on windows.
 	 * on other systems we should use {gmtime,localtime}_r().
 	 */
-#if WIN32
+#if G_OS_WIN32
 	tm_utc = *gmtime (&t);
 	tm_local = *localtime (&t);
 #else
@@ -1371,8 +1371,8 @@ get_timezone(void)
 }
 
 /* Handle time-server tags.
- * 
- * Sets tags_data->timestamp to the correct time (in unix time). 
+ *
+ * Sets tags_data->timestamp to the correct time (in unix time).
  * This received time is always in UTC.
  *
  * See http://ircv3.atheme.org/extensions/server-time-3.2
@@ -1387,7 +1387,7 @@ handle_message_tag_time (const char *time, message_tags_data *tags_data)
 	 */
 	if (!*time)
 		return;
-	
+
 	if (time[strlen (time) - 1] == 'Z')
 	{
 		/* as defined in the specification */
@@ -1431,7 +1431,7 @@ handle_message_tag_time (const char *time, message_tags_data *tags_data)
 
 /* Handle message tags.
  *
- * See http://ircv3.atheme.org/specification/message-tags-3.2 
+ * See http://ircv3.atheme.org/specification/message-tags-3.2
  */
 static void
 handle_message_tags (server *serv, const char *tags_str,
@@ -1440,7 +1440,7 @@ handle_message_tags (server *serv, const char *tags_str,
 	char **tags;
 	int i;
 
-	/* FIXME We might want to avoid the allocation overhead here since 
+	/* FIXME We might want to avoid the allocation overhead here since
 	 * this might be called for every message from the server.
 	 */
 	tags = g_strsplit (tags_str, ";", 0);
@@ -1459,7 +1459,7 @@ handle_message_tags (server *serv, const char *tags_str,
 		if (serv->have_server_time && !strcmp (key, "time"))
 			handle_message_tag_time (value, tags_data);
 	}
-	
+
 	g_strfreev (tags);
 }
 
@@ -1492,7 +1492,7 @@ irc_inline (server *serv, char *buf, int len)
 
 		if (!sep)
 			goto xit;
-		
+
 		*sep = '\0';
 		buf = sep + 1;
 

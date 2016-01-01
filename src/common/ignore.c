@@ -23,7 +23,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 #include <io.h>
 #else
 #include <unistd.h>
@@ -349,7 +349,7 @@ flood_check (char *nick, char *ip, server *serv, session *sess, int what)	/*0=ct
 {
 	/*
 	   serv
-	   int ctcp_counter; 
+	   int ctcp_counter;
 	   time_t ctcp_last_time;
 	   prefs
 	   unsigned int ctcp_number_limit;

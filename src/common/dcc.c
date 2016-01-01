@@ -38,7 +38,7 @@
 #define WANTDNS
 #include "inet.h"
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 #include <windows.h>
 #include <io.h>
 #else
@@ -103,11 +103,11 @@ timeval_diff (GTimeVal *greater,
 {
 	long usecdiff;
 	double result;
-	
+
 	result = greater->tv_sec - less->tv_sec;
 	usecdiff = (long) greater->tv_usec - less->tv_usec;
 	result += (double) usecdiff / 1000000;
-	
+
 	return result;
 }
 
@@ -395,9 +395,9 @@ dcc_close (struct DCC *dcc, int dccstat, int destroy)
 			/* if we just completed a dcc receive, move the */
 			/* completed file to the completed directory */
 			if(dcc->type == TYPE_RECV)
-			{			
+			{
 				/* mgl: change this to handle the case where dccwithnick is set */
-				move_file (prefs.pchat_dcc_dir, prefs.pchat_dcc_completed_dir, 
+				move_file (prefs.pchat_dcc_dir, prefs.pchat_dcc_completed_dir,
 									 file_part (dcc->destfile), prefs.pchat_dcc_permissions);
 			}
 
@@ -809,8 +809,8 @@ static gboolean
 dcc_did_connect (GIOChannel *source, GIOCondition condition, struct DCC *dcc)
 {
 	int er;
-	
-#ifdef WIN32
+
+#ifdef G_OS_WIN32
 	if (condition & G_IO_ERR)
 	{
 		int len;
@@ -849,7 +849,7 @@ dcc_did_connect (GIOChannel *source, GIOCondition condition, struct DCC *dcc)
 		}
 	}
 #endif
-	
+
 	return TRUE;
 }
 
@@ -1163,7 +1163,7 @@ dcc_socks5_proxy_traverse (GIOChannel *source, GIOCondition condition, struct DC
 			proxy->phase += 2;
 		}
 	}
-	
+
 	if (proxy->phase == 3)
 	{
 		if (!write_proxy (dcc))
@@ -1436,7 +1436,7 @@ dcc_connect (struct DCC *dcc)
 		else
 			dcc->iotag = fe_input_add (dcc->sok, FIA_WRITE|FIA_EX, dcc_connect_finished, dcc);
 	}
-	
+
 	fe_dcc_update (dcc);
 }
 
@@ -2361,7 +2361,7 @@ dcc_add_file (session *sess, char *file, DCC_SIZE size, int port, char *nick, gu
 			strcat (dcc->destfile, G_DIR_SEPARATOR_S);
 		if (prefs.pchat_dcc_save_nick)
 		{
-#ifdef WIN32
+#ifdef G_OS_WIN32
 			char *t = strlen (dcc->destfile) + dcc->destfile;
 			strcpy (t, nick);
 			while (*t)

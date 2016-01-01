@@ -334,11 +334,11 @@ void
 xchat_plugingui_remove (xchat_plugin *ph,
 			void *handle);
 
-int 
+int
 xchat_emit_print (xchat_plugin *ph,
 		  const char *event_name, ...);
 
-int 
+int
 xchat_emit_print_attrs (xchat_plugin *ph, xchat_event_attrs *attrs,
 						  const char *event_name, ...);
 
@@ -390,7 +390,7 @@ int
 xchat_pluginpref_list (xchat_plugin *ph,
 		char *dest);
 
-#if !defined(PLUGIN_C) && defined(WIN32)
+#if !defined(PLUGIN_C) && defined(G_OS_WIN32)
 #ifndef XCHAT_PLUGIN_HANDLE
 #define XCHAT_PLUGIN_HANDLE (ph)
 #endif

@@ -22,7 +22,7 @@
 #include <fcntl.h>
 #include <time.h>
 
-#ifndef WIN32
+#ifndef G_OS_WIN32
 #include <unistd.h>
 #endif
 
@@ -336,7 +336,7 @@ banlist_copyentry (GtkWidget *menuitem, GtkTreeView *view)
 	memset (&mask, 0, sizeof (mask));
 	memset (&from, 0, sizeof (from));
 	memset (&date, 0, sizeof (date));
-	
+
 	/* get selection (which should have been set on click)
 	 * and temporarily switch to single mode to get selected iter */
 	sel = gtk_tree_view_get_selection (view);
@@ -356,7 +356,7 @@ banlist_copyentry (GtkWidget *menuitem, GtkTreeView *view)
 
 		if (str[0] != 0)
 			gtkutil_copy_to_clipboard (menuitem, NULL, str);
-			
+
 		g_value_unset (&mask);
 		g_value_unset (&from);
 		g_value_unset (&date);
@@ -380,7 +380,7 @@ banlist_button_pressed (GtkWidget *wid, GdkEventButton *event, gpointer userdata
 			/* Must set the row active for use in callback */
 			gtk_tree_view_set_cursor (GTK_TREE_VIEW(wid), path, NULL, FALSE);
 			gtk_tree_path_free (path);
-			
+
 			menu = gtk_menu_new ();
 			maskitem = gtk_menu_item_new_with_label (_("Copy mask"));
 			allitem = gtk_menu_item_new_with_label (_("Copy entry"));
@@ -389,14 +389,14 @@ banlist_button_pressed (GtkWidget *wid, GdkEventButton *event, gpointer userdata
 			gtk_menu_shell_append (GTK_MENU_SHELL(menu), maskitem);
 			gtk_menu_shell_append (GTK_MENU_SHELL(menu), allitem);
 			gtk_widget_show_all (menu);
-			
-			gtk_menu_popup (GTK_MENU(menu), NULL, NULL, NULL, NULL, 
+
+			gtk_menu_popup (GTK_MENU(menu), NULL, NULL, NULL, NULL,
 							event->button, gtk_get_current_event_time ());
 		}
-		
+
 		return TRUE;
 	}
-	
+
 	return FALSE;
 }
 

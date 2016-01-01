@@ -28,7 +28,7 @@
 #define WANTARPA
 #include "inet.h"
 
-#ifndef WIN32
+#ifndef G_OS_WIN32
 #include <sys/wait.h>
 #include <unistd.h>
 #endif
@@ -527,7 +527,7 @@ create_mask (session * sess, char *mask, char *mode, char *typestr, int deop)
 	{
 		g_snprintf (buf, sizeof (buf), "%s %s", mode, mask);
 	}
-	
+
 	return g_strdup (buf);
 }
 
@@ -536,7 +536,7 @@ ban (session * sess, char *tbuf, char *mask, char *bantypestr, int deop)
 {
 	char *banmask = create_mask (sess, mask, deop ? "-o+b" : "+b", bantypestr, deop);
 	server *serv = sess->server;
-	
+
 	if (banmask)
 	{
 		serv->p_mode (serv, sess->channel, banmask);
@@ -583,11 +583,11 @@ static int
 cmd_chanopt (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	int ret;
-	
+
 	/* chanopt.c */
 	ret = chanopt_command (sess, tbuf, word, word_eol);
 	chanopt_save_all ();
-	
+
 	return ret;
 }
 
@@ -1447,7 +1447,7 @@ cmd_echo (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	return TRUE;
 }
 
-#ifndef WIN32
+#ifndef G_OS_WIN32
 
 static void
 exec_check_process (struct session *sess)
@@ -2378,7 +2378,7 @@ cmd_join (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		}
 		else
 			fe_ctrl_gui (sess_find, 2, 0);	/* bring-to-front */
-		
+
 		return TRUE;
 	}
 	return FALSE;
@@ -2492,7 +2492,7 @@ cmd_lastlog (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		return TRUE;
 	}
 	else
-	{	
+	{
 		return FALSE;
 	}
 }
@@ -2561,7 +2561,7 @@ cmd_load (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 #ifdef USE_PLUGIN
 	len = strlen (word[2]);
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	if (len > 4 && g_ascii_strcasecmp (".dll", word[2] + len - 4) == 0)
 #else
 #if defined(__hpux)
@@ -2867,7 +2867,7 @@ cmd_newserver (struct session *sess, char *tbuf, char *word[],
 		new_ircwindow (NULL, word[3], SESS_SERVER, 0);
 		return TRUE;
 	}
-	
+
 	sess = new_ircwindow (NULL, NULL, SESS_SERVER, 1);
 	cmd_server (sess, tbuf, word, word_eol);
 	return TRUE;
@@ -2906,10 +2906,10 @@ cmd_notice (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		{
 			sess->server->p_notice (sess->server, word[2], split_text);
 			EMIT_SIGNAL (XP_TE_NOTICESEND, sess, word[2], split_text, NULL, NULL, 0);
-			
+
 			if (*split_text)
 				offset += strlen(split_text);
-			
+
 			g_free(split_text);
 		}
 
@@ -3097,7 +3097,7 @@ cmd_quiet (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	if (*word[2])
 	{
 		quietmask = create_mask (sess, word[2], "+q", word[3], 0);
-	
+
 		if (quietmask)
 		{
 			serv->p_mode (serv, sess->channel, quietmask);
@@ -3117,7 +3117,7 @@ cmd_unquiet (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	/* Allow more than one mask in /unban -- tvk */
 	int i = 2;
-	
+
 	if (strchr (sess->server->chanmodes, 'q') == NULL)
 	{
 		PrintText (sess, _("Quiet is not supported by this server."));
@@ -3341,7 +3341,7 @@ urlserv:
 				*channel = co+1;
 			else if (*co != '\0')
 				*channel = co;
-				
+
 			/* check for key - mirc style */
 			co = strchr (co + 1, '?');
 			if (co)
@@ -3349,9 +3349,9 @@ urlserv:
 				*co = 0;
 				co++;
 				*key = co;
-			}	
+			}
 		}
-			
+
 		return TRUE;
 	}
 	return FALSE;
@@ -3392,7 +3392,7 @@ cmd_server (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		port = word[3 + offset];
 		pass = word[4 + offset];
 	}
-	
+
 	if (!(*server_name))
 		return FALSE;
 
@@ -3550,7 +3550,7 @@ cmd_unignore (struct session *sess, char *tbuf, char *word[],
 			mask = tbuf;
 			g_snprintf (tbuf, TBUFSIZE, "%s!*@*", word[2]);
 		}
-		
+
 		if (ignore_del (mask, NULL))
 		{
 			if (g_ascii_strcasecmp (arg, "QUIET"))
@@ -3568,7 +3568,7 @@ cmd_unload (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	int len, by_file = FALSE;
 
 	len = strlen (word[2]);
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	if (len > 4 && g_ascii_strcasecmp (word[2] + len - 4, ".dll") == 0)
 #else
 #if defined(__hpux)
@@ -3602,7 +3602,7 @@ cmd_reload (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	int len, by_file = FALSE;
 
 	len = strlen (word[2]);
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	if (len > 4 && g_ascii_strcasecmp (word[2] + len - 4, ".dll") == 0)
 #else
 #if defined(__hpux)
@@ -3848,7 +3848,7 @@ cmd_wallchan (struct session *sess, char *tbuf, char *word[],
 				message_tags_data no_tags = MESSAGE_TAGS_DATA_INIT;
 
 				inbound_chanmsg (sess->server, NULL, sess->channel,
-									  sess->server->nick, word_eol[2], TRUE, FALSE, 
+									  sess->server->nick, word_eol[2], TRUE, FALSE,
 									  &no_tags);
 				sess->server->p_message (sess->server, sess->channel, word_eol[2]);
 			}
@@ -3944,7 +3944,7 @@ const struct commands xc_cmds[] = {
 	{"DISCON", cmd_discon, 0, 0, 1, N_("DISCON, Disconnects from server")},
 	{"DNS", cmd_dns, 0, 0, 1, N_("DNS <nick|host|ip>, Resolves an IP or hostname")},
 	{"ECHO", cmd_echo, 0, 0, 1, N_("ECHO <text>, Prints text locally")},
-#ifndef WIN32
+#ifndef G_OS_WIN32
 	{"EXEC", cmd_exec, 0, 0, 1,
 	 N_("EXEC [-o] <command>, runs the command. If -o flag is used then output is sent to current channel, else is printed to current text box")},
 #ifndef __EMX__
@@ -4594,10 +4594,10 @@ handle_say (session *sess, char *text, int check_spch)
 			inbound_chanmsg (sess->server, sess, sess->channel, sess->server->nick,
 								  split_text, TRUE, FALSE, &no_tags);
 			sess->server->p_message (sess->server, sess->channel, split_text);
-			
+
 			if (*split_text)
 				offset += strlen(split_text);
-			
+
 			g_free(split_text);
 		}
 

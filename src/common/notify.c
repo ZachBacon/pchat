@@ -24,7 +24,7 @@
 #include <fcntl.h>
 #include <time.h>
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 #include <io.h>
 #else
 #include <unistd.h>
@@ -166,7 +166,7 @@ notify_load (void)
 				if (sep)
 				{
 					sep[0] = 0;
-					notify_adduser (buf, sep + 1);					
+					notify_adduser (buf, sep + 1);
 				}
 				else
 					notify_adduser (buf, NULL);
@@ -205,7 +205,7 @@ notify_find (server *serv, char *nick)
 
 static void
 notify_announce_offline (server * serv, struct notify_per_server *servnot,
-								 char *nick, int quiet, 
+								 char *nick, int quiet,
 								 const message_tags_data *tags_data)
 {
 	session *sess;

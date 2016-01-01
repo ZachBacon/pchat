@@ -103,7 +103,7 @@ url_save_node (char* url)
 	}
 
 	fprintf (fd, "%s\n", url);
-	fclose (fd);	
+	fclose (fd);
 }
 
 static int
@@ -244,7 +244,7 @@ match_nick (const char *word, int *start, int *end)
 	if (strchr (NICKPRE, word[*start])
 		&& !strchr (nick_prefixes, word[*start]))
 		return FALSE;
-	
+
 	/* nick prefix is not part of the matched word */
 	if (strchr (nick_prefixes, word[*start]))
 		(*start)++;
@@ -282,7 +282,7 @@ match_channel (const char *word, int *start, int *end)
 	/* Or just #channel */
 	else if (strchr (chan_prefixes, word[*start]) != NULL)
 		return TRUE;
-	
+
 	return FALSE;
 }
 
@@ -396,21 +396,21 @@ regex_match (const GRegex *re, const char *word, int *start, int *end)
 	GMatchInfo *gmi;
 
 	g_regex_match (re, word, 0, &gmi);
-	
+
 	if (!g_match_info_matches (gmi))
 	{
 		g_match_info_free (gmi);
 		return FALSE;
 	}
-	
+
 	while (g_match_info_matches (gmi))
 	{
 		g_match_info_fetch_pos (gmi, 0, start, end);
 		g_match_info_next (gmi, NULL);
 	}
-	
+
 	g_match_info_free (gmi);
-	
+
 	return TRUE;
 }
 
@@ -449,7 +449,7 @@ re_host (void)
 	if (host_ret) return host_ret;
 
 	host_ret = make_re ("(" "(" HOST_URL PORT ")|(" HOST ")" ")");
-	
+
 	return host_ret;
 }
 
@@ -584,12 +584,12 @@ re_url (void)
 
 		if (uri[i].flags & URI_AUTHORITY)
 			g_string_append (grist_gstr, HOST_URL_OPT_TLD OPT_PORT);
-		
+
 		if (uri[i].flags & URI_PATH)
 		{
 			char *sep_escaped;
-			
-			sep_escaped = g_regex_escape_string (uri[i].path_sep, 
+
+			sep_escaped = g_regex_escape_string (uri[i].path_sep,
 							     strlen(uri[i].path_sep));
 
 			g_string_append_printf(grist_gstr, "(" "%s" PATH ")?",
@@ -671,7 +671,7 @@ re_channel (void)
 }
 
 /*	PATH description --- */
-#ifdef WIN32
+#ifdef G_OS_WIN32
 /* Windows path can be .\ ..\ or C: D: etc */
 #define FS_PATH "^(\\.{1,2}\\\\|[a-z]:).*"
 #else

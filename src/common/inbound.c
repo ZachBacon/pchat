@@ -23,7 +23,7 @@
 #include <sys/types.h>
 #include <time.h>
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 #include <io.h>
 #else
 #include <unistd.h>
@@ -209,14 +209,14 @@ inbound_privmsg (server *serv, char *from, char *ip, char *text, int id,
 		if (user->account)
 			id = TRUE;
 	}
-	
+
 	inbound_make_idtext (serv, idtext, sizeof (idtext), id);
 
 	if (sess->type == SESS_DIALOG && !nodiag)
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_DPRIVMSG, sess, from, text, idtext, NULL, 0,
 									  tags_data->timestamp);
 	else
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_PRIVMSG, sess, from, text, idtext, NULL, 0, 
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_PRIVMSG, sess, from, text, idtext, NULL, 0,
 									  tags_data->timestamp);
 }
 
@@ -425,8 +425,8 @@ inbound_action (session *sess, char *chan, char *from, char *ip, char *text,
 }
 
 void
-inbound_chanmsg (server *serv, session *sess, char *chan, char *from, 
-					  char *text, char fromme, int id, 
+inbound_chanmsg (server *serv, session *sess, char *chan, char *from,
+					  char *text, char fromme, int id,
 					  const message_tags_data *tags_data)
 {
 	struct User *user;
@@ -516,7 +516,7 @@ inbound_newnick (server *serv, char *nick, char *newnick, int quiet,
 				if (!quiet)
 				{
 					if (me)
-						EMIT_SIGNAL_TIMESTAMP (XP_TE_UCHANGENICK, sess, nick, 
+						EMIT_SIGNAL_TIMESTAMP (XP_TE_UCHANGENICK, sess, nick,
 													  newnick, NULL, NULL, 0,
 													  tags_data->timestamp);
 					else
@@ -636,7 +636,7 @@ inbound_ukick (server *serv, char *chan, char *kicker, char *reason,
 	session *sess = find_channel (serv, chan);
 	if (sess)
 	{
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_UKICK, sess, serv->nick, chan, kicker, 
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_UKICK, sess, serv->nick, chan, kicker,
 									  reason, 0, tags_data->timestamp);
 		clear_channel (sess);
 		if (prefs.pchat_irc_auto_rejoin)
@@ -1008,7 +1008,7 @@ inbound_notice (server *serv, char *to, char *nick, char *msg, char *ip, int id,
 
 		if (!sess)
 		{
-			if (server_notice)	
+			if (server_notice)
 				sess = serv->server_session;
 			else
 				sess = serv->front_session;
@@ -1101,7 +1101,7 @@ inbound_away_notify (server *serv, char *nick, char *reason,
 					EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYAWAY, sess, nick, reason, NULL,
 												  NULL, 0, tags_data->timestamp);
 				else
-					EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYBACK, sess, nick, NULL, NULL, 
+					EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYBACK, sess, nick, NULL, NULL,
 												  NULL, 0, tags_data->timestamp);
 			}
 		}
@@ -1488,7 +1488,7 @@ inbound_user_info (session *sess, char *chan, char *user, char *host,
 }
 
 int
-inbound_banlist (session *sess, time_t stamp, char *chan, char *mask, 
+inbound_banlist (session *sess, time_t stamp, char *chan, char *mask,
 					  char *banner, int rplcode, const message_tags_data *tags_data)
 {
 	char *time_str = ctime (&stamp);
@@ -1663,7 +1663,7 @@ inbound_cap_ack (server *serv, char *nick, char *extensions,
 	{
 		serv->have_accnotify = TRUE;
 	}
-					
+
 	if (strstr (extensions, "extended-join") != NULL)
 	{
 		serv->have_extjoin = TRUE;
@@ -1776,7 +1776,7 @@ inbound_cap_ls (server *serv, char *nick, char *extensions_str,
 			strcat (buffer, "server-time ");
 			want_cap = 1;
 		}
-		
+
 		/* if the SASL password is set AND auth mode is set to SASL, request SASL auth */
 		if (!strcmp (extension, "sasl")
 			&& ((serv->loginmethod == LOGIN_SASL && strlen (serv->password) != 0)
@@ -1904,7 +1904,7 @@ inbound_sasl_authenticate (server *serv, char *data)
 		tcp_sendf (serv, "AUTHENTICATE %s\r\n", pass);
 		g_free (pass);
 
-		
+
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_SASLAUTH, serv->server_session, user, (char*)mech,
 								NULL,	NULL,	0,	0);
 }
