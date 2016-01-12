@@ -65,3 +65,6 @@ src/fe-gtk/resources.c
 resource.h
 #OSX
 osx/PChat.app
+po/.intltool-merge-cache
+src/fe-gtk3/pchat.rc
+src/fe-gtk3/resources.c

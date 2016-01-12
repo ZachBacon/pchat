@@ -23,7 +23,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 #include <io.h>
 #else
 #include <unistd.h>
@@ -218,7 +218,7 @@ xchat_dummy (xchat_plugin *ph)
 	return NULL;
 }
 
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 static int
 xchat_read_fd (xchat_plugin *ph, GIOChannel *source, char *buf, int *len)
 {
@@ -282,7 +282,7 @@ plugin_add (session *sess, char *filename, void *handle, void *init_func,
 		pl->xchat_plugingui_add = xchat_plugingui_add;
 		pl->xchat_plugingui_remove = xchat_plugingui_remove;
 		pl->xchat_emit_print = xchat_emit_print;
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 		pl->xchat_read_fd = (void *) xchat_read_fd;
 #else
 		pl->xchat_read_fd = xchat_dummy;
@@ -466,7 +466,7 @@ plugin_auto_load_cb (char *filename)
 {
 	char *pMsg;
 
-#ifndef G_OS_WIN32	/* black listed */
+#ifndef _WIN32	/* black listed */
 	if (!strcmp (file_part (filename), "dbus.so"))
 		return;
 #endif
@@ -501,7 +501,7 @@ plugin_auto_load (session *sess)
 	lib_dir = plugin_get_libdir ();
 	sub_dir = g_build_filename (get_xdir (), "addons", NULL);
 
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 	/* a long list of bundled plugins that should be loaded automatically,
 	 * user plugins should go to <config>, leave Program Files alone! */
 	for_files (lib_dir, "hcchecksum.dll", plugin_auto_load_cb);
@@ -1843,7 +1843,7 @@ xchat_pluginpref_set_str_real (xchat_plugin *pl, const char *var, const char *va
 			buffer_tmp = g_build_filename (get_xdir (), confname_tmp, NULL);
 			g_free (confname_tmp);
 
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 			g_unlink (buffer);
 #endif
 
@@ -1917,7 +1917,7 @@ xchat_pluginpref_set_str_real (xchat_plugin *pl, const char *var, const char *va
 		buffer_tmp = g_build_filename (get_xdir (), confname_tmp, NULL);
 		g_free (confname_tmp);
 
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 		g_unlink (buffer);
 #endif
 

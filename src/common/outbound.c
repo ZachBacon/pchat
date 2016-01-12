@@ -28,7 +28,7 @@
 #define WANTARPA
 #include "inet.h"
 
-#ifndef G_OS_WIN32
+#ifndef _WIN32
 #include <sys/wait.h>
 #include <unistd.h>
 #endif
@@ -1447,7 +1447,7 @@ cmd_echo (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	return TRUE;
 }
 
-#ifndef G_OS_WIN32
+#ifndef _WIN32
 
 static void
 exec_check_process (struct session *sess)
@@ -2561,7 +2561,7 @@ cmd_load (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 
 #ifdef USE_PLUGIN
 	len = strlen (word[2]);
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 	if (len > 4 && g_ascii_strcasecmp (".dll", word[2] + len - 4) == 0)
 #else
 #if defined(__hpux)
@@ -3568,7 +3568,7 @@ cmd_unload (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	int len, by_file = FALSE;
 
 	len = strlen (word[2]);
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 	if (len > 4 && g_ascii_strcasecmp (word[2] + len - 4, ".dll") == 0)
 #else
 #if defined(__hpux)
@@ -3602,7 +3602,7 @@ cmd_reload (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	int len, by_file = FALSE;
 
 	len = strlen (word[2]);
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 	if (len > 4 && g_ascii_strcasecmp (word[2] + len - 4, ".dll") == 0)
 #else
 #if defined(__hpux)
@@ -3944,7 +3944,7 @@ const struct commands xc_cmds[] = {
 	{"DISCON", cmd_discon, 0, 0, 1, N_("DISCON, Disconnects from server")},
 	{"DNS", cmd_dns, 0, 0, 1, N_("DNS <nick|host|ip>, Resolves an IP or hostname")},
 	{"ECHO", cmd_echo, 0, 0, 1, N_("ECHO <text>, Prints text locally")},
-#ifndef G_OS_WIN32
+#ifndef _WIN32
 	{"EXEC", cmd_exec, 0, 0, 1,
 	 N_("EXEC [-o] <command>, runs the command. If -o flag is used then output is sent to current channel, else is printed to current text box")},
 #ifndef __EMX__

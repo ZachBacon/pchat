@@ -29,7 +29,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 #include <sys/timeb.h>
 #include <process.h>
 #include <io.h>
@@ -60,7 +60,7 @@
 #include <openssl/rand.h>
 #include <openssl/blowfish.h>
 #include <openssl/aes.h>
-#ifndef G_OS_WIN32
+#ifndef _WIN32
 #include <netinet/in.h>
 #endif
 #endif
@@ -262,7 +262,7 @@ file_part (char *file)
 			case 0:
 				return (filepart);
 			case '/':
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 			case '\\':
 #endif
 				filepart = file + 1;
@@ -305,7 +305,7 @@ errorstring (int err)
 		return "";
 	case 0:
 		return _("Remote host closed socket");
-#ifndef G_OS_WIN32
+#ifndef _WIN32
 	}
 #else
 	case WSAECONNREFUSED:
@@ -363,7 +363,7 @@ errorstring (int err)
 		sprintf (tbuf, "%s %d", _("Error"), err);
 		return tbuf;
 	} /* ! if (err >= WSABASEERR) */
-#endif	/* ! G_OS_WIN32 */
+#endif	/* ! _WIN32 */
 
 	return strerror (err);
 }
@@ -393,7 +393,7 @@ waitline (int sok, char *buf, int bufsize, int use_recv)
 	}
 }
 
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 /* waitline2 using win32 file descriptor and glib instead of _read. win32 can't _read() sok! */
 int
 waitline2 (GIOChannel *source, char *buf, int bufsize)
@@ -426,7 +426,7 @@ waitline2 (GIOChannel *source, char *buf, int bufsize)
 char *
 expand_homedir (char *file)
 {
-#ifndef G_OS_WIN32
+#ifndef _WIN32
 	char *ret, *user;
 	struct passwd *pw;
 
@@ -642,7 +642,7 @@ get_cpu_info (double *mhz, int *cpus)
 }
 #endif
 
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 
 static int
 get_mhz (void)
@@ -1389,7 +1389,7 @@ util_exec (const char *cmd)
 {
 	char **argv;
 	int argc;
-#ifndef G_OS_WIN32
+#ifndef _WIN32
 	int pid;
 	int fd;
 #endif
@@ -1397,7 +1397,7 @@ util_exec (const char *cmd)
 	if (my_poptParseArgvString (cmd, &argc, &argv) != 0)
 		return -1;
 
-#ifndef G_OS_WIN32
+#ifndef _WIN32
 	pid = fork ();
 	if (pid == -1)
 		return -1;
@@ -1422,7 +1422,7 @@ util_exec (const char *cmd)
 int
 util_execv (char * const argv[])
 {
-#ifndef G_OS_WIN32
+#ifndef _WIN32
 	int pid, fd;
 
 	pid = fork ();
@@ -1447,7 +1447,7 @@ util_execv (char * const argv[])
 unsigned long
 make_ping_time (void)
 {
-#ifndef G_OS_WIN32
+#ifndef _WIN32
 	struct timeval timev;
 	gettimeofday (&timev, 0);
 #else
@@ -1852,7 +1852,7 @@ canonalize_key (char *key)
 int
 portable_mode ()
 {
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 	static int is_portable = -1;
 
 	if (G_UNLIKELY(is_portable == -1))
@@ -2285,7 +2285,7 @@ challengeauth_response (char *username, char *password, char *challenge)
 size_t
 strftime_validated (char *dest, size_t destsize, const char *format, const struct tm *time)
 {
-#ifndef G_OS_WIN32
+#ifndef _WIN32
 	return strftime (dest, destsize, format, time);
 #else
 	char safe_format[64];

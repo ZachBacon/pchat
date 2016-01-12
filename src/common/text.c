@@ -25,7 +25,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 #include <io.h>
 #else
 #include <unistd.h>
@@ -43,7 +43,7 @@
 #include "xchatc.h"
 #include "text.h"
 #include "typedef.h"
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 #include <windows.h>
 #endif
 
@@ -387,7 +387,7 @@ log_create_filename (char *channame)
 		mbl = g_utf8_skip[((unsigned char *)tmp)[0]];
 		if (mbl == 1)
 		{
-#ifndef G_OS_WIN32
+#ifndef _WIN32
 			*tmp = rfc_tolower (*tmp);
 			if (*tmp == '/')
 #else
@@ -805,7 +805,7 @@ text_validate (char **text, gssize *len)
 	if (g_utf8_validate (*text, *len, 0))
 		return NULL;
 
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 	if (GetACP () == 1252) /* our routine is better than iconv's 1252 */
 #else
 	if (prefs.utf8_locale)
@@ -2199,7 +2199,7 @@ sound_play (const char *file, gboolean quiet)
 {
 	char *buf;
 	char *wavfile;
-#ifndef G_OS_WIN32
+#ifndef _WIN32
 	char *cmd;
 #endif
 
@@ -2221,7 +2221,7 @@ sound_play (const char *file, gboolean quiet)
 
 	if (g_access (wavfile, R_OK) == 0)
 	{
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 		PlaySound (wavfile, NULL, SND_NODEFAULT|SND_FILENAME|SND_ASYNC);
 #else
 #ifdef USE_LIBCANBERRA

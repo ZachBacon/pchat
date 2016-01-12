@@ -2355,7 +2355,7 @@ mg_create_textarea (session *sess, GtkWidget *box)
 
 	g_signal_connect (G_OBJECT (xtext), "word_click",
 							G_CALLBACK (mg_word_clicked), NULL);
-#ifndef G_OS_WIN32	/* needs more work */
+#ifndef _WIN32	/* needs more work */
 	gtk_drag_dest_set (gui->vscrollbar, 5, dnd_dest_targets, 2,
 							 GDK_ACTION_MOVE | GDK_ACTION_COPY | GDK_ACTION_LINK);
 	g_signal_connect (G_OBJECT (gui->vscrollbar), "drag_begin",
@@ -2409,7 +2409,7 @@ mg_create_meters (session_gui *gui, GtkWidget *parent_box)
 	if (prefs.pchat_gui_lagometer & 1)
 	{
 		gui->lagometer = wid = gtk_progress_bar_new ();
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 		gtk_widget_set_size_request (wid, 1, 10);
 #else
 		gtk_widget_set_size_request (wid, 1, 8);
@@ -2428,7 +2428,7 @@ mg_create_meters (session_gui *gui, GtkWidget *parent_box)
 	if (prefs.pchat_gui_throttlemeter & 1)
 	{
 		gui->throttlemeter = wid = gtk_progress_bar_new ();
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 		gtk_widget_set_size_request (wid, 1, 10);
 #else
 		gtk_widget_set_size_request (wid, 1, 8);
@@ -3813,7 +3813,7 @@ mg_drag_end_cb (GtkWidget *widget, GdkDragContext *context, gpointer userdata)
 	if (!mg_is_gui_target (context))
 		return;
 
-#ifndef G_OS_WIN32
+#ifndef _WIN32
 	g_object_unref (g_object_get_data (G_OBJECT (widget), "ico"));
 #endif
 }

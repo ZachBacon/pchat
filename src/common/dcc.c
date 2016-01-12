@@ -38,7 +38,7 @@
 #define WANTDNS
 #include "inet.h"
 
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 #include <windows.h>
 #include <io.h>
 #else
@@ -810,7 +810,7 @@ dcc_did_connect (GIOChannel *source, GIOCondition condition, struct DCC *dcc)
 {
 	int er;
 
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 	if (condition & G_IO_ERR)
 	{
 		int len;
@@ -2361,7 +2361,7 @@ dcc_add_file (session *sess, char *file, DCC_SIZE size, int port, char *nick, gu
 			strcat (dcc->destfile, G_DIR_SEPARATOR_S);
 		if (prefs.pchat_dcc_save_nick)
 		{
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 			char *t = strlen (dcc->destfile) + dcc->destfile;
 			strcpy (t, nick);
 			while (*t)

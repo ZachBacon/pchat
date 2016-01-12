@@ -21,7 +21,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 #include <io.h>
 #else
 #include <unistd.h>

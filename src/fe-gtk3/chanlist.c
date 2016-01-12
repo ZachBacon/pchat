@@ -22,7 +22,7 @@
 #include <fcntl.h>
 #include <time.h>
 
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 #include <io.h>
 #else
 #include <unistd.h>
@@ -76,7 +76,7 @@ chanlist_match (server *serv, const char *str)
 	{
 	case 1:
 		return match (gtk_entry_get_text (GTK_ENTRY (serv->gui->chanlist_wild)), str);
-#ifndef G_OS_WIN32
+#ifndef _WIN32
 	case 2:
 		if (!serv->gui->have_regex)
 			return 0;
@@ -406,7 +406,7 @@ chanlist_search_pressed (GtkButton * button, server *serv)
 static void
 chanlist_find_cb (GtkWidget * wid, server *serv)
 {
-#ifndef G_OS_WIN32
+#ifndef _WIN32
 	/* recompile the regular expression. */
 	if (serv->gui->have_regex)
 	{
@@ -655,7 +655,7 @@ chanlist_destroy_widget (GtkWidget *wid, server *serv)
 		serv->gui->chanlist_tag = 0;
 	}
 
-#ifndef G_OS_WIN32
+#ifndef _WIN32
 	if (serv->gui->have_regex)
 	{
 		regfree (&serv->gui->chanlist_match_regex);
@@ -897,7 +897,7 @@ chanlist_opengui (server *serv, int do_refresh)
 	wid = gtk_combo_box_text_new ();
 	gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (wid), _("Simple Search"));
 	gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (wid), _("Pattern Match (Wildcards)"));
-#ifndef G_OS_WIN32
+#ifndef _WIN32
 	gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (wid), _("Regular Expression"));
 #endif
 	gtk_combo_box_set_active (GTK_COMBO_BOX (wid), serv->gui->chanlist_search_type);

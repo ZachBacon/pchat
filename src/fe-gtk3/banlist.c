@@ -22,7 +22,7 @@
 #include <fcntl.h>
 #include <time.h>
 
-#ifndef G_OS_WIN32
+#ifndef _WIN32
 #include <unistd.h>
 #endif
 

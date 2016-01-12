@@ -75,7 +75,7 @@ notify_treecell_property_mapper (GtkTreeViewColumn *col, GtkCellRenderer *cell,
 	GdkColor *colour;
 	int model_column = GPOINTER_TO_INT (data);
 
-	gtk_tree_model_get (GTK_TREE_MODEL (model), iter, 
+	gtk_tree_model_get (GTK_TREE_MODEL (model), iter,
 	                    COLOUR_COLUMN, &colour,
 	                    model_column, &text, -1);
 	g_object_set (G_OBJECT (cell), "text", text, NULL);
@@ -189,7 +189,7 @@ notify_gui_update (void)
 			else
 			{
 				lastseenminutes = (int)(time (0) - lastseen) / 60;
-				if (lastseenminutes < 60) 
+				if (lastseenminutes < 60)
 					snprintf (agobuf, sizeof (agobuf), _("%d minutes ago"), lastseenminutes);
 				else if (lastseenminutes < 120)
 					snprintf (agobuf, sizeof (agobuf), _("An hour ago"));
@@ -234,7 +234,7 @@ notify_gui_update (void)
 				slist = slist->next;
 			}
 		}
-		
+
 		list = list->next;
 	}
 
@@ -410,7 +410,7 @@ notify_opengui (void)
 
 	view = notify_treeview_new (vbox);
 	g_object_set_data (G_OBJECT (notify_window), "view", view);
-  
+
 	bbox = gtk_hbutton_box_new ();
 	gtk_button_box_set_layout (GTK_BUTTON_BOX (bbox), GTK_BUTTONBOX_SPREAD);
 	gtk_container_set_border_width (GTK_CONTAINER (bbox), 5);

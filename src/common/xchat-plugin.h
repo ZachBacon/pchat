@@ -390,7 +390,7 @@ int
 xchat_pluginpref_list (xchat_plugin *ph,
 		char *dest);
 
-#if !defined(PLUGIN_C) && defined(G_OS_WIN32)
+#if !defined(PLUGIN_C) && defined(_WIN32)
 #ifndef XCHAT_PLUGIN_HANDLE
 #define XCHAT_PLUGIN_HANDLE (ph)
 #endif

@@ -33,7 +33,7 @@
 #include "sexy-iso-codes.h"
 #include "../common/marshal.h"
 
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 #include "../common/typedef.h"
 #include <io.h>
 #else
@@ -153,14 +153,14 @@ initialize_enchant ()
 	GModule *enchant;
 	gpointer funcptr;
 
-#ifdef G_OS_WIN32
+#ifdef _WIN32
 	enchant = g_module_open("libenchant.dll", 0);
 #else
 	enchant = g_module_open("libenchant", 0);
 #endif
 	if (enchant == NULL)
 	{
-#ifndef G_OS_WIN32
+#ifndef _WIN32
 		enchant = g_module_open("libenchant.so.1", 0);
 				if (enchant == NULL)
 					return;
