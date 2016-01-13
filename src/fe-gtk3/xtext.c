@@ -171,7 +171,7 @@ xtext_draw_line (GtkXText *xtext, cairo_t *cr, GdkColor *color, int x1, int y1, 
 
 	/* Disable antialiasing for crispy 1-pixel lines */
 	cairo_set_antialias (cr, CAIRO_ANTIALIAS_NONE);
-	gdk_cairo_set_source_color (cr, color);
+	gdk_cairo_set_source_rgba (cr, color);
 	cairo_set_line_cap (cr, CAIRO_LINE_CAP_SQUARE);
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 	cairo_set_line_width (cr, 1.0);
@@ -402,7 +402,7 @@ backend_draw_text_emph (GtkXText *xtext, gboolean dofill, int x, int y, char *st
 							str_width, xtext->fontsize);
 	}
 
-	gdk_cairo_set_source_color (cr, &xtext->fgc);
+	gdk_cairo_set_source_rgba (cr, &xtext->fgc);
 	line = pango_layout_get_line_readonly (xtext->layout, 0);
 
 	cairo_save (cr);
@@ -552,8 +552,10 @@ gtk_xtext_new (GdkColor palette[], int separator)
 	xtext->wordwrap = TRUE;
 	xtext->buffer = gtk_xtext_buffer_new (xtext);
 	xtext->orig_buffer = xtext->buffer;
-
-	gtk_widget_set_double_buffered (GTK_WIDGET (xtext), FALSE);
+    /*
+     * This function does not work under non-X11 backends or with non-native windows
+	 * gtk_widget_set_double_buffered (GTK_WIDGET (xtext), FALSE);
+	 */
 	gtk_xtext_set_palette (xtext, palette);
 
 	return GTK_WIDGET (xtext);
@@ -605,13 +607,13 @@ gtk_xtext_destroy (GObject * object)
 
 	if (xtext->hand_cursor)
 	{
-		gdk_cursor_unref (xtext->hand_cursor);
+		g_object_unref (xtext->hand_cursor);
 		xtext->hand_cursor = NULL;
 	}
 
 	if (xtext->resize_cursor)
 	{
-		gdk_cursor_unref (xtext->resize_cursor);
+		g_object_unref (xtext->resize_cursor);
 		xtext->resize_cursor = NULL;
 	}
 
