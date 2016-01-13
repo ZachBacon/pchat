@@ -85,3 +85,4 @@ char *encode_sasl_pass_aes (char *user, char *pass, char *data);
 char *challengeauth_response (char *username, char *password, char *challenge);
 size_t strftime_validated (char *dest, size_t destsize, const char *format, const struct tm *time);
 #endif
+

@@ -32,6 +32,7 @@
 #include "xchat.h"
 #include "fe.h"
 #include "util.h"
+#include "pchat-platform-support.h"
 #include "outbound.h"
 #include "cfgfiles.h"
 #include "ignore.h"
@@ -484,7 +485,7 @@ plugin_get_libdir ()
 {
 	const char *libdir;
 
-	libdir = g_getenv ("XCHAT_LIBDIR");
+	libdir = pchat_platform_support_get_lib_dir();
 	if (libdir && *libdir)
 		return (char*)libdir;
 	else

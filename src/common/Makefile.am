@@ -23,6 +23,7 @@ EXTRA_DIST = \
 	network.h \
 	notify.h \
 	outbound.h \
+	platform.h \
 	plugin.h \
 	plugin-timer.h \
 	proto-irc.h \
@@ -45,6 +46,7 @@ endif
 
 if OS_W32
 identd_c = identd.c
+platform_c = pchat-platform-support-win32.c
 endif
 
 if USE_DBUS
@@ -62,7 +64,7 @@ noinst_PROGRAMS = make-te
 
 libpchatcommon_a_SOURCES = cfgfiles.c chanopt.c ctcp.c dcc.c xchat.c \
 	history.c ignore.c $(identd_c) inbound.c marshal.c modes.c network.c notify.c \
-	outbound.c plugin.c plugin-timer.c proto-irc.c server.c servlist.c \
+	outbound.c $(platform_c) plugin.c plugin-timer.c proto-irc.c server.c servlist.c \
 	$(ssl_c) text.c tree.c url.c userlist.c util.c
 libpchatcommon_a_CFLAGS = $(LIBPROXY_CFLAGS)
 
