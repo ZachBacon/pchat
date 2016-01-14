@@ -57,15 +57,15 @@ url_treeview_url_clicked_cb (GtkWidget *view, GdkEventButton *event,
 		return FALSE;
 
 	/* select what they right-clicked on */
-	sel = gtk_tree_view_get_selection (tree); 
+	sel = gtk_tree_view_get_selection (tree);
 	gtk_tree_selection_unselect_all (sel);
 	gtk_tree_selection_select_path (sel, path);
-	gtk_tree_path_free (path); 
+	gtk_tree_path_free (path);
 
 	if (!gtkutil_treeview_get_selected (GTK_TREE_VIEW (view), &iter,
 	                                    URL_COLUMN, &url, -1))
 		return FALSE;
-	
+
 	switch (event->button)
 	{
 		case 1:
@@ -112,7 +112,7 @@ static void
 url_button_clear (void)
 {
 	GtkListStore *store;
-	
+
 	url_clear ();
 	store = GTK_LIST_STORE (g_object_get_data (G_OBJECT (urlgrabberwindow),
 	                                           "model"));
@@ -155,7 +155,7 @@ fe_url_add (const char *urltext)
 	GtkListStore *store;
 	GtkTreeIter iter;
 	gboolean valid;
-	
+
 	if (urlgrabberwindow)
 	{
 		store = GTK_LIST_STORE (g_object_get_data (G_OBJECT (urlgrabberwindow),
@@ -208,11 +208,11 @@ url_opengui ()
 	gtk_box_pack_end (GTK_BOX (vbox), hbox, 0, 0, 0);
 	gtk_widget_show (hbox);
 
-	gtkutil_button (hbox, GTK_STOCK_CLEAR,
+	gtkutil_button (hbox, gtk_image_new_from_stock(GTK_STOCK_CLEAR, GTK_ICON_SIZE_MENU),
 						 _("Clear list"), url_button_clear, 0, _("Clear"));
-	gtkutil_button (hbox, GTK_STOCK_COPY,
+	gtkutil_button (hbox, gtk_image_new_from_stock(GTK_STOCK_COPY, GTK_ICON_SIZE_MENU),
 						 _("Copy selected URL"), url_button_copy, view, _("Copy"));
-	gtkutil_button (hbox, GTK_STOCK_SAVE_AS,
+	gtkutil_button (hbox, gtk_image_new_from_stock(GTK_STOCK_SAVE_AS, GTK_ICON_SIZE_MENU),
 						 _("Save list to a file"), url_button_save, 0, _("Save As..."));
 
 	gtk_widget_show (urlgrabberwindow);

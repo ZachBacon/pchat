@@ -423,7 +423,7 @@ pevent_dialog_show ()
 	g_signal_connect (G_OBJECT (wid), "clicked",
 							G_CALLBACK (pevent_test_cb), pevent_dialog_twid);
 
-	wid = gtk_button_new_from_stock (GTK_STOCK_OK);
+	wid = gtk_button_new_from_stock (gtk_image_new_from_stock(GTK_STOCK_OK, GTK_ICON_SIZE_MENU));
 	gtk_box_pack_start (GTK_BOX (hbox), wid, 0, 0, 0);
 	g_signal_connect (G_OBJECT (wid), "clicked",
 							G_CALLBACK (pevent_ok_cb), NULL);
