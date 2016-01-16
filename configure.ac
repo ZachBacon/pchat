@@ -8,7 +8,7 @@ AC_COPYRIGHT([Copyright (C) 1998-2010 Peter Zelezny])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([configure.ac])
 
-AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_MACRO_DIR([m4-common])
 
 AM_INIT_AUTOMAKE([1.11 dist-xz subdir-objects no-define foreign])
 AM_SILENT_RULES([yes])
