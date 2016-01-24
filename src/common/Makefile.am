@@ -47,6 +47,8 @@ endif
 if OS_W32
 identd_c = identd.c
 platform_c = pchat-platform-support-win32.c
+else
+platform_c = pchat-platform-support.c
 endif
 
 if USE_DBUS
