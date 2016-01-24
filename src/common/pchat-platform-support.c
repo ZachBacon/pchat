@@ -23,11 +23,11 @@ pchat_platform_support_get_locale_dir (void)
 char *
 pchat_platform_support_get_data_dir (void)
 {
-	return g_strdup (ISO_CODES_LOCALEDIR);
+	return g_strdup (XCHATSHAREDIR);
 }
 
 char *
 pchat_platform_support_get_user_home_dir (const char *name)
 {
-	return NULL;
+	return 0;
 }

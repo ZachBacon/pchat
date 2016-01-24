@@ -347,7 +347,7 @@ get_xdir (void)
 			xdir = g_build_filename (out, "PChat", NULL);
 		}
 #else
-		xdir = g_build_filename (g_get_user_config_dir (), PCHAT_DIR, NULL);
+		xdir = g_build_filename (g_get_user_config_dir (), XCHAT_DIR, NULL);
 #endif
 	}
 
