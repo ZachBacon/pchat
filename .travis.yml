@@ -1,0 +1,30 @@
+sudo: false
+language: c
+cache: apt
+compiler: clang
+script:
+    - ./autogen.sh --disable-python --disable-perl
+    - make V=1 -j$(nproc)
+notifications:
+    irc:
+        channels: "chat.freenode.net#valhallalinux"
+        template: "Build %{build_url} (%{commit} in %{branch}) by %{author}: %{message}"
+        on_success: change
+matrix:
+     fast_finish: true
+addons:
+    apt:
+        packages:
+            - automake
+            - autoconf
+            - imagemagick
+            - intltool
+            - libcanberra-dev
+            - libdbus-glib-1-dev
+            - libglib2.0-dev
+            - libgtk3.0-dev
+            - libnotify-dev
+            - libpci-dev
+            - libproxy-dev
+            - libssl-dev
+            - libtool
