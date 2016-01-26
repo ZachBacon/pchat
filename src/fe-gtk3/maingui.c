@@ -2068,7 +2068,6 @@ mg_create_chanmodebuttons (session_gui *gui, GtkWidget *box)
 {
 	gui->flag_c = mg_create_flagbutton (_("Filter Colors"), box, "c");
 	gui->flag_n = mg_create_flagbutton (_("No outside messages"), box, "n");
-	gui->flag_r = mg_create_flagbutton (_("Registered Only"), box, "r");
 	gui->flag_t = mg_create_flagbutton (_("Topic Protection"), box, "t");
 	gui->flag_i = mg_create_flagbutton (_("Invite Only"), box, "i");
 	gui->flag_m = mg_create_flagbutton (_("Moderated"), box, "m");

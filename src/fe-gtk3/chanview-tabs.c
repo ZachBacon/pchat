@@ -65,15 +65,14 @@ cv_tabs_sizerequest (GtkWidget *viewport, GtkRequisition *requisition, chanview 
 static void
 cv_tabs_sizealloc (GtkWidget *widget, GtkAllocation *allocation, chanview *cv)
 {
+	GdkWindow *parent_win;
 	GtkAdjustment *adj;
 	GtkWidget *inner;
 	gint viewport_size;
 
 	inner = ((tabview *)cv)->inner;
-	GdkWindow *parent_win = gtk_widget_get_window (gtk_widget_get_parent (inner));
+	parent_win = gtk_widget_get_window (gtk_widget_get_parent (inner));
 
-	if (NULL == parent_win)
-		return;
 	if (cv->vertical)
 	{
 		adj = gtk_viewport_get_vadjustment (GTK_VIEWPORT (gtk_widget_get_parent (inner)));
@@ -146,7 +145,7 @@ tab_scroll_left_up_clicked (GtkWidget *widget, chanview *cv)
 	gfloat new_value;
 	GtkWidget *inner;
 	GdkWindow *parent_win;
-	gfloat i;
+	gdouble i;
 
 	inner = ((tabview *)cv)->inner;
 	parent_win = gtk_widget_get_window (gtk_widget_get_parent (inner));
@@ -195,7 +194,7 @@ tab_scroll_right_down_clicked (GtkWidget *widget, chanview *cv)
 	gfloat new_value;
 	GtkWidget *inner;
 	GdkWindow *parent_win;
-	gfloat i;
+	gdouble i;
 
 	inner = ((tabview *)cv)->inner;
 	parent_win = gtk_widget_get_window (gtk_widget_get_parent (inner));
@@ -304,10 +303,9 @@ cv_tabs_init (chanview *cv)
 
 	viewport = gtk_viewport_new (0, 0);
 	gtk_viewport_set_shadow_type (GTK_VIEWPORT (viewport), GTK_SHADOW_NONE);
-/*
+	/*
 	g_signal_connect (G_OBJECT (viewport), "size_request",
-							G_CALLBACK (cv_tabs_sizerequest), cv);
-*/
+							G_CALLBACK (cv_tabs_sizerequest), cv); */
 	g_signal_connect (G_OBJECT (viewport), "scroll_event",
 							G_CALLBACK (tab_scroll_cb), cv);
 	gtk_box_pack_start (GTK_BOX (outer), viewport, 1, 1, 0);
@@ -395,7 +393,7 @@ tab_add_sorted (chanview *cv, GtkWidget *box, GtkWidget *tab, chan *ch)
 			if (ch->tag == 0 && cv->cb_compare (a, b) > 0)
 			{
 				gtk_box_pack_start (GTK_BOX (box), tab, 0, 0, 0);
-				gtk_box_reorder_child (GTK_BOX (box), tab, i);
+				gtk_box_reorder_child (GTK_BOX (box), tab, ++i);
 				gtk_widget_show (tab);
 				return;
 			}
@@ -589,7 +587,7 @@ cv_tabs_add (chanview *cv, chan *ch, char *name, GtkTreeIter *parent)
 	return but;
 }
 
-/* traverse all the family boxes of tabs 
+/* traverse all the family boxes of tabs
  *
  * A "group" is basically:
  * GtkV/HBox
