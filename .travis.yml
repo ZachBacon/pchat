@@ -1,9 +1,9 @@
 sudo: false
 language: c
 cache: apt
-compiler: clang
+compiler: gcc
 script:
-    - ./autogen.sh --disable-python --disable-perl
+    - ./autogen.sh --disable-python --disable-perl --disable-dbus
     - make V=1 -j$(nproc)
 notifications:
     irc:
