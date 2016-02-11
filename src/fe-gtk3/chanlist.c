@@ -76,13 +76,10 @@ chanlist_match (server *serv, const char *str)
 	{
 	case 1:
 		return match (gtk_entry_get_text (GTK_ENTRY (serv->gui->chanlist_wild)), str);
-#ifndef _WIN32
 	case 2:
 		if (!serv->gui->have_regex)
 			return 0;
-		/* regex returns 0 if it's a match: */
-		return !regexec (&serv->gui->chanlist_match_regex, str, 1, NULL, REG_NOTBOL);
-#endif
+		return g_regex_match (serv->gui->chanlist_match_regex, str, 0, NULL);
 	default:	/* case 0: */
 		return nocasestrstr (str, gtk_entry_get_text (GTK_ENTRY (serv->gui->chanlist_wild))) ? 1 : 0;
 	}
@@ -96,7 +93,7 @@ chanlist_update_caption (server *serv)
 {
 	gchar tbuf[256];
 
-	snprintf (tbuf, sizeof tbuf,
+	g_snprintf (tbuf, sizeof tbuf,
 				 _("Displaying %d/%d users on %d/%d channels."),
 				 serv->gui->chanlist_users_shown_count,
 				 serv->gui->chanlist_users_found_count,
@@ -150,7 +147,7 @@ chanlist_data_free (server *serv)
 			data = rows->data;
 			g_free (data->topic);
 			g_free (data->collation_key);
-			free (data);
+			g_free (data);
 		}
 
 		g_slist_free (serv->gui->chanlist_data_stored_rows);
@@ -372,7 +369,7 @@ fe_add_chan_list (server *serv, char *chan, char *users, char *topic)
 	int len = strlen (chan) + 1;
 
 	/* we allocate the struct and channel string in one go */
-	next_row = malloc (sizeof (chanlistrow) + len);
+	next_row = g_malloc (sizeof (chanlistrow) + len);
 	memcpy (((char *)next_row) + sizeof (chanlistrow), chan, len);
 	next_row->topic = strip_color (topic, -1, STRIP_ALL);
 	next_row->collation_key = g_utf8_collate_key (chan, len-1);
@@ -406,18 +403,20 @@ chanlist_search_pressed (GtkButton * button, server *serv)
 static void
 chanlist_find_cb (GtkWidget * wid, server *serv)
 {
-#ifndef _WIN32
+	const char *pattern = gtk_entry_get_text (GTK_ENTRY (wid));
+
 	/* recompile the regular expression. */
 	if (serv->gui->have_regex)
 	{
 		serv->gui->have_regex = 0;
-		regfree (&serv->gui->chanlist_match_regex);
+		g_regex_unref (serv->gui->chanlist_match_regex);
 	}
 
-	if (regcomp (&serv->gui->chanlist_match_regex, gtk_entry_get_text (GTK_ENTRY (wid)),
-					 REG_ICASE | REG_EXTENDED | REG_NOSUB) == 0)
+	serv->gui->chanlist_match_regex = g_regex_new (pattern, G_REGEX_CASELESS | G_REGEX_EXTENDED,
+												G_REGEX_MATCH_NOTBOL, NULL);
+
+	if (serv->gui->chanlist_match_regex)
 		serv->gui->have_regex = 1;
-#endif
 }
 
 static void
@@ -456,7 +455,7 @@ chanlist_join (GtkWidget * wid, server *serv)
 	{
 		if (serv->connected && (strcmp (chan, "*") != 0))
 		{
-			snprintf (tbuf, sizeof (tbuf), "join %s", chan);
+			g_snprintf (tbuf, sizeof (tbuf), "join %s", chan);
 			handle_command (serv->server_session, tbuf, FALSE);
 		} else
 			gdk_beep ();
@@ -482,7 +481,7 @@ chanlist_filereq_done (server *serv, char *file)
 	if (fh == -1)
 		return;
 
-	snprintf (buf, sizeof buf, "PChat Channel List: %s - %s\n",
+	g_snprintf (buf, sizeof buf, "PChat Channel List: %s - %s\n",
 				 serv->servername, ctime (&t));
 	write (fh, buf, strlen (buf));
 
@@ -494,7 +493,7 @@ chanlist_filereq_done (server *serv, char *file)
 									  COL_CHANNEL, &chan,
 									  COL_USERS, &users,
 									  COL_TOPIC, &topic, -1);
-			snprintf (buf, sizeof buf, "%-16s %-5d%s\n", chan, users, topic);
+			g_snprintf (buf, sizeof buf, "%-16s %-5d%s\n", chan, users, topic);
 			g_free (chan);
 			g_free (topic);
 			write (fh, buf, strlen (buf));
@@ -655,13 +654,11 @@ chanlist_destroy_widget (GtkWidget *wid, server *serv)
 		serv->gui->chanlist_tag = 0;
 	}
 
-#ifndef _WIN32
 	if (serv->gui->have_regex)
 	{
-		regfree (&serv->gui->chanlist_match_regex);
+		g_regex_unref (serv->gui->chanlist_match_regex);
 		serv->gui->have_regex = 0;
 	}
-#endif
 }
 
 static void
@@ -714,7 +711,7 @@ chanlist_opengui (server *serv, int do_refresh)
 		return;
 	}
 
-	snprintf (tbuf, sizeof tbuf, _(DISPLAY_NAME": Channel List (%s)"),
+	g_snprintf (tbuf, sizeof tbuf, _(DISPLAY_NAME": Channel List (%s)"),
 				 server_get_network (serv, TRUE));
 
 	serv->gui->chanlist_pending_rows = NULL;
@@ -897,9 +894,7 @@ chanlist_opengui (server *serv, int do_refresh)
 	wid = gtk_combo_box_text_new ();
 	gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (wid), _("Simple Search"));
 	gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (wid), _("Pattern Match (Wildcards)"));
-#ifndef _WIN32
 	gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (wid), _("Regular Expression"));
-#endif
 	gtk_combo_box_set_active (GTK_COMBO_BOX (wid), serv->gui->chanlist_search_type);
 	gtk_table_attach (GTK_TABLE (table), wid, 1, 2, 1, 2,
 							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);

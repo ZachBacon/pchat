@@ -20,32 +20,15 @@
 #ifndef HEXCHAT_FE_GTK_H
 #define HEXCHAT_FE_GTK_H
 
-#ifdef HAVE_CONFIG_H
-#include "../../config.h"
-#endif
+#include "config.h"
 
 #define DISPLAY_NAME "PChat"
 
 #ifndef _WIN32
 #include <sys/types.h>
-#include <regex.h>
 #endif
 
-#if defined(ENABLE_NLS) && !defined(_)
-#  include <libintl.h>
-#  define _(x) gettext(x)
-#  ifdef gettext_noop
-#    define N_(String) gettext_noop (String)
-#  else
-#    define N_(String) (String)
-#  endif
-#endif
-#if !defined(ENABLE_NLS) && defined(_)
-#  undef _
-#  define N_(String) (String)
-#  define _(x) (x)
-#endif
-
+#include <glib/gi18n.h>
 #include <gtk/gtk.h>
 
 #ifdef HAVE_GTK_MAC
@@ -56,14 +39,13 @@
 
 #define flag_c flag_wid[0]
 #define flag_n flag_wid[1]
-#define flag_r flag_wid[2]
-#define flag_t flag_wid[3]
-#define flag_i flag_wid[4]
-#define flag_m flag_wid[5]
-#define flag_l flag_wid[6]
-#define flag_k flag_wid[7]
-#define flag_b flag_wid[8]
-#define NUM_FLAG_WIDS 9
+#define flag_t flag_wid[2]
+#define flag_i flag_wid[3]
+#define flag_m flag_wid[4]
+#define flag_l flag_wid[5]
+#define flag_k flag_wid[6]
+#define flag_b flag_wid[7]
+#define NUM_FLAG_WIDS 8
 
 #ifdef HAVE_GTK_MAC
 extern GtkosxApplication *osx_app;
@@ -100,10 +82,8 @@ struct server_gui
 	gboolean chanlist_match_wants_channel;	/* match in channel name */
 	gboolean chanlist_match_wants_topic;	/* match in topic */
 
-#ifndef _WIN32
-	regex_t chanlist_match_regex;	/* compiled regular expression here */
+	GRegex *chanlist_match_regex;	/* compiled regular expression here */
 	unsigned int have_regex;
-#endif
 
 	guint chanlist_users_found_count;	/* users total for all channels */
 	guint chanlist_users_shown_count;	/* users total for displayed channels */
