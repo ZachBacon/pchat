@@ -36,6 +36,9 @@
 #include "../../config.h"
 #endif
 
+#include <cairo.h>
+#include <pango/pangocairo.h>
+
 #include "../common/xchat.h"
 #include "../common/fe.h"
 #include "../common/util.h"
@@ -645,7 +648,7 @@ gtk_xtext_realize (GtkWidget * widget)
 	GtkXText *xtext;
 	GdkWindowAttr attributes;
 	GtkAllocation alloc;
-	/* GdkColormap *cmap; */
+	GdkVisual *cmap;
 
 	gtk_widget_set_realized (widget, TRUE);
 	xtext = GTK_XTEXT (widget);
@@ -662,8 +665,8 @@ gtk_xtext_realize (GtkWidget * widget)
 		GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK
 		| GDK_POINTER_MOTION_MASK | GDK_LEAVE_NOTIFY_MASK;
 
-	/*cmap = gtk_widget_get_colormap (widget);
-	attributes.colormap = cmap; */
+	cmap = gtk_widget_get_visual (widget);
+	attributes.colormap = cmap;
 	attributes.visual = gtk_widget_get_visual (widget);
 
 	gtk_widget_set_window (widget, gdk_window_new (gtk_widget_get_parent_window (widget), &attributes,
