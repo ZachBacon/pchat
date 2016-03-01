@@ -20,6 +20,8 @@
 #ifndef HEXCHAT_XTEXT_H
 #define HEXCHAT_XTEXT_H
 
+#include <cairo.h>
+#include <glib-object.h>
 #include <gtk/gtk.h>
 
 #define GTK_TYPE_XTEXT              (gtk_xtext_get_type ())
@@ -188,6 +190,8 @@ struct _GtkXText
 
 	int clip_y;			/* clipping (y directions) */
 	int clip_y2;		/* from y to y2 */
+
+	cairo_pattern_t *bg_pattern;
 
 	/* current text states */
 	unsigned int underline:1;
