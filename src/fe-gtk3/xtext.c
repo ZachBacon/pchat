@@ -153,12 +153,9 @@ gtk_xtext_create_cairo_handle (GtkXText *xtext)
 	cairo_t *cr;
 
 	g_return_val_if_fail(xtext != NULL, NULL);
-	g_return_val_if_fail(xtext->draw_buf != NULL, NULL);
+	//g_return_val_if_fail(xtext->draw_buf != NULL, NULL);
 
-	cr = gdk_cairo_create(GDK_DRAWABLE(xtext->draw_buf));
-#if GTK_CHECK_VERSION(2,18,0)
-	gdk_cairo_reset_clip(cr, GDK_DRAWABLE(xtext->draw_buf));
-#endif
+	cr = gdk_cairo_create (gtk_widget_get_window (&xtext->widget));
 
 	return cr;
 }
@@ -180,8 +177,26 @@ gtk_xtext_text_width_8bit (GtkXText *xtext, unsigned char *str, int len)
 	return width;
 }
 
-static void
-xtext_draw_bg(GtkXText *xtext, gint x, gint y, gint width, gint height)
+static inline void
+xtext_draw_line (GtkXText *xtext, cairo_t *cr, GdkColor *color, int x1, int y1, int x2, int y2)
+{
+	cairo_save (cr);
+
+	/* Disable antialiasing for crispy 1-pixel lines */
+	cairo_set_antialias (cr, CAIRO_ANTIALIAS_NONE);
+	gdk_cairo_set_source_rgba (cr, color);
+	cairo_set_line_cap (cr, CAIRO_LINE_CAP_SQUARE);
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+	cairo_set_line_width (cr, 1.0);
+	cairo_move_to (cr, x1, y1);
+	cairo_line_to (cr, x2, y2);
+	cairo_stroke (cr);
+
+	cairo_restore (cr);
+}
+
+static inline void
+xtext_draw_bg (GtkXText *xtext, int x, int y, int width, int height)
 {
 	cairo_t *cr;
 
@@ -198,42 +213,74 @@ xtext_draw_bg(GtkXText *xtext, gint x, gint y, gint width, gint height)
 	cairo_destroy(cr);
 }
 
-static void
-xtext_set_bg(GtkXText *xtext, gint color)
-{
-	GdkColor *bgcol;
-
-	g_return_if_fail(xtext != NULL);
-
-	xtext->bgcol = color;
-	bgcol = &xtext->palette[xtext->bgcol];
-
-	if (xtext->bg_pattern != NULL)
-		cairo_pattern_destroy(xtext->bg_pattern);
-
-	xtext->bg_pattern = cairo_pattern_create_rgba (bgcol->red / 65535.,
-						       bgcol->green / 65535.,
-						       bgcol->blue / 65535.,
-						       xtext->transparency);
-}
-
-static void
-xtext_set_fg(GtkXText *xtext, gint color)
-{
-	g_return_if_fail(xtext != NULL);
-
-	xtext->fgcol = color;
-}
-
 /* ======================================= */
 /* ============ PANGO BACKEND ============ */
 /* ======================================= */
+
+#define EMPH_ITAL 1
+#define EMPH_BOLD 2
+static PangoAttrList *attr_lists[4];
+static int fontwidths[4][128];
+
+static PangoAttribute *
+xtext_pango_attr (PangoAttribute *attr)
+{
+	attr->start_index = PANGO_ATTR_INDEX_FROM_TEXT_BEGINNING;
+	attr->end_index = PANGO_ATTR_INDEX_TO_TEXT_END;
+	return attr;
+}
+
+static void
+xtext_pango_init (GtkXText *xtext)
+{
+	int i, j;
+	char buf[2] = "\000";
+
+	if (attr_lists[0])
+	{
+		for (i = 0; i < (EMPH_ITAL | EMPH_BOLD); i++)
+			pango_attr_list_unref (attr_lists[i]);
+	}
+
+	for (i = 0; i < sizeof attr_lists / sizeof attr_lists[0]; i++)
+	{
+		attr_lists[i] = pango_attr_list_new ();
+		switch (i)
+		{
+		case 0:		/* Roman */
+			break;
+		case EMPH_ITAL:		/* Italic */
+			pango_attr_list_insert (attr_lists[i],
+				xtext_pango_attr (pango_attr_style_new (PANGO_STYLE_ITALIC)));
+			break;
+		case EMPH_BOLD:		/* Bold */
+			pango_attr_list_insert (attr_lists[i],
+				xtext_pango_attr (pango_attr_weight_new (PANGO_WEIGHT_BOLD)));
+			break;
+		case EMPH_ITAL | EMPH_BOLD:		/* Italic Bold */
+			pango_attr_list_insert (attr_lists[i],
+				xtext_pango_attr (pango_attr_style_new (PANGO_STYLE_ITALIC)));
+			pango_attr_list_insert (attr_lists[i],
+				xtext_pango_attr (pango_attr_weight_new (PANGO_WEIGHT_BOLD)));
+			break;
+		}
+
+		/* Now initialize fontwidths[i] */
+		pango_layout_set_attributes (xtext->layout, attr_lists[i]);
+		for (j = 0; j < 128; j++)
+		{
+			buf[0] = j;
+			pango_layout_set_text (xtext->layout, buf, 1);
+			pango_layout_get_pixel_size (xtext->layout, &fontwidths[i][j], NULL);
+		}
+	}
+	xtext->space_width = fontwidths[0][' '];
+}
 
 static void
 backend_font_close (GtkXText *xtext)
 {
 	pango_font_description_free (xtext->font->font);
-	pango_font_description_free (xtext->font->ifont);
 }
 
 static void
@@ -289,11 +336,9 @@ backend_font_open (GtkXText *xtext, char *name)
 		return;
 	}
 
-	xtext->font->ifont = backend_font_open_real (name);
-	pango_font_description_set_style (xtext->font->ifont, PANGO_STYLE_ITALIC);
-
 	backend_init (xtext);
 	pango_layout_set_font_description (xtext->layout, xtext->font->font);
+	xtext_pango_init (xtext);
 
 	/* vte does it this way */
 	context = gtk_widget_get_pango_context (GTK_WIDGET (xtext));
@@ -303,7 +348,6 @@ backend_font_open (GtkXText *xtext, char *name)
 	xtext->font->descent = pango_font_metrics_get_descent (metrics) / PANGO_SCALE;
 	pango_font_metrics_unref (metrics);
 }
-
 static int
 backend_get_text_width_emph (GtkXText *xtext, guchar *str, int len, int emphasis)
 {
@@ -353,36 +397,38 @@ backend_get_text_width_slp (GtkXText *xtext, guchar *str, GSList *slp)
 }
 
 static void
-backend_draw_text (GtkXText *xtext, int dofill, int x, int y, const gchar *str, int len, int str_width, int is_mb)
+backend_draw_text_emph (GtkXText *xtext, gboolean dofill, int x, int y, char *str, int len, int str_width, int emphasis)
 {
 	cairo_t *cr;
+	PangoLayoutLine *line;
 
 	cr = gtk_xtext_create_cairo_handle(xtext);
 	cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
-	if (xtext->italics)
-		pango_layout_set_font_description (xtext->layout, xtext->font->ifont);
-
+	pango_layout_set_attributes (xtext->layout, attr_lists[emphasis]);
 	pango_layout_set_text (xtext->layout, str, len);
 
 	if (dofill)
 		xtext_draw_bg(xtext, x, y, str_width, xtext->fontsize);
 
-	gdk_cairo_set_source_color(cr, &xtext->palette[xtext->fgcol]);
+	gdk_cairo_set_source_color(cr, &xtext->fgc);
 
 	cairo_move_to(cr, x, y);
 	pango_cairo_show_layout(cr, xtext->layout);
 
-	if (xtext->bold)
-	{
-		cairo_rel_move_to(cr, 1, 0);
-		pango_cairo_show_layout(cr, xtext->layout);
-	}
-
-	if (xtext->italics)
-		pango_layout_set_font_description (xtext->layout, xtext->font->font);
-
 	cairo_destroy(cr);
+}
+
+static inline void
+xtext_set_fg (GtkXText *xtext, int index)
+{
+	xtext->fgc = xtext->palette[index];
+}
+
+static inline void
+xtext_set_bg (GtkXText *xtext, int index)
+{
+	xtext->bgc = xtext->palette[index];
 }
 
 static void
@@ -519,7 +565,10 @@ gtk_xtext_new (GdkColor palette[], int separator)
 	xtext->wordwrap = TRUE;
 	xtext->buffer = gtk_xtext_buffer_new (xtext);
 	xtext->orig_buffer = xtext->buffer;
-
+        /*
+         * This function does not work under non-X11 backends or with non-native windows
+	 * gtk_widget_set_double_buffered (GTK_WIDGET (xtext), FALSE);
+	 */
 	gtk_xtext_set_palette (xtext, palette);
 
 	return GTK_WIDGET (xtext);
@@ -608,7 +657,8 @@ gtk_xtext_realize (GtkWidget * widget)
 {
 	GtkXText *xtext;
 	GdkWindowAttr attributes;
-	GdkColormap *cmap;
+	GtkAllocation alloc;
+	GdkVisual *cmap;
 
 	gtk_widget_set_realized (widget, TRUE);
 	xtext = GTK_XTEXT (widget);
@@ -625,8 +675,8 @@ gtk_xtext_realize (GtkWidget * widget)
 		GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK
 		| GDK_POINTER_MOTION_MASK | GDK_LEAVE_NOTIFY_MASK;
 
-	cmap = gtk_widget_get_colormap (widget);
-	attributes.colormap = cmap;
+	cmap = gtk_widget_get_visual (widget);
+	//attributes.colormap = cmap;
 	attributes.visual = gtk_widget_get_visual (widget);
 
 	gtk_widget_set_window (widget, gdk_window_new (gtk_widget_get_parent_window (widget), &attributes,
@@ -2415,9 +2465,12 @@ static int
 gtk_xtext_render_flush (GtkXText * xtext, int x, int y, unsigned char *str,
 								int len, int *emphasis)
 {
-	int str_width, dofill;
-	GdkDrawable *pix = NULL;
-	int dest_x = 0, dest_y = 0;
+	int dest_x, dest_y;
+	int str_width;
+	gboolean dofill = TRUE;
+	cairo_t *cr;
+
+	dest_x = dest_y = 0;
 
 	if (xtext->dont_render || len < 1 || xtext->hidden)
 		return 0;
@@ -2437,41 +2490,43 @@ gtk_xtext_render_flush (GtkXText * xtext, int x, int y, unsigned char *str,
 	{
 		if (!xtext->in_hilight)	/* is it a hilight prefix? */
 			return str_width;
-
 		if (!xtext->un_hilight)	/* doing a hilight? no need to draw the text */
-			goto dounder;
+		{
+			cr = gdk_cairo_create (gtk_widget_get_window (&xtext->widget));
+
+			y++;
+			dest_x = x;
+
+			xtext_draw_line (xtext, cr, &xtext->fgc, dest_x + 1, y + 1, dest_x + str_width - 1, y + 1);
+			cairo_destroy (cr);
+
+			return str_width;
+		}
 	}
 
-	if (str_width)
-		pix = gdk_pixmap_new (xtext->draw_buf, str_width, xtext->fontsize, xtext->depth);
-	else
-		pix = NULL;
-
-	if (pix)
+	if (!xtext->backcolor && xtext->pixbuf)
 	{
-		dest_x = x;
-		dest_y = y - xtext->font->ascent;
+		cr = gdk_cairo_create (gtk_widget_get_window (&xtext->widget));
+		gdk_cairo_set_source_pixbuf (cr, xtext->pixbuf, 0, 0);
+		cairo_pattern_set_extend (cairo_get_source (cr), CAIRO_EXTEND_REPEAT);
+		cairo_rectangle (cr, x, y - xtext->font->ascent, str_width, xtext->fontsize);
+		cairo_fill (cr);
+		cairo_destroy (cr);
 
-		x = 0;
-		y = 0;
-		xtext->draw_buf = pix;
+		dofill = FALSE;
 	}
 
-	dofill = TRUE;
-
-	backend_draw_text (xtext, dofill, x, y, str, len, str_width, is_mb);
-
-	if (pix)
+	if (xtext->pixbuf)
 	{
-		GdkRectangle clip;
-		GdkRectangle dest;
-		GdkGC *gc;
+		GdkRectangle clip, dest;
+		cairo_t *cr = gdk_cairo_create (gtk_widget_get_window (&xtext->widget));
 
-		xtext->draw_buf = GTK_WIDGET (xtext)->window;
-		gc = gdk_gc_new(xtext->draw_buf);
+	backend_draw_text_emph (xtext, dofill, x, y, str, len, str_width, *emphasis);
 
-		gdk_gc_set_ts_origin (gc, xtext->ts_x, xtext->ts_y);
 
+		gdk_cairo_set_source_pixbuf (cr, xtext->pixbuf, 0, 0);
+
+		/* Only redraw what is required */
 		clip.x = xtext->clip_x;
 		clip.y = xtext->clip_y;
 		clip.width = xtext->clip_x2 - xtext->clip_x;
@@ -2483,23 +2538,23 @@ gtk_xtext_render_flush (GtkXText * xtext, int x, int y, unsigned char *str,
 		dest.height = xtext->fontsize;
 
 		if (gdk_rectangle_intersect (&clip, &dest, &dest))
-			gdk_draw_drawable (xtext->draw_buf, gc, pix, dest.x - dest_x, dest.y - dest_y, dest.x, dest.y, dest.width, dest.height);
+			//gdk_draw_drawable (xtext->draw_buf, gc, pix, dest.x - dest_x, dest.y - dest_y, dest.x, dest.y, dest.width, dest.height);
 
-		g_object_unref(gc);
-		g_object_unref(pix);
-	}
+		//g_object_unref(gc);
+		//g_object_unref(pix);
+	//}
 
-	if (xtext->underline)
-	{
-		cairo_t *cr;
-dounder:
-		cr = gtk_xtext_create_cairo_handle(xtext);
-		cairo_set_line_width(cr, 1.0);
-		cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
-
-		if (pix)
-			y = dest_y + xtext->font->ascent + 1;
-		else
+	//if (xtext->underline)
+	//{
+	//	cairo_t *cr;
+//dounder:
+//		cr = gtk_xtext_create_cairo_handle(xtext);
+//		cairo_set_line_width(cr, 1.0);
+//		cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
+//
+//		if (pix)
+//			y = dest_y + xtext->font->ascent + 1;
+//		else
 		{
 			y++;
 			dest_x = x;
@@ -2508,7 +2563,7 @@ dounder:
 		cairo_move_to(cr, dest_x, y);
 		cairo_rel_line_to(cr, str_width - 1, 0);
 
-		gdk_cairo_set_source_color(cr, &xtext->palette[xtext->fgcol]);
+		gdk_cairo_set_source_color(cr, &xtext->fgc);
 		cairo_stroke(cr);
 
 		cairo_destroy(cr);
