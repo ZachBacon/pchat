@@ -162,21 +162,6 @@ gtk_xtext_create_cairo_handle (GtkXText *xtext)
 
 /* gives width of a 8bit string - with no mIRC codes in it */
 
-static int
-gtk_xtext_text_width_8bit (GtkXText *xtext, unsigned char *str, int len)
-{
-	int width = 0;
-
-	while (len)
-	{
-		width += xtext->fontwidth[*str];
-		str++;
-		len--;
-	}
-
-	return width;
-}
-
 static inline void
 xtext_draw_line (GtkXText *xtext, cairo_t *cr, GdkColor *color, int x1, int y1, int x2, int y2)
 {
@@ -698,13 +683,6 @@ gtk_xtext_realize (GtkWidget * widget)
 }
 
 static void
-gtk_xtext_size_request (GtkWidget * widget, GtkRequisition * requisition)
-{
-	requisition->width = 200;
-	requisition->height = 90;
-}
-
-static void
 gtk_xtext_size_allocate (GtkWidget * widget, GtkAllocation * allocation)
 {
 	GtkXText *xtext = GTK_XTEXT (widget);
@@ -985,79 +963,6 @@ gtk_xtext_draw_marker (GtkXText * xtext, textentry * ent, int y)
 	cairo_destroy(cr);
 }
 
-static void
-gtk_xtext_paint (GtkWidget *widget, GdkRectangle *area)
-{
-	GtkXText *xtext = GTK_XTEXT (widget);
-	textentry *ent_start, *ent_end;
-	int x, y;
-
-	if (area->x == 0 && area->y == 0 &&
-		 area->height == gtk_widget_get_allocated_height(widget) &&
-		 area->width == gtk_widget_get_allocated_width(widget))
-	{
-		dontscroll (xtext->buffer);	/* force scrolling off */
-		gtk_xtext_render_page (xtext);
-		return;
-	}
-
-	ent_start = gtk_xtext_find_char (xtext, area->x, area->y, NULL, NULL);
-	if (!ent_start)
-	{
-		xtext_draw_bg (xtext, area->x, area->y, area->width, area->height);
-		goto xit;
-	}
-	ent_end = gtk_xtext_find_char (xtext, area->x + area->width,
-											 area->y + area->height, NULL, NULL);
-	if (!ent_end)
-		ent_end = xtext->buffer->text_last;
-
-	/* can't set a clip here, because fgc/bgc are used to draw the DB too */
-/*	backend_set_clip (xtext, area);*/
-	xtext->clip_x = area->x;
-	xtext->clip_x2 = area->x + area->width;
-	xtext->clip_y = area->y;
-	xtext->clip_y2 = area->y + area->height;
-
-	/* y is the last pixel y location it rendered text at */
-	y = gtk_xtext_render_ents (xtext, ent_start, ent_end);
-
-	if (y && y < gtk_widget_get_allocated_height(widget) && !ent_end->next)
-	{
-		GdkRectangle rect;
-
-		rect.x = 0;
-		rect.y = y;
-		rect.width = gtk_widget_get_allocated_width(widget);
-		rect.height = gtk_widget_get_allocated_height(widget) - y;
-
-		/* fill any space below the last line that also intersects with
-			the exposure rectangle */
-		if (gdk_rectangle_intersect (area, &rect, &rect))
-		{
-			xtext_draw_bg (xtext, rect.x, rect.y, rect.width, rect.height);
-		}
-	}
-
-	/*backend_clear_clip (xtext);*/
-	xtext->clip_x = 0;
-	xtext->clip_x2 = 1000000;
-	xtext->clip_y = 0;
-	xtext->clip_y2 = 1000000;
-
-xit:
-	x = xtext->buffer->indent - ((xtext->space_width + 1) / 2);
-	if (area->x <= x)
-		gtk_xtext_draw_sep (xtext, -1);
-}
-
-static gboolean
-gtk_xtext_expose (GtkWidget * widget, GdkEventExpose * event)
-{
-	gtk_xtext_paint (widget, &event->area);
-	return FALSE;
-}
-
 /* render a selection that has extended or contracted upward */
 
 static void
@@ -1310,7 +1215,7 @@ gtk_xtext_selection_draw (GtkXText * xtext, GdkEventMotion * event, gboolean ren
 		offset_end = tmp;
 	}
 
-	/* has the selection changed? Dont render unless necessary 
+	/* has the selection changed? Dont render unless necessary
 	if (xtext->buffer->last_ent_start == ent_start &&
 		 xtext->buffer->last_ent_end == ent_end &&
 		 xtext->buffer->last_offset_start == offset_start &&
