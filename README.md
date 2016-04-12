@@ -1,5 +1,5 @@
 # PChat
-The todo list for PChat [![Build Status](https://travis-ci.org/DoctorWho11/pchat.svg?branch=master)](https://travis-ci.org/DoctorWho11/pchat)
+The todo list for PChat [![Build Status](https://tea-ci.org/api/badges/DoctorWho11/pchat/status.svg)](https://tea-ci.org/DoctorWho11/pchat)
 
 * [x] Port to gtk 3
 * [] Fix the cairo xtext renderer
