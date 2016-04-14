@@ -58,11 +58,11 @@ static void
 timer_del_ref (int ref, int quiet)
 {
 	GSList *list;
-	timer *tim;
-
+	
 	list = timer_list;
 	while (list)
 	{
+		timer *tim;
 		tim = list->data;
 		if (tim->ref == ref)
 		{
@@ -134,8 +134,7 @@ static void
 timer_showlist (void)
 {
 	GSList *list;
-	timer *tim;
-
+	
 	if (timer_list == NULL)
 	{
 		xchat_print (ph, "No timers installed.\n");
@@ -147,6 +146,7 @@ timer_showlist (void)
 	list = timer_list;
 	while (list)
 	{
+		timer *tim;
 		tim = list->data;
 		xchat_printf (ph, "%5d %8.1f %7d  %s\n", tim->ref, tim->timeout,
 						  tim->repeat, tim->command);

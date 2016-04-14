@@ -385,7 +385,6 @@ static void
 backend_draw_text_emph (GtkXText *xtext, gboolean dofill, int x, int y, char *str, int len, int str_width, int emphasis)
 {
 	cairo_t *cr;
-	PangoLayoutLine *line;
 
 	cr = gtk_xtext_create_cairo_handle(xtext);
 	cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
@@ -643,7 +642,7 @@ gtk_xtext_realize (GtkWidget * widget)
 	GtkXText *xtext;
 	GdkWindowAttr attributes;
 	GtkAllocation alloc;
-	GdkVisual *cmap;
+	//GdkVisual *cmap;
 
 	gtk_widget_set_realized (widget, TRUE);
 	xtext = GTK_XTEXT (widget);
@@ -660,7 +659,7 @@ gtk_xtext_realize (GtkWidget * widget)
 		GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK
 		| GDK_POINTER_MOTION_MASK | GDK_LEAVE_NOTIFY_MASK;
 
-	cmap = gtk_widget_get_visual (widget);
+	//cmap = gtk_widget_get_visual (widget);
 	//attributes.colormap = cmap;
 	attributes.visual = gtk_widget_get_visual (widget);
 

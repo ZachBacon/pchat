@@ -324,11 +324,10 @@ int
 plugin_kill (char *name, int by_filename)
 {
 	GSList *list;
-	xchat_plugin *pl;
-
 	list = plugin_list;
 	while (list)
 	{
+		xchat_plugin *pl;
 		pl = list->data;
 		/* static-plugins (plugin-timer.c) have a NULL filename */
 		if ((by_filename && pl->filename && g_ascii_strcasecmp (name, pl->filename) == 0) ||

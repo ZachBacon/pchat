@@ -57,10 +57,6 @@ list_addentry (GSList ** list, char *cmd, char *name)
 	size_t name_len;
 	size_t cmd_len = 1;
 
-	/* remove <2.8.0 stuff */
-	if (!strcmp (cmd, "away") && !strcmp (name, "BACK"))
-		return;
-
 	if (cmd)
 		cmd_len = strlen (cmd) + 1;
 	name_len = strlen (name) + 1;
@@ -149,9 +145,9 @@ list_loadconf (char *file, GSList ** list, char *defaultconf)
 void
 list_free (GSList ** list)
 {
-	void *data;
 	while (*list)
 	{
+		void *data;
 		data = (void *) (*list)->data;
 		g_free (data);
 		*list = g_slist_remove (*list, data);
@@ -161,11 +157,11 @@ list_free (GSList ** list)
 int
 list_delentry (GSList ** list, char *name)
 {
-	struct popup *pop;
 	GSList *alist = *list;
 
 	while (alist)
 	{
+		struct popup *pop;
 		pop = (struct popup *) alist->data;
 		if (!g_ascii_strcasecmp (name, pop->name))
 		{
@@ -681,23 +677,23 @@ static char *
 get_default_spell_languages (void)
 {
 	const gchar* const *langs = g_get_language_names ();
-	char *last = NULL;
-	char *p;
 	char lang_list[64];
 	char *ret = lang_list;
-	int i;
-
+	
 	if (langs != NULL)
 	{
+		int i;
+		char *last = NULL;
 		memset (lang_list, 0, sizeof(lang_list));
 
 		for (i = 0; langs[i]; i++)
 		{
 			if (g_ascii_strncasecmp (langs[i], "C", 1) != 0 && strlen (langs[i]) >= 2)
-			{
+			{				
 				/* Avoid duplicates */
 				if (!last || !g_str_has_prefix (langs[i], last))
 				{
+					char *p;
 					if (last != NULL)
 					{
 						g_free(last);

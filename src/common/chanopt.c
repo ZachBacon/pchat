@@ -248,18 +248,17 @@ chanopt_add_opt (chanopt_in_memory *co, char *var, int new_value)
 static void
 chanopt_load_all (void)
 {
-	int fh;
-	char buf[256];
-	char *eq;
-	char *network = NULL;
-	chanopt_in_memory *current = NULL;
-
+	int fh;	
 	/* 1. load the old file into our GSList */
 	fh = xchat_open_file ("chanopt.conf", O_RDONLY, 0, 0);
 	if (fh != -1)
 	{
+		char buf[256];
+		char *network = NULL;
 		while (waitline (fh, buf, sizeof buf, FALSE) != -1)
 		{
+			char *eq;
+			chanopt_in_memory *current = NULL;
 			eq = strchr (buf, '=');
 			if (!eq)
 				continue;

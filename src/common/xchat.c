@@ -169,11 +169,12 @@ lastact_getfirst(int (*filter) (session *sess))
 {
 	int i;
 	session *sess = NULL;
-	GList *curitem;
+	
 
 	/* 5 is the number of priority classes LACT_ */
 	for (i = 0; i < 5 && !sess; i++)
 	{
+		GList *curitem;
 		curitem = sess_list_by_lastact[i];
 		while (curitem && !sess)
 		{
@@ -205,10 +206,11 @@ session *
 find_dialog (server *serv, char *nick)
 {
 	GSList *list = sess_list;
-	session *sess;
+	
 
 	while (list)
 	{
+		session *sess;
 		sess = list->data;
 		if (sess->server == serv && sess->type == SESS_DIALOG)
 		{
@@ -223,10 +225,11 @@ find_dialog (server *serv, char *nick)
 session *
 find_channel (server *serv, char *chan)
 {
-	session *sess;
+	
 	GSList *list = sess_list;
 	while (list)
 	{
+		session *sess;
 		sess = list->data;
 		if ((!serv || serv == sess->server) && sess->type == SESS_CHANNEL)
 		{
@@ -241,7 +244,7 @@ find_channel (server *serv, char *chan)
 static void
 lagcheck_update (void)
 {
-	server *serv;
+	
 	GSList *list = serv_list;
 
 	if (!prefs.pchat_gui_lagometer)
@@ -249,6 +252,7 @@ lagcheck_update (void)
 
 	while (list)
 	{
+		server *serv;
 		serv = list->data;
 		if (serv->lag_sent)
 			fe_set_lag (serv, -1);
@@ -260,7 +264,7 @@ lagcheck_update (void)
 void
 lag_check (void)
 {
-	server *serv;
+	
 	GSList *list = serv_list;
 	unsigned long tim;
 	char tbuf[128];
@@ -271,6 +275,7 @@ lag_check (void)
 
 	while (list)
 	{
+		server *serv;
 		serv = list->data;
 		if (serv->connected && serv->end_of_motd)
 		{
@@ -388,7 +393,7 @@ irc_init (session *sess)
 {
 	static int done_init = FALSE;
 	char *buf;
-	int i;
+	
 
 	if (done_init)
 		return;
@@ -423,6 +428,7 @@ irc_init (session *sess)
 
 	if (arg_urls != NULL)
 	{
+		int i;
 		for (i = 0; i < g_strv_length(arg_urls); i++)
 		{
 			buf = g_strdup_printf ("%s %s", i==0? "server" : "newserver", arg_urls[i]);
@@ -520,9 +526,9 @@ static void
 exec_notify_kill (session * sess)
 {
 #ifndef _WIN32
-	struct nbexec *re;
 	if (sess->running_exec != NULL)
 	{
+		struct nbexec *re;
 		re = sess->running_exec;
 		sess->running_exec = NULL;
 		kill (re->childpid, SIGKILL);
@@ -541,13 +547,13 @@ send_quit_or_part (session * killsess)
 {
 	int willquit = TRUE;
 	GSList *list;
-	session *sess;
 	server *killserv = killsess->server;
 
 	/* check if this is the last session using this server */
 	list = sess_list;
 	while (list)
 	{
+		session *sess;
 		sess = (session *) list->data;
 		if (sess->server == killserv && sess != killsess)
 		{
@@ -732,10 +738,10 @@ static void
 sigusr1_handler (int signal, siginfo_t *si, void *un)
 {
 	GSList *list = sess_list;
-	session *sess;
 
 	while (list)
 	{
+		session *sess;
 		sess = list->data;
 		log_open_or_close (sess);
 		list = list->next;
@@ -1034,7 +1040,6 @@ set_locale (void)
 int
 main (int argc, char *argv[])
 {
-	int i;
 	int ret;
 
 	srand (time (0));	/* CL: do this only once! */
@@ -1045,6 +1050,7 @@ main (int argc, char *argv[])
 	 * for the most part. */
 	if (argc >= 3)
 	{
+		int i;
 		for (i = 1; i < argc - 1; i++)
 		{
 			if (strcmp (argv[i], "-d") == 0)
