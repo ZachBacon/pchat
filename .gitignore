@@ -68,3 +68,14 @@ osx/PChat.app
 po/.intltool-merge-cache
 src/fe-gtk3/pchat.rc
 src/fe-gtk3/resources.c
+m4-common/glib-2.0.m4
+m4-common/glib-gettext.m4
+m4-common/gtk-3.0.m4
+m4-common/intltool.m4
+m4-common/libtool.m4
+m4-common/ltoptions.m4
+m4-common/ltsugar.m4
+m4-common/ltversion.m4
+m4-common/lt~obsolete.m4
+m4-common/nls.m4
+m4-common/pkg.m4
