@@ -6,3 +6,4 @@ The todo list for PChat [![Build Status](https://tea-ci.org/api/badges/DoctorWho
 * [ ] Make the interface a little more modern, implimentation of gtkheaderbar etc.
 * [ ] Overhaul the plugin system to make use of libpeas.
 
+Just a short list of things I need to fix.
