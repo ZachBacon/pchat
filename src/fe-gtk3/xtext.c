@@ -121,6 +121,8 @@ static void gtk_xtext_adjustment_changed (GtkAdjustment * adj,
 														GtkXText * xtext);
 static void gtk_xtext_scroll_adjustments (GtkXText *xtext, GtkAdjustment *hadj,
 										GtkAdjustment *vadj);
+static void gtk_xtext_scrollable_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void gtk_xtext_scrollable_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 static int gtk_xtext_render_ents (GtkXText * xtext, textentry *, textentry *);
 static void gtk_xtext_recalc_widths (xtext_buffer *buf, int);
 static void gtk_xtext_fix_indent (xtext_buffer *buf);
@@ -685,7 +687,8 @@ gtk_xtext_realize (GtkWidget * widget)
 	attributes.window_type = GDK_WINDOW_CHILD;
 	attributes.event_mask = gtk_widget_get_events (widget) |
 		GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK
-		| GDK_POINTER_MOTION_MASK | GDK_LEAVE_NOTIFY_MASK;
+		| GDK_POINTER_MOTION_MASK | GDK_LEAVE_NOTIFY_MASK | GDK_SCROLL_MASK
+		| GDK_SMOOTH_SCROLL_MASK;
 
 	//cmap = gtk_widget_get_visual (widget);
 	//attributes.colormap = cmap;
@@ -2102,13 +2105,27 @@ gtk_xtext_scroll (GtkWidget *widget, GdkEventScroll *event)
 {
 	GtkXText *xtext = GTK_XTEXT (widget);
 	gfloat new_value;
+	gdouble delta_y;
 
-	if (event->direction == GDK_SCROLL_UP)		/* mouse wheel pageUp */
+	/* Handle smooth scrolling */
+	if (event->direction == GDK_SCROLL_SMOOTH)
+	{
+		gdk_event_get_scroll_deltas ((GdkEvent *)event, NULL, &delta_y);
+		new_value = gtk_adjustment_get_value (xtext->adj) + delta_y * (gtk_adjustment_get_page_increment (xtext->adj) / 10);
+		if (new_value < gtk_adjustment_get_lower (xtext->adj))
+			new_value = gtk_adjustment_get_lower (xtext->adj);
+		if (new_value > (gtk_adjustment_get_upper (xtext->adj) - gtk_adjustment_get_page_size (xtext->adj)))
+			new_value = gtk_adjustment_get_upper (xtext->adj) - gtk_adjustment_get_page_size (xtext->adj);
+		gtk_adjustment_set_value (xtext->adj, (int)new_value);
+		return TRUE;
+	}
+	else if (event->direction == GDK_SCROLL_UP)		/* mouse wheel pageUp */
 	{
 		new_value = gtk_adjustment_get_value (xtext->adj) - (gtk_adjustment_get_page_increment (xtext->adj) / 10);
 		if (new_value < gtk_adjustment_get_lower (xtext->adj))
 			new_value = gtk_adjustment_get_lower (xtext->adj);
 		gtk_adjustment_set_value (xtext->adj, (int)new_value);
+		return TRUE;
 	}
 	else if (event->direction == GDK_SCROLL_DOWN)	/* mouse wheel pageDn */
 	{
@@ -2116,6 +2133,7 @@ gtk_xtext_scroll (GtkWidget *widget, GdkEventScroll *event)
 		if (new_value > (gtk_adjustment_get_upper (xtext->adj) - gtk_adjustment_get_page_size (xtext->adj)))
 			new_value = gtk_adjustment_get_upper (xtext->adj) - gtk_adjustment_get_page_size (xtext->adj);
 		gtk_adjustment_set_value (xtext->adj, (int)new_value);
+		return TRUE;
 	}
 
 	return FALSE;
@@ -2205,6 +2223,8 @@ gtk_xtext_class_init (GtkXTextClass * class)
 							2, GTK_TYPE_ADJUSTMENT, GTK_TYPE_ADJUSTMENT); */
 
 	object_class->dispose = gtk_xtext_destroy;
+	object_class->set_property = gtk_xtext_scrollable_set_property;
+	object_class->get_property = gtk_xtext_scrollable_get_property;
 
 	widget_class->realize = gtk_xtext_realize;
 	widget_class->unrealize = gtk_xtext_unrealize;
@@ -2222,6 +2242,61 @@ gtk_xtext_class_init (GtkXTextClass * class)
 
 	xtext_class->word_click = NULL;
 	xtext_class->set_scroll_adjustments = gtk_xtext_scroll_adjustments;
+	
+	/* Install properties for GtkScrollable interface */
+	g_object_class_override_property (object_class, 1, "hadjustment");
+	g_object_class_override_property (object_class, 2, "vadjustment");
+	g_object_class_override_property (object_class, 3, "hscroll-policy");
+	g_object_class_override_property (object_class, 4, "vscroll-policy");
+}
+
+static void
+gtk_xtext_scrollable_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+{
+	GtkXText *xtext = GTK_XTEXT (object);
+	
+	switch (prop_id)
+	{
+		case 2: /* vadjustment */
+			gtk_xtext_scroll_adjustments (xtext, NULL, g_value_get_object (value));
+			break;
+		case 1: /* hadjustment - ignored */
+		case 3: /* hscroll-policy - ignored */
+		case 4: /* vscroll-policy - ignored */
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			break;
+	}
+}
+
+static void
+gtk_xtext_scrollable_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+	GtkXText *xtext = GTK_XTEXT (object);
+	
+	switch (prop_id)
+	{
+		case 2: /* vadjustment */
+			g_value_set_object (value, xtext->adj);
+			break;
+		case 1: /* hadjustment */
+			g_value_set_object (value, NULL);
+			break;
+		case 3: /* hscroll-policy */
+		case 4: /* vscroll-policy */
+			g_value_set_enum (value, GTK_SCROLL_NATURAL);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			break;
+	}
+}
+
+static void
+gtk_xtext_scrollable_init (GtkScrollableInterface *iface)
+{
+	/* All functions are optional, properties are set via get/set_property */
 }
 
 GType
@@ -2243,9 +2318,17 @@ gtk_xtext_get_type (void)
 			0,		/* n_preallocs */
 			(GInstanceInitFunc) gtk_xtext_init,
 		};
+		
+		static const GInterfaceInfo scrollable_info =
+		{
+			(GInterfaceInitFunc) gtk_xtext_scrollable_init,
+			NULL,
+			NULL
+		};
 
 		xtext_type = g_type_register_static (GTK_TYPE_WIDGET, "GtkXText",
 														 &xtext_info, 0);
+		g_type_add_interface_static (xtext_type, GTK_TYPE_SCROLLABLE, &scrollable_info);
 	}
 
 	return xtext_type;

@@ -754,7 +754,7 @@ key_dialog_show ()
 
 	gtkutil_button (box, "_New", NULL, key_dialog_add,
 					NULL, _("Add"));
-	gtkutil_button (box, GTK_STOCK_DELETE, NULL, key_dialog_delete,
+	gtkutil_button (box, "edit-delete", NULL, key_dialog_delete,
 					NULL, _("Delete"));
 	gtkutil_button (box, "_Cancel", NULL, key_dialog_close,
 					NULL, _("Cancel"));

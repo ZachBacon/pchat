@@ -379,7 +379,7 @@ ignore_gui_open ()
 
 	gtkutil_button (box, "_New", 0, ignore_new_entry_clicked, 0,
 						 _("Add..."));
-	gtkutil_button (box, GTK_STOCK_DELETE, 0, ignore_delete_entry_clicked,
+	gtkutil_button (box, "edit-delete", 0, ignore_delete_entry_clicked,
 						 0, _("Delete"));
 	gtkutil_button (box, "_Clear", 0, ignore_clear_entry_clicked,
 						 0, _("Clear"));

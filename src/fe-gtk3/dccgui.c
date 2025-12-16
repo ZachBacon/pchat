@@ -744,13 +744,14 @@ dcc_detail_label (char *text, GtkWidget *box, int num)
 	gtk_label_set_markup (GTK_LABEL (label), buf);
 	gtk_widget_set_halign (GTK_WIDGET (label), 0 == 0.0 ? GTK_ALIGN_START : (0 == 1.0 ? GTK_ALIGN_END : GTK_ALIGN_CENTER));
 	gtk_widget_set_valign (GTK_WIDGET (label), 0 == 0.0 ? GTK_ALIGN_START : (0 == 1.0 ? GTK_ALIGN_END : GTK_ALIGN_CENTER));
-	gtk_table_attach (GTK_TABLE (box), label, 0, 1, 0 + num, 1 + num, GTK_FILL, GTK_FILL, 0, 0);
+	gtk_grid_attach (GTK_GRID (box), label, 0, num, 1, 1);
 
 	label = gtk_label_new (NULL);
 	gtk_label_set_selectable (GTK_LABEL (label), TRUE);
 	gtk_widget_set_halign (GTK_WIDGET (label), 0 == 0.0 ? GTK_ALIGN_START : (0 == 1.0 ? GTK_ALIGN_END : GTK_ALIGN_CENTER));
 	gtk_widget_set_valign (GTK_WIDGET (label), 0 == 0.0 ? GTK_ALIGN_START : (0 == 1.0 ? GTK_ALIGN_END : GTK_ALIGN_CENTER));
-	gtk_table_attach (GTK_TABLE (box), label, 1, 2, 0 + num, 1 + num, GTK_FILL, GTK_FILL, 0, 0);
+	gtk_widget_set_hexpand (label, TRUE);
+	gtk_grid_attach (GTK_GRID (box), label, 1, num, 1, 1);
 
 	return label;
 }
@@ -843,37 +844,39 @@ fe_dcc_open_recv_win (int passive)
 	g_signal_connect (G_OBJECT (view), "row-activated",
 							G_CALLBACK (dcc_dclick_cb), NULL);
 
-	table = gtk_table_new (1, 3, FALSE);
-	gtk_table_set_col_spacings (GTK_TABLE (table), 16);
+	table = gtk_grid_new ();
+	gtk_grid_set_column_spacing (GTK_GRID (table), 16);
 	gtk_box_pack_start (GTK_BOX (vbox), table, 0, 0, 0);
 
 	radio = gtk_radio_button_new_with_mnemonic (NULL, _("Both"));
 	g_signal_connect (G_OBJECT (radio), "toggled",
 							G_CALLBACK (dcc_toggle), GINT_TO_POINTER (VIEW_BOTH));
-	gtk_table_attach (GTK_TABLE (table), radio, 3, 4, 0, 1, GTK_FILL, GTK_FILL, 0, 0);
+	gtk_grid_attach (GTK_GRID (table), radio, 3, 0, 1, 1);
 	group = gtk_radio_button_get_group (GTK_RADIO_BUTTON (radio));
 
 	radio = gtk_radio_button_new_with_mnemonic (group, _("Uploads"));
 	g_signal_connect (G_OBJECT (radio), "toggled",
 							G_CALLBACK (dcc_toggle), GINT_TO_POINTER (VIEW_UPLOAD));
-	gtk_table_attach (GTK_TABLE (table), radio, 1, 2, 0, 1, GTK_FILL, GTK_FILL, 0, 0);
+	gtk_grid_attach (GTK_GRID (table), radio, 1, 0, 1, 1);
 	group = gtk_radio_button_get_group (GTK_RADIO_BUTTON (radio));
 
 	radio = gtk_radio_button_new_with_mnemonic (group, _("Downloads"));
 	g_signal_connect (G_OBJECT (radio), "toggled",
 							G_CALLBACK (dcc_toggle), GINT_TO_POINTER (VIEW_DOWNLOAD));
-	gtk_table_attach (GTK_TABLE (table), radio, 2, 3, 0, 1, GTK_FILL, GTK_FILL, 0, 0);
+	gtk_grid_attach (GTK_GRID (table), radio, 2, 0, 1, 1);
 
 	exp = gtk_expander_new (_("Details"));
-	gtk_table_attach (GTK_TABLE (table), exp, 0, 1, 0, 1, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
+	gtk_widget_set_hexpand (exp, TRUE);
+	gtk_grid_attach (GTK_GRID (table), exp, 0, 0, 1, 1);
 
-	detailbox = gtk_table_new (3, 3, FALSE);
-	gtk_table_set_col_spacings (GTK_TABLE (detailbox), 6);
-	gtk_table_set_row_spacings (GTK_TABLE (detailbox), 2);
+	detailbox = gtk_grid_new ();
+	gtk_grid_set_column_spacing (GTK_GRID (detailbox), 6);
+	gtk_grid_set_row_spacing (GTK_GRID (detailbox), 2);
 	gtk_container_set_border_width (GTK_CONTAINER (detailbox), 6);
 	g_signal_connect (G_OBJECT (exp), "activate",
 							G_CALLBACK (dcc_exp_cb), detailbox);
-	gtk_table_attach (GTK_TABLE (table), detailbox, 0, 4, 1, 2, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
+	gtk_widget_set_hexpand (detailbox, TRUE);
+	gtk_grid_attach (GTK_GRID (table), detailbox, 0, 1, 4, 1);
 
 	dccfwin.file_label = dcc_detail_label (_("File:"), detailbox, 0);
 	dccfwin.address_label = dcc_detail_label (_("Address:"), detailbox, 1);

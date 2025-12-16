@@ -148,7 +148,7 @@ joind_show_dialog (server *serv)
 	gtk_widget_show (hbox1);
 	gtk_box_pack_start (GTK_BOX (vbox1), hbox1, TRUE, TRUE, 0);
 
-	image1 = gtk_image_new_from_icon_name (GTK_STOCK_NETWORK, GTK_ICON_SIZE_BUTTON);
+	image1 = gtk_image_new_from_icon_name ("network-workgroup", GTK_ICON_SIZE_BUTTON);
 	gtk_widget_show (image1);
 	gtk_box_pack_start (GTK_BOX (hbox1), image1, FALSE, TRUE, 24);
 

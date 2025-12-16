@@ -356,7 +356,7 @@ editlist_gui_open (char *title1, char *title2, GSList *list, char *title, char *
 
 	gtkutil_button (box, "_New", 0, editlist_add,
 					NULL, _("Add"));
-	gtkutil_button (box, GTK_STOCK_DELETE, 0, editlist_delete,
+	gtkutil_button (box, "edit-delete", 0, editlist_delete,
 					NULL, _("Delete"));
 	gtkutil_button (box, "_Cancel", 0, editlist_close,
 					NULL, _("Cancel"));
