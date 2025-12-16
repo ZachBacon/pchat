@@ -316,6 +316,13 @@ static const struct defaultserver def[] =
 
 	{"Krstarica", 0},
 	{0,			"irc.krstarica.com"},
+	{"Libera.Chat", 0, 0, 0, LOGIN_SASL},
+	{0,			"irc.libera.chat"},
+	{0,			"irc.eu.libera.chat"},
+	{0,			"irc.us.libera.chat"},
+
+	{"Link-IRC",	0},
+	{0,			"irc.link-irc.net"},
 
 #ifdef USE_OPENSSL
 	{"LinkNet",	0},
