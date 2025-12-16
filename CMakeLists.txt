@@ -65,6 +65,16 @@ endif()
 find_package(Gettext REQUIRED)
 set(GETTEXT_PACKAGE "pchat")
 
+# iso-codes for locale data
+pkg_check_modules(ISO_CODES iso-codes)
+if(ISO_CODES_FOUND)
+    pkg_get_variable(ISO_CODES_PREFIX iso-codes prefix)
+    set(ISO_CODES_LOCALEDIR "${ISO_CODES_PREFIX}/share/locale")
+else()
+    # Fallback to standard location
+    set(ISO_CODES_LOCALEDIR "${CMAKE_INSTALL_PREFIX}/share/locale")
+endif()
+
 # System checks
 include(CheckIncludeFile)
 include(CheckFunctionExists)
@@ -84,7 +94,11 @@ check_function_exists(memset HAVE_MEMSET)
 check_function_exists(strcasecmp HAVE_STRCASECMP)
 check_function_exists(strdup HAVE_STRDUP)
 check_function_exists(strtoul HAVE_STRTOUL)
-check_function_exists(memrchr HAVE_MEMRCHR)
+
+# memrchr is a GNU extension, need to check with feature test macros
+set(CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
+check_symbol_exists(memrchr "string.h" HAVE_MEMRCHR)
+set(CMAKE_REQUIRED_DEFINITIONS)
 
 # Detect system
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")

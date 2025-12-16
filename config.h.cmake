@@ -18,6 +18,7 @@
 #define PREFIX "@CMAKE_INSTALL_PREFIX@"
 #define XCHATLIBDIR "@PCHAT_LIBDIR@"
 #define XCHATSHAREDIR "@PCHAT_SHAREDIR@"
+#define ISO_CODES_LOCALEDIR "@ISO_CODES_LOCALEDIR@"
 
 /* Optional features */
 #cmakedefine USE_OPENSSL 1
@@ -48,6 +49,14 @@ typedef int socklen_t;
 #ifndef INET6_ADDRSTRLEN
 #define INET6_ADDRSTRLEN 46
 #endif
+#endif
+
+/* Linux/UNIX specific - memrchr is a GNU extension */
+#if defined(USING_LINUX) || defined(__linux__) || defined(__gnu_linux__)
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#define HAVE_MEMRCHR 1
 #endif
 
 /* System headers */
