@@ -871,7 +871,7 @@ key_load_kbs (void)
 	fd = xchat_open_file ("keybindings.conf", O_RDONLY, 0, 0);
 	if (fd < 0)
 	{
-		ibuf = strdup (default_kb_cfg);
+		ibuf = g_strdup (default_kb_cfg);
 		size = strlen (default_kb_cfg);
 	}
 	else
@@ -1097,7 +1097,7 @@ key_action_page_switch (GtkWidget * wid, GdkEventKey * evt, char *d1,
 	if (!len)
 		return 1;
 
-	if (strcasecmp(d1, "auto") == 0)
+	if (g_strcasecmp(d1, "auto") == 0)
 	{
 		/* Auto switch makes no sense in detached sessions */
 		if (!sess->gui->is_tab)
