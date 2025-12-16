@@ -432,6 +432,13 @@ fe_set_title (session *sess)
 	}
 
 	gtk_window_set_title (GTK_WINDOW (sess->gui->window), tbuf);
+	
+	/* Also update the header bar title if it exists */
+	GtkWidget *headerbar = gtk_window_get_titlebar (GTK_WINDOW (sess->gui->window));
+	if (headerbar && GTK_IS_HEADER_BAR (headerbar))
+	{
+		gtk_header_bar_set_title (GTK_HEADER_BAR (headerbar), tbuf);
+	}
 }
 
 static gboolean
@@ -3099,6 +3106,36 @@ mg_topwin_focus_cb (GtkWindow * win, GdkEventFocus *event, session *sess)
 	return FALSE;
 }
 
+static GtkWidget *
+mg_create_headerbar_with_menu (session_gui *gui, GtkWidget *window, int away_state)
+{
+	GtkWidget *headerbar;
+	GtkAccelGroup *accel_group;
+
+	/* Create the header bar */
+	headerbar = gtk_header_bar_new ();
+	gtk_header_bar_set_show_close_button (GTK_HEADER_BAR (headerbar), TRUE);
+	gtk_header_bar_set_title (GTK_HEADER_BAR (headerbar), "PChat");
+	gtk_header_bar_set_has_subtitle (GTK_HEADER_BAR (headerbar), FALSE);
+
+	/* Create the menu bar */
+	accel_group = gtk_accel_group_new ();
+	gtk_window_add_accel_group (GTK_WINDOW (window), accel_group);
+	g_object_unref (accel_group);
+
+	gui->menu = menu_create_main (accel_group, TRUE, away_state, !gui->is_tab,
+											gui->menu_item);
+	
+	/* Pack the menu bar into the header bar */
+	gtk_header_bar_pack_start (GTK_HEADER_BAR (headerbar), gui->menu);
+
+#ifdef HAVE_GTK_MAC
+	gtkosx_application_set_menu_bar(osx_app, GTK_MENU_SHELL(gui->menu));
+#endif
+
+	return headerbar;
+}
+
 static void
 mg_create_menu (session_gui *gui, GtkWidget *table, int away_state)
 {
@@ -3157,16 +3194,18 @@ mg_create_topwindow (session *sess)
 
 	palette_alloc (win);
 
+	/* Create and set the header bar with integrated menu */
+	GtkWidget *headerbar = mg_create_headerbar_with_menu (sess->gui, win, sess->server->is_away);
+	gtk_window_set_titlebar (GTK_WINDOW (win), headerbar);
+
 	table = gtk_table_new (4, 3, FALSE);
-	/* spacing under the menubar */
-	gtk_table_set_row_spacing (GTK_TABLE (table), 0, GUI_SPACING);
+	/* No spacing needed since menu is now in header bar */
 	/* left and right borders */
 	gtk_table_set_col_spacing (GTK_TABLE (table), 0, 1);
 	gtk_table_set_col_spacing (GTK_TABLE (table), 1, 1);
 	gtk_container_add (GTK_CONTAINER (win), table);
 
 	mg_create_irctab (sess, table);
-	mg_create_menu (sess->gui, table, sess->server->is_away);
 
 	if (sess->res->buffer == NULL)
 	{
@@ -3267,9 +3306,12 @@ mg_create_tabwindow (session *sess)
 
 	palette_alloc (win);
 
+	/* Create and set the header bar with integrated menu */
+	GtkWidget *headerbar = mg_create_headerbar_with_menu (sess->gui, win, sess->server->is_away);
+	gtk_window_set_titlebar (GTK_WINDOW (win), headerbar);
+
 	sess->gui->main_table = table = gtk_table_new (4, 3, FALSE);
-	/* spacing under the menubar */
-	gtk_table_set_row_spacing (GTK_TABLE (table), 0, GUI_SPACING);
+	/* No spacing needed since menu is now in header bar */
 	/* left and right borders */
 	gtk_table_set_col_spacing (GTK_TABLE (table), 0, 1);
 	gtk_table_set_col_spacing (GTK_TABLE (table), 1, 1);
@@ -3277,11 +3319,13 @@ mg_create_tabwindow (session *sess)
 
 	mg_create_irctab (sess, table);
 	mg_create_tabs (sess->gui);
-	mg_create_menu (sess->gui, table, sess->server->is_away);
 
 	mg_focus (sess);
 
 	gtk_widget_show_all (table);
+	
+	/* Show the header bar (menu is now part of it) */
+	gtk_widget_show_all (headerbar);
 
 	if (prefs.pchat_gui_hide_menu)
 		gtk_widget_hide (sess->gui->menu);
