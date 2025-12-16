@@ -38,6 +38,8 @@
  *    modes.c, notify.c, outbound.c, proto-irc.c, server.c and text.c.
  */
 
+#define _POSIX_C_SOURCE 200809L
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
