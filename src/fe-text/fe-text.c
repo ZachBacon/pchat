@@ -508,7 +508,7 @@ fe_args (int argc, char *argv[])
 	{
 #ifdef WIN32
 		/* see the chdir() below */
-		char *sl, *exe = strdup (argv[0]);
+		char *sl, *exe = g_strdup (argv[0]);
 		sl = strrchr (exe, '\\');
 		if (sl)
 		{
@@ -532,7 +532,7 @@ fe_args (int argc, char *argv[])
 	{
 		if (xdir)
 			g_free (xdir);
-		xdir = strdup (arg_cfgdir);
+		xdir = g_strdup (arg_cfgdir);
 		if (xdir[strlen (xdir) - 1] == '/')
 			xdir[strlen (xdir) - 1] = 0;
 		g_free (arg_cfgdir);

@@ -379,7 +379,7 @@ mode_cat (char *str, char *addition)
 		strcat (str, addition);
 	} else
 	{
-		str = strdup (addition);
+		str = g_strdup (addition);
 	}
 
 	return str;
@@ -719,7 +719,7 @@ handle_mode (server * serv, char *word[], char *word_eol[],
 	{
 		if (sess->current_modes)
 			free (sess->current_modes);
-		sess->current_modes = strdup (word_eol[offset+1]);
+		sess->current_modes = g_strdup (word_eol[offset+1]);
 	}
 
 	sign = *modes;
@@ -800,11 +800,11 @@ inbound_005 (server * serv, char *word[], const message_tags_data *tags_data)
 		} else if (strncmp (word[w], "CHANTYPES=", 10) == 0)
 		{
 			free (serv->chantypes);
-			serv->chantypes = strdup (word[w] + 10);
+			serv->chantypes = g_strdup (word[w] + 10);
 		} else if (strncmp (word[w], "CHANMODES=", 10) == 0)
 		{
 			free (serv->chanmodes);
-			serv->chanmodes = strdup (word[w] + 10);
+			serv->chanmodes = g_strdup (word[w] + 10);
 		} else if (strncmp (word[w], "PREFIX=", 7) == 0)
 		{
 			pre = strchr (word[w] + 7, ')');
@@ -813,8 +813,8 @@ inbound_005 (server * serv, char *word[], const message_tags_data *tags_data)
 				pre[0] = 0;			  /* NULL out the ')' */
 				free (serv->nick_prefixes);
 				free (serv->nick_modes);
-				serv->nick_prefixes = strdup (pre + 1);
-				serv->nick_modes = strdup (word[w] + 8);
+				serv->nick_prefixes = g_strdup (pre + 1);
+				serv->nick_modes = g_strdup (word[w] + 8);
 			} else
 			{
 				/* bad! some ircds don't give us the modes. */
@@ -822,7 +822,7 @@ inbound_005 (server * serv, char *word[], const message_tags_data *tags_data)
 				serv->bad_prefix = TRUE;
 				if (serv->bad_nick_prefixes)
 					free (serv->bad_nick_prefixes);
-				serv->bad_nick_prefixes = strdup (word[w] + 7);
+				serv->bad_nick_prefixes = g_strdup (word[w] + 7);
 			}
 		} else if (strncmp (word[w], "WATCH=", 6) == 0)
 		{

@@ -93,7 +93,7 @@ ignore_add (char *mask, int type, gboolean overwrite)
 	if (!ig)
 		return 0;
 
-	ig->mask = strdup (mask);
+	ig->mask = g_strdup (mask);
 
 	if (!overwrite && change_only)
 		ig->type |= type;
@@ -265,7 +265,7 @@ ignore_read_next_entry (char *my_cfg, struct ignore *ignore)
 		my_cfg = cfg_get_str (my_cfg, "mask", tbuf, sizeof (tbuf));
 		if (!my_cfg)
 			return NULL;
-		ignore->mask = strdup (tbuf);
+		ignore->mask = g_strdup (tbuf);
 	}
 	if (my_cfg)
 	{

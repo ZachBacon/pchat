@@ -80,7 +80,7 @@ int main(void)
 	}
 
 	printf("};\n");
-	
+
 	fprintf(stderr, "/* this file is auto generated, edit textevents.in instead! */\n\nenum\n{\n");
 	max = i;
 	i = 0;

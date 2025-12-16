@@ -930,7 +930,7 @@ servlist_server_add (ircnet *net, char *name)
 
 	serv = malloc (sizeof (ircserver));
 	memset (serv, 0, sizeof (ircserver));
-	serv->hostname = strdup (name);
+	serv->hostname = g_strdup (name);
 
 	net->servlist = g_slist_append (net->servlist, serv);
 
@@ -944,7 +944,7 @@ servlist_command_add (ircnet *net, char *cmd)
 
 	entry = malloc (sizeof (commandentry));
 	memset (entry, 0, sizeof (commandentry));
-	entry->command = strdup (cmd);
+	entry->command = g_strdup (cmd);
 
 	net->commandlist = g_slist_append (net->commandlist, entry);
 
@@ -1116,8 +1116,8 @@ servlist_net_add (char *name, char *comment, int prepend)
 
 	net = malloc (sizeof (ircnet));
 	memset (net, 0, sizeof (ircnet));
-	net->name = strdup (name);
-/*	net->comment = strdup (comment);*/
+	net->name = g_strdup (name);
+/*	net->comment = g_strdup (comment);*/
 	net->flags = FLAG_CYCLE | FLAG_USE_GLOBAL | FLAG_USE_PROXY;
 
 	if (prepend)
@@ -1214,25 +1214,25 @@ servlist_load (void)
 			switch (buf[0])
 			{
 			case 'I':
-				net->nick = strdup (buf + 2);
+				net->nick = g_strdup (buf + 2);
 				break;
 			case 'i':
-				net->nick2 = strdup (buf + 2);
+				net->nick2 = g_strdup (buf + 2);
 				break;
 			case 'U':
-				net->user = strdup (buf + 2);
+				net->user = g_strdup (buf + 2);
 				break;
 			case 'R':
-				net->real = strdup (buf + 2);
+				net->real = g_strdup (buf + 2);
 				break;
 			case 'P':
-				net->pass = strdup (buf + 2);
+				net->pass = g_strdup (buf + 2);
 				break;
 			case 'L':
 				net->logintype = atoi (buf + 2);
 				break;
 			case 'E':
-				net->encoding = strdup (buf + 2);
+				net->encoding = g_strdup (buf + 2);
 				break;
 			case 'F':
 				net->flags = atoi (buf + 2);
@@ -1262,7 +1262,7 @@ servlist_load (void)
 			case 'A':
 				if (!net->pass)
 				{
-					net->pass = strdup (buf + 2);
+					net->pass = g_strdup (buf + 2);
 					if (!net->logintype)
 					{
 						net->logintype = LOGIN_SASL;
@@ -1271,7 +1271,7 @@ servlist_load (void)
 			case 'B':
 				if (!net->pass)
 				{
-					net->pass = strdup (buf + 2);
+					net->pass = g_strdup (buf + 2);
 					if (!net->logintype)
 					{
 						net->logintype = LOGIN_NICKSERV;

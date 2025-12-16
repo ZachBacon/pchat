@@ -44,7 +44,7 @@ ctcp_reply (session *sess, char *nick, char *word[], char *word_eol[],
 {
 	char tbuf[4096];	/* can receive 2048 from IRC, so this is enough */
 
-	conf = strdup (conf);
+	conf = g_strdup (conf);
 	/* process %C %B etc */
 	check_special_chars (conf, TRUE);
 	auto_insert (tbuf, sizeof (tbuf), conf, word, word_eol, "", "", word_eol[5],

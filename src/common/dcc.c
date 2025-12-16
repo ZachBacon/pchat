@@ -312,7 +312,7 @@ dcc_lookup_proxy (char *host, struct sockaddr_in *addr)
 	{
 		memcpy (&addr->sin_addr, h->h_addr, 4);
 		memcpy (&cache_addr, h->h_addr, 4);
-		cache_host = strdup (host);
+		cache_host = g_strdup (host);
 		/* cppcheck-suppress memleak */
 		return TRUE;
 	}
@@ -1843,7 +1843,7 @@ dcc_send (struct session *sess, char *to, char *file, int maxcps, int passive)
 					}
 					file++;
 				}
-				dcc->nick = strdup (to);
+				dcc->nick = g_strdup (to);
 				if (prefs.pchat_gui_autoopen_send)
 				{
 					if (fe_dcc_open_send_win (TRUE))	/* already open? add */
@@ -1967,7 +1967,7 @@ dcc_change_nick (struct server *serv, char *oldnick, char *newnick)
 			{
 				if (dcc->nick)
 					free (dcc->nick);
-				dcc->nick = strdup (newnick);
+				dcc->nick = g_strdup (newnick);
 			}
 		}
 		list = list->next;
@@ -2207,7 +2207,7 @@ dcc_chat (struct session *sess, char *nick, int passive)
 	dcc->serv = sess->server;
 	dcc->dccstat = STAT_QUEUED;
 	dcc->type = TYPE_CHATSEND;
-	dcc->nick = strdup (nick);
+	dcc->nick = g_strdup (nick);
 	if (passive || dcc_listen_init (dcc, sess))
 	{
 		if (prefs.pchat_gui_autoopen_chat)
@@ -2307,7 +2307,7 @@ dcc_add_chat (session *sess, char *nick, int port, guint32 addr, int pasvid)
 		dcc->addr = addr;
 		dcc->port = port;
 		dcc->pasvid = pasvid;
-		dcc->nick = strdup (nick);
+		dcc->nick = g_strdup (nick);
 		dcc->starttime = time (0);
 
 		EMIT_SIGNAL (XP_TE_DCCCHATOFFER, sess->server->front_session, nick,
@@ -2344,7 +2344,7 @@ dcc_add_file (session *sess, char *file, DCC_SIZE size, int port, char *nick, gu
 	dcc = new_dcc ();
 	if (dcc)
 	{
-		dcc->file = strdup (file);
+		dcc->file = g_strdup (file);
 
 		dcc->destfile = g_malloc (strlen (prefs.pchat_dcc_dir) + strlen (nick) +
 										  strlen (file) + 4);
@@ -2379,7 +2379,7 @@ dcc_add_file (session *sess, char *file, DCC_SIZE size, int port, char *nick, gu
 		dcc->port = port;
 		dcc->pasvid = pasvid;
 		dcc->size = size;
-		dcc->nick = strdup (nick);
+		dcc->nick = g_strdup (nick);
 		dcc->maxcps = prefs.pchat_dcc_max_get_cps;
 
 		is_resumable (dcc);

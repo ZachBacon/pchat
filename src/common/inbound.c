@@ -84,7 +84,7 @@ set_topic (session *sess, char *topic, char *stripped_topic)
 {
 	if (sess->topic)
 		free (sess->topic);
-	sess->topic = strdup (stripped_topic);
+	sess->topic = g_strdup (stripped_topic);
 	fe_set_topic (sess, topic, stripped_topic);
 }
 
@@ -970,7 +970,7 @@ inbound_notice (server *serv, char *to, char *nick, char *msg, char *ip, int id,
 				/* guess where chanserv meant to post this -sigh- */
 				if (!g_ascii_strcasecmp (nick, "ChanServ") && !find_dialog (serv, nick))
 				{
-					char *dest = strdup (msg + 1);
+					char *dest = g_strdup (msg + 1);
 					char *end = strchr (dest, ']');
 					if (end)
 					{
