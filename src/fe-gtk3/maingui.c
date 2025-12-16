@@ -310,7 +310,7 @@ mg_inputbox_cb (GtkWidget *igad, session_gui *gui)
 	if (cmd[0] == 0)
 		return;
 
-	cmd = strdup (cmd);
+	cmd = g_strdup (cmd);
 
 	/* avoid recursive loop */
 	ignore = TRUE;
@@ -612,14 +612,14 @@ mg_unpopulate (session *sess)
 	gui = sess->gui;
 	res = sess->res;
 
-	res->input_text = strdup (SPELL_ENTRY_GET_TEXT (gui->input_box));
-	res->topic_text = strdup (gtk_entry_get_text (GTK_ENTRY (gui->topic_entry)));
-	res->limit_text = strdup (gtk_entry_get_text (GTK_ENTRY (gui->limit_entry)));
-	res->key_text = strdup (gtk_entry_get_text (GTK_ENTRY (gui->key_entry)));
+	res->input_text = g_strdup (SPELL_ENTRY_GET_TEXT (gui->input_box));
+	res->topic_text = g_strdup (gtk_entry_get_text (GTK_ENTRY (gui->topic_entry)));
+	res->limit_text = g_strdup (gtk_entry_get_text (GTK_ENTRY (gui->limit_entry)));
+	res->key_text = g_strdup (gtk_entry_get_text (GTK_ENTRY (gui->key_entry)));
 	if (gui->laginfo)
-		res->lag_text = strdup (gtk_label_get_text (GTK_LABEL (gui->laginfo)));
+		res->lag_text = g_strdup (gtk_label_get_text (GTK_LABEL (gui->laginfo)));
 	if (gui->throttleinfo)
-		res->queue_text = strdup (gtk_label_get_text (GTK_LABEL (gui->throttleinfo)));
+		res->queue_text = g_strdup (gtk_label_get_text (GTK_LABEL (gui->throttleinfo)));
 
 	for (i = 0; i < NUM_FLAG_WIDS - 1; i++)
 		res->flag_wid_state[i] = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (gui->flag_wid[i]));
@@ -1643,7 +1643,7 @@ mg_dnd_drop_file (session *sess, char *target, char *uri)
 {
 	char *p, *data, *next, *fname;
 
-	p = data = strdup (uri);
+	p = data = g_strdup (uri);
 	while (*p)
 	{
 		next = strchr (p, '\r');
@@ -2059,8 +2059,8 @@ mg_limit_entry_cb (GtkWidget * igad, gpointer userdata)
 static void
 mg_apply_entry_style (GtkWidget *entry)
 {
-	gtk_widget_modify_base (entry, GTK_STATE_NORMAL, &colors[COL_BG]);
-	gtk_widget_modify_text (entry, GTK_STATE_NORMAL, &colors[COL_FG]);
+	/* gtk_widget_modify_base (entry, GTK_STATE_NORMAL, &colors[COL_BG]); */
+	/* gtk_widget_modify_text (entry, GTK_STATE_NORMAL, &colors[COL_FG]); */
 	gtk_widget_modify_font (entry, input_style->font_desc);
 }
 
@@ -2478,7 +2478,7 @@ mg_create_userlist (session_gui *gui, GtkWidget *box)
 	if (prefs.pchat_gui_ulist_style)
 	{
 		gtk_widget_set_style (ulist, input_style);
-		gtk_widget_modify_base (ulist, GTK_STATE_NORMAL, &colors[COL_BG]);
+		/* gtk_widget_modify_base (ulist, GTK_STATE_NORMAL, &colors[COL_BG]); */
 	}
 
 	mg_create_meters (gui, vbox);
@@ -3334,7 +3334,7 @@ mg_add_generic_tab (char *name, char *title, void *family, GtkWidget *box)
 	ch = chanview_add (mg_gui->chanview, name, NULL, box, TRUE, TAG_UTIL, pix_tree_util);
 	chan_set_color (ch, plain_list);
 	/* FIXME: memory leak */
-	g_object_set_data (G_OBJECT (box), "title", strdup (title));
+	g_object_set_data (G_OBJECT (box), "title", g_strdup (title));
 	g_object_set_data (G_OBJECT (box), "ch", ch);
 
 	if (prefs.pchat_gui_tab_newtofront)
@@ -3633,7 +3633,7 @@ mg_set_title (GtkWidget *vbox, char *title) /* for non-irc tab/window only */
 	old = g_object_get_data (G_OBJECT (vbox), "title");
 	if (old)
 	{
-		g_object_set_data (G_OBJECT (vbox), "title", strdup (title));
+		g_object_set_data (G_OBJECT (vbox), "title", g_strdup (title));
 		free (old);
 	} else
 	{
