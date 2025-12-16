@@ -1503,7 +1503,7 @@ gtk_xtext_leave_notify (GtkWidget * widget, GdkEventCrossing * event)
 		xtext->hilight_start = -1;
 		xtext->hilight_end = -1;
 		xtext->cursor_hand = FALSE;
-		gdk_window_set_cursor (gtk_widget_get_window (widget), 0);
+		gdk_window_set_cursor (gtk_widget_get_window (widget), NULL);
 		xtext->hilight_ent = NULL;
 	}
 
@@ -1513,7 +1513,7 @@ gtk_xtext_leave_notify (GtkWidget * widget, GdkEventCrossing * event)
 		xtext->hilight_start = -1;
 		xtext->hilight_end = -1;
 		xtext->cursor_resize = FALSE;
-		gdk_window_set_cursor (gtk_widget_get_window (widget), 0);
+		gdk_window_set_cursor (gtk_widget_get_window (widget), NULL);
 		xtext->hilight_ent = NULL;
 	}
 
@@ -2455,15 +2455,16 @@ gtk_xtext_render_flush (GtkXText * xtext, int x, int y, unsigned char *str,
 		{
 			cr = gtk_xtext_create_cairo_handle(xtext);
 
-			y++;
 			dest_x = x;
 
-			xtext_draw_line (xtext, cr, &xtext->fgc, dest_x + 1, y + 1, dest_x + str_width - 1, y + 1);
+			xtext_draw_line (xtext, cr, &xtext->fgc, dest_x + 1, y + xtext->fontsize - 1, dest_x + str_width - 1, y + xtext->fontsize - 1);
 			if (cr != xtext->draw_cr)
 				cairo_destroy (cr);
 
 			return str_width;
 		}
+		/* When un-highlighting, don't fill background to avoid black bars */
+		dofill = FALSE;
 	}
 
 	if (!xtext->backcolor && xtext->pixbuf)

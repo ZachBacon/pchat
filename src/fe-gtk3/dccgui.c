@@ -742,12 +742,14 @@ dcc_detail_label (char *text, GtkWidget *box, int num)
 	label = gtk_label_new (NULL);
 	snprintf (buf, sizeof (buf), "<b>%s</b>", text);
 	gtk_label_set_markup (GTK_LABEL (label), buf);
-	gtk_misc_set_alignment (GTK_MISC (label), 0, 0);
+	gtk_widget_set_halign (GTK_WIDGET (label), 0 == 0.0 ? GTK_ALIGN_START : (0 == 1.0 ? GTK_ALIGN_END : GTK_ALIGN_CENTER));
+	gtk_widget_set_valign (GTK_WIDGET (label), 0 == 0.0 ? GTK_ALIGN_START : (0 == 1.0 ? GTK_ALIGN_END : GTK_ALIGN_CENTER));
 	gtk_table_attach (GTK_TABLE (box), label, 0, 1, 0 + num, 1 + num, GTK_FILL, GTK_FILL, 0, 0);
 
 	label = gtk_label_new (NULL);
 	gtk_label_set_selectable (GTK_LABEL (label), TRUE);
-	gtk_misc_set_alignment (GTK_MISC (label), 0, 0);
+	gtk_widget_set_halign (GTK_WIDGET (label), 0 == 0.0 ? GTK_ALIGN_START : (0 == 1.0 ? GTK_ALIGN_END : GTK_ALIGN_CENTER));
+	gtk_widget_set_valign (GTK_WIDGET (label), 0 == 0.0 ? GTK_ALIGN_START : (0 == 1.0 ? GTK_ALIGN_END : GTK_ALIGN_CENTER));
 	gtk_table_attach (GTK_TABLE (box), label, 1, 2, 0 + num, 1 + num, GTK_FILL, GTK_FILL, 0, 0);
 
 	return label;
@@ -809,7 +811,7 @@ fe_dcc_open_recv_win (int passive)
 										 G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING,
 										 G_TYPE_STRING, G_TYPE_POINTER, GDK_TYPE_COLOR);
 	view = gtkutil_treeview_new (vbox, GTK_TREE_MODEL (store), NULL, -1);
-	gtk_tree_view_set_rules_hint (GTK_TREE_VIEW (view), TRUE);
+	/* gtk_tree_view_set_rules_hint deprecated - no replacement needed */;
 	/* Up/Down Icon column */
 	gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (view), -1, NULL,
 																gtk_cell_renderer_pixbuf_new (),
@@ -876,14 +878,14 @@ fe_dcc_open_recv_win (int passive)
 	dccfwin.file_label = dcc_detail_label (_("File:"), detailbox, 0);
 	dccfwin.address_label = dcc_detail_label (_("Address:"), detailbox, 1);
 
-	bbox = gtk_hbutton_box_new ();
+	bbox = gtk_button_box_new (GTK_ORIENTATION_HORIZONTAL);
 	gtk_button_box_set_layout (GTK_BUTTON_BOX (bbox), GTK_BUTTONBOX_SPREAD);
 	gtk_box_pack_end (GTK_BOX (vbox), bbox, FALSE, FALSE, 2);
 
-	dccfwin.abort_button = gtkutil_button (bbox, GTK_STOCK_CANCEL, 0, abort_clicked, 0, _("Abort"));
-	dccfwin.accept_button = gtkutil_button (bbox, GTK_STOCK_APPLY, 0, accept_clicked, 0, _("Accept"));
-	dccfwin.resume_button = gtkutil_button (bbox, GTK_STOCK_REFRESH, 0, resume_clicked, 0, _("Resume"));
-	dccfwin.clear_button = gtkutil_button (bbox, GTK_STOCK_CLEAR, 0, clear_completed, 0, _("Clear"));
+	dccfwin.abort_button = gtkutil_button (bbox, "_Cancel", 0, abort_clicked, 0, _("Abort"));
+	dccfwin.accept_button = gtkutil_button (bbox, "_Apply", 0, accept_clicked, 0, _("Accept"));
+	dccfwin.resume_button = gtkutil_button (bbox, "_Refresh", 0, resume_clicked, 0, _("Resume"));
+	dccfwin.clear_button = gtkutil_button (bbox, "_Clear", 0, clear_completed, 0, _("Clear"));
 	dccfwin.open_button = gtkutil_button (bbox, 0, 0, browse_dcc_folder, 0, _("Open Folder..."));
 	gtk_widget_set_sensitive (dccfwin.accept_button, FALSE);
 	gtk_widget_set_sensitive (dccfwin.resume_button, FALSE);
@@ -1062,7 +1064,7 @@ fe_dcc_open_chat_win (int passive)
 	dcc_add_column (view, CCOL_START,  CCOL_COLOR, _("Start Time"), FALSE);
 
 	gtk_tree_view_column_set_expand (gtk_tree_view_get_column (GTK_TREE_VIEW (view), 1), TRUE);
-	gtk_tree_view_set_rules_hint (GTK_TREE_VIEW (view), TRUE);
+	/* gtk_tree_view_set_rules_hint deprecated - no replacement needed */;
 
 	dcccwin.list = view;
 	dcccwin.store = store;
@@ -1075,12 +1077,12 @@ fe_dcc_open_chat_win (int passive)
 	g_signal_connect (G_OBJECT (view), "row-activated",
 							G_CALLBACK (dcc_chat_dclick_cb), NULL);
 
-	bbox = gtk_hbutton_box_new ();
+	bbox = gtk_button_box_new (GTK_ORIENTATION_HORIZONTAL);
 	gtk_button_box_set_layout (GTK_BUTTON_BOX (bbox), GTK_BUTTONBOX_SPREAD);
 	gtk_box_pack_end (GTK_BOX (vbox), bbox, FALSE, FALSE, 2);
 
-	dcccwin.abort_button = gtkutil_button (bbox, GTK_STOCK_CANCEL, 0, abort_chat_clicked, 0, _("Abort"));
-	dcccwin.accept_button = gtkutil_button (bbox, GTK_STOCK_APPLY, 0, accept_chat_clicked, 0, _("Accept"));
+	dcccwin.abort_button = gtkutil_button (bbox, "_Cancel", 0, abort_chat_clicked, 0, _("Abort"));
+	dcccwin.accept_button = gtkutil_button (bbox, "_Apply", 0, accept_chat_clicked, 0, _("Accept"));
 	gtk_widget_set_sensitive (dcccwin.accept_button, FALSE);
 	gtk_widget_set_sensitive (dcccwin.abort_button, FALSE);
 

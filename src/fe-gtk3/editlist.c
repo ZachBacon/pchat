@@ -287,7 +287,7 @@ editlist_treeview_new (GtkWidget *box, char *title1, char *title2)
 	g_signal_connect (G_OBJECT (view), "key_press_event",
 						G_CALLBACK (editlist_keypress), NULL);
 
-	gtk_tree_view_set_rules_hint (GTK_TREE_VIEW (view), TRUE);
+	/* gtk_tree_view_set_rules_hint deprecated - no replacement needed */;
 
 	render = gtk_cell_renderer_text_new ();
 	g_object_set (render, "editable", TRUE, NULL);
@@ -348,19 +348,19 @@ editlist_gui_open (char *title1, char *title2, GSList *list, char *title, char *
 	if (help)
 		gtk_widget_set_tooltip_text (view, help);
 
-	box = gtk_hbutton_box_new ();
+	box = gtk_button_box_new (GTK_ORIENTATION_HORIZONTAL);
 	gtk_button_box_set_layout (GTK_BUTTON_BOX (box), GTK_BUTTONBOX_SPREAD);
 	gtk_box_pack_start (GTK_BOX (vbox), box, FALSE, FALSE, 2);
 	gtk_container_set_border_width (GTK_CONTAINER (box), 5);
 	gtk_widget_show (box);
 
-	gtkutil_button (box, GTK_STOCK_NEW, 0, editlist_add,
+	gtkutil_button (box, "_New", 0, editlist_add,
 					NULL, _("Add"));
 	gtkutil_button (box, GTK_STOCK_DELETE, 0, editlist_delete,
 					NULL, _("Delete"));
-	gtkutil_button (box, GTK_STOCK_CANCEL, 0, editlist_close,
+	gtkutil_button (box, "_Cancel", 0, editlist_close,
 					NULL, _("Cancel"));
-	gtkutil_button (box, GTK_STOCK_SAVE, 0, editlist_save,
+	gtkutil_button (box, "_Save", 0, editlist_save,
 					file, _("Save"));
 
 	store = GTK_LIST_STORE (gtk_tree_view_get_model (GTK_TREE_VIEW (view)));

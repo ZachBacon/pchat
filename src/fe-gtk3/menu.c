@@ -273,7 +273,7 @@ menu_quick_item (char *cmd, char *label, GtkWidget * menu, int flags,
 			/*if (flags & XCMENU_MARKUP)
 				item = gtk_image_menu_item_new_with_markup (label);
 			else*/
-				item = gtk_image_menu_item_new_with_mnemonic (label);
+				item = gtk_menu_item_new_with_mnemonic (label);
 			img = NULL;
 			if (access (icon, R_OK) == 0)	/* try fullpath */
 				img = gtk_image_new_from_file (icon);
@@ -284,12 +284,12 @@ menu_quick_item (char *cmd, char *label, GtkWidget * menu, int flags,
 				if (access (path, R_OK) == 0)
 					img = gtk_image_new_from_file (path);
 				else
-					img = gtk_image_new_from_stock (icon, GTK_ICON_SIZE_MENU);
+					img = gtk_image_new_from_icon_name (icon, GTK_ICON_SIZE_BUTTON);
 				g_free (path);
 			}
 
 			if (img)
-				gtk_image_menu_item_set_image ((GtkImageMenuItem *)item, img);
+				/* gtk_image_menu_item_set_image deprecated */;
 		}
 		else
 		{
@@ -568,8 +568,7 @@ menu_popup (GtkWidget *menu, GdkEventButton *event, gpointer objtounref)
 	g_object_unref (menu);
 	g_signal_connect (G_OBJECT (menu), "selection-done",
 							G_CALLBACK (menu_destroy), objtounref);
-	gtk_menu_popup (GTK_MENU (menu), NULL, NULL, NULL, NULL,
-						 0, event ? event->time : 0);
+	gtk_menu_popup_at_pointer (GTK_MENU (menu), (GdkEvent*)event);
 }
 
 static void
@@ -1357,12 +1356,12 @@ menu_join (GtkWidget * wid, gpointer none)
 	dialog = gtk_dialog_new_with_buttons (_("Join Channel"),
 									GTK_WINDOW (parent_window), 0,
 									_("Retrieve channel list..."), GTK_RESPONSE_HELP,
-									GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-									GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+									"_Cancel", GTK_RESPONSE_REJECT,
+									"_OK", GTK_RESPONSE_ACCEPT,
 									NULL);
 	gtk_box_set_homogeneous (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), TRUE);
 	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_MOUSE);
-	hbox = gtk_hbox_new (TRUE, 0);
+	hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, TRUE);
 
 	entry = gtk_entry_new ();
 	gtk_editable_set_editable (GTK_EDITABLE (entry), FALSE);	/* avoid auto-selection */
@@ -1700,7 +1699,7 @@ static struct mymenu mymenu[] = {
 	{N_("Network Li_st..."), menu_open_server_list, (char *)&pix_book, M_MENUPIX, 0, 0, 1, GDK_KEY_s},
 	{0, 0, 0, M_SEP, 0, 0, 0},
 
-	{N_("_New"), 0, GTK_STOCK_NEW, M_MENUSUB, 0, 0, 1},
+	{N_("_New"), 0, "_New", M_MENUSUB, 0, 0, 1},
 		{N_("Server Tab..."), menu_newserver_tab, 0, M_MENUITEM, 0, 0, 1, GDK_KEY_t},
 		{N_("Channel Tab..."), menu_newchannel_tab, 0, M_MENUITEM, 0, 0, 1},
 		{N_("Server Window..."), menu_newserver_window, 0, M_MENUITEM, 0, 0, 1, GDK_KEY_n},
@@ -1717,7 +1716,7 @@ static struct mymenu mymenu[] = {
 #define DETACH_OFFSET (12)
 	{0, menu_detach, GTK_STOCK_REDO, M_MENUSTOCK, 0, 0, 1, GDK_KEY_i},	/* 12 */
 #define CLOSE_OFFSET (13)
-	{0, menu_close, GTK_STOCK_CLOSE, M_MENUSTOCK, 0, 0, 1, GDK_KEY_w},
+	{0, menu_close, "_Close", M_MENUSTOCK, 0, 0, 1, GDK_KEY_w},
 	{0, 0, 0, M_SEP, 0, 0, 0},
 	{N_("_Quit"), menu_quit, GTK_STOCK_QUIT, M_MENUSTOCK, 0, 0, 1, GDK_KEY_q},	/* 15 */
 
@@ -1781,13 +1780,13 @@ static struct mymenu mymenu[] = {
 	{0, 0, 0, M_SEP, 0, 0, 0},
 	{N_("Reset Marker Line"), menu_resetmarker, 0, M_MENUITEM, 0, 0, 1, GDK_KEY_m},
 	{N_("_Copy Selection"), menu_copy_selection, 0, M_MENUITEM, 0, 0, 1, GDK_KEY_C},
-	{N_("C_lear Text"), menu_flushbuffer, GTK_STOCK_CLEAR, M_MENUSTOCK, 0, 0, 1},
-	{N_("Save Text..."), menu_savebuffer, GTK_STOCK_SAVE, M_MENUSTOCK, 0, 0, 1},
+	{N_("C_lear Text"), menu_flushbuffer, "_Clear", M_MENUSTOCK, 0, 0, 1},
+	{N_("Save Text..."), menu_savebuffer, "_Save", M_MENUSTOCK, 0, 0, 1},
 #define SEARCH_OFFSET (70)
 	{N_("Search"), 0, GTK_STOCK_JUSTIFY_LEFT, M_MENUSUB, 0, 0, 1},
-		{N_("Search Text..."), menu_search, GTK_STOCK_FIND, M_MENUSTOCK, 0, 0, 1, GDK_KEY_f},
-		{N_("Search Next"   ), menu_search_next, GTK_STOCK_FIND, M_MENUSTOCK, 0, 0, 1, GDK_KEY_g},
-		{N_("Search Previous"   ), menu_search_prev, GTK_STOCK_FIND, M_MENUSTOCK, 0, 0, 1, GDK_KEY_G},
+		{N_("Search Text..."), menu_search, "_Find", M_MENUSTOCK, 0, 0, 1, GDK_KEY_f},
+		{N_("Search Next"   ), menu_search_next, "_Find", M_MENUSTOCK, 0, 0, 1, GDK_KEY_g},
+		{N_("Search Previous"   ), menu_search_prev, "_Find", M_MENUSTOCK, 0, 0, 1, GDK_KEY_G},
 		{0, 0, 0, M_END, 0, 0, 0},
 
 	{N_("_Help"), 0, 0, M_NEWMENU, 0, 0, 1},	/* 74 */
@@ -1823,11 +1822,11 @@ create_icon_menu (char *labeltext, void *stock_name, int is_stock)
 	GtkWidget *item, *img;
 
 	if (is_stock)
-		img = gtk_image_new_from_stock (stock_name, GTK_ICON_SIZE_MENU);
+		img = gtk_image_new_from_icon_name (stock_name, GTK_ICON_SIZE_BUTTON);
 	else
 		img = gtk_image_new_from_pixbuf (*((GdkPixbuf **)stock_name));
-	item = gtk_image_menu_item_new_with_mnemonic (labeltext);
-	gtk_image_menu_item_set_image ((GtkImageMenuItem *)item, img);
+	item = gtk_menu_item_new_with_mnemonic (labeltext);
+	/* gtk_image_menu_item_set_image deprecated */;
 	gtk_widget_show (img);
 
 	return item;

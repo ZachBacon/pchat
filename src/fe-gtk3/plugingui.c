@@ -64,7 +64,7 @@ plugingui_treeview_new (GtkWidget *box)
 	                             VERSION_COLUMN, _("Version"),
 	                             FILE_COLUMN, _("File"),
 	                             DESC_COLUMN, _("Description"), -1);
-	gtk_tree_view_set_rules_hint (GTK_TREE_VIEW (view), TRUE);
+	/* gtk_tree_view_set_rules_hint deprecated - no replacement needed */;
 	for (col_id=0; (col = gtk_tree_view_get_column (GTK_TREE_VIEW (view), col_id));
 	     col_id++)
 			gtk_tree_view_column_set_alignment (col, 0.5);
@@ -258,7 +258,7 @@ plugingui_open (void)
 	g_object_set_data (G_OBJECT (plugin_window), "view", view);
 
 
-	hbox = gtk_hbutton_box_new ();
+	hbox = gtk_button_box_new (GTK_ORIENTATION_HORIZONTAL);
 	gtk_button_box_set_layout (GTK_BUTTON_BOX (hbox), GTK_BUTTONBOX_SPREAD);
 	gtk_container_set_border_width (GTK_CONTAINER (hbox), 5);
 	gtk_box_pack_end (GTK_BOX (vbox), hbox, 0, 0, 0);
@@ -269,7 +269,7 @@ plugingui_open (void)
 	gtkutil_button (hbox, GTK_STOCK_DELETE, NULL,
 	                plugingui_unload, NULL, _("_Unload"));
 
-	gtkutil_button (hbox, GTK_STOCK_REFRESH, NULL,
+	gtkutil_button (hbox, "_Refresh", NULL,
 	                plugingui_reloadbutton_cb, view, _("_Reload"));
 
 	fe_pluginlist_update ();

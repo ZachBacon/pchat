@@ -132,7 +132,7 @@ PrintTextRaw (void *xtbuf, unsigned char *text, int indent, time_t stamp)
 			{
 				beep_done = TRUE;
 				if (!prefs.pchat_input_filter_beep)
-					gdk_beep ();
+					gdk_display_beep (gdk_display_get_default ());
 			}
 		default:
 			text++;
@@ -363,9 +363,9 @@ pevent_dialog_show ()
 											 TRUE, FALSE, pevent_dialog_close, NULL,
 											 600, 455, &vbox, 0);
 
-	wid = gtk_vpaned_new ();
-	th = gtk_vbox_new (0, 2);
-	bh = gtk_vbox_new (0, 2);
+	wid = gtk_paned_new (GTK_ORIENTATION_VERTICAL);
+	th = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+	bh = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
 	gtk_widget_show (th);
 	gtk_widget_show (bh);
 	gtk_paned_pack1 (GTK_PANED (wid), th, 1, 1);
@@ -389,7 +389,7 @@ pevent_dialog_show ()
 							G_CALLBACK (pevent_dialog_update), pevent_dialog_twid);
 	gtk_box_pack_start (GTK_BOX (bh), pevent_dialog_entry, 0, 0, 0);
 
-	tbox = gtk_hbox_new (0, 0);
+	tbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
 	gtk_container_add (GTK_CONTAINER (bh), tbox);
 
 	wid = gtk_scrolled_window_new (NULL, NULL);
@@ -407,23 +407,23 @@ pevent_dialog_show ()
 
 	pevent_dialog_fill (pevent_dialog_list);
 
-	hbox = gtk_hbutton_box_new ();
+	hbox = gtk_button_box_new (GTK_ORIENTATION_HORIZONTAL);
 	gtk_box_pack_end (GTK_BOX (vbox), hbox, 0, 0, 2);
 	/*wid = gtk_button_new_with_label (_("Save"));
 	gtk_box_pack_end (GTK_BOX (hbox), wid, 0, 0, 0);
 	g_signal_connect (G_OBJECT (wid), "clicked",
 							  G_CALLBACK (pevent_save_cb), NULL);
 	gtk_widget_show (wid);*/
-	gtkutil_button (hbox, GTK_STOCK_SAVE_AS, NULL, pevent_save_cb,
+	gtkutil_button (hbox, "_Save", NULL, pevent_save_cb,
 						 (void *) 1, _("Save As..."));
-	gtkutil_button (hbox, GTK_STOCK_OPEN, NULL, pevent_load_cb,
+	gtkutil_button (hbox, "_Open", NULL, pevent_load_cb,
 						 (void *) 0, _("Load From..."));
 	wid = gtk_button_new_with_label (_("Test All"));
 	gtk_box_pack_end (GTK_BOX (hbox), wid, 0, 0, 0);
 	g_signal_connect (G_OBJECT (wid), "clicked",
 							G_CALLBACK (pevent_test_cb), pevent_dialog_twid);
 
-	wid = gtk_button_new_from_stock (GTK_STOCK_OK);
+	wid = gtk_button_new_with_mnemonic ("_OK");
 	gtk_box_pack_start (GTK_BOX (hbox), wid, 0, 0, 0);
 	g_signal_connect (G_OBJECT (wid), "clicked",
 							G_CALLBACK (pevent_ok_cb), NULL);

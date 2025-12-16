@@ -458,7 +458,7 @@ chanlist_join (GtkWidget * wid, server *serv)
 			g_snprintf (tbuf, sizeof (tbuf), "join %s", chan);
 			handle_command (serv->server_session, tbuf, FALSE);
 		} else
-			gdk_beep ();
+			gdk_display_beep (gdk_display_get_default ());
 		g_free (chan);
 	}
 }
@@ -629,7 +629,7 @@ chanlist_button_cb (GtkTreeView *tree, GdkEventButton *event, server *serv)
 	menu_addfavoritemenu (serv, menu, chan, FALSE);
 	g_free (chan);
 
-	gtk_menu_popup (GTK_MENU (menu), NULL, NULL, NULL, NULL, 0, event->time);
+	gtk_menu_popup_at_pointer (GTK_MENU (menu), (GdkEvent*)event);
 
 	return TRUE;
 }
@@ -769,7 +769,7 @@ chanlist_opengui (server *serv, int do_refresh)
 	chanlist_add_column (view, COL_CHANNEL, 96, _("Channel"), FALSE);
 	chanlist_add_column (view, COL_USERS,   50, _("Users"),   TRUE);
 	chanlist_add_column (view, COL_TOPIC,   50, _("Topic"),   FALSE);
-	gtk_tree_view_set_rules_hint (GTK_TREE_VIEW (view), TRUE);
+	/* gtk_tree_view_set_rules_hint deprecated - no replacement needed */;
 	/* this is a speed up, but no horizontal scrollbar :( */
 	/*gtk_tree_view_set_fixed_height_mode (GTK_TREE_VIEW (view), TRUE);*/
 	gtk_widget_show (view);
@@ -782,19 +782,19 @@ chanlist_opengui (server *serv, int do_refresh)
 	gtk_box_pack_start (GTK_BOX (vbox), table, 0, 1, 0);
 	gtk_widget_show (table);
 
-	wid = gtkutil_button (NULL, GTK_STOCK_FIND, 0, chanlist_search_pressed, serv,
+	wid = gtkutil_button (NULL, "_Find", 0, chanlist_search_pressed, serv,
 								 _("_Search"));
 	serv->gui->chanlist_search = wid;
 	gtk_table_attach (GTK_TABLE (table), wid, 3, 4, 3, 4,
 							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
 
-	wid = gtkutil_button (NULL, GTK_STOCK_REFRESH, 0, chanlist_refresh, serv,
+	wid = gtkutil_button (NULL, "_Refresh", 0, chanlist_refresh, serv,
 							 _("_Download List"));
 	serv->gui->chanlist_refresh = wid;
 	gtk_table_attach (GTK_TABLE (table), wid, 3, 4, 2, 3,
 							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
 
-	wid = gtkutil_button (NULL, GTK_STOCK_SAVE_AS, 0, chanlist_save, serv,
+	wid = gtkutil_button (NULL, "_Save", 0, chanlist_save, serv,
 							 _("Save _List..."));
 	serv->gui->chanlist_savelist = wid;
 	gtk_table_attach (GTK_TABLE (table), wid, 3, 4, 1, 2,
@@ -809,12 +809,12 @@ chanlist_opengui (server *serv, int do_refresh)
 	/* ============================================================= */
 
 	wid = gtk_label_new (_("Show only:"));
-	gtk_misc_set_alignment (GTK_MISC (wid), 0, 0.5);
+	gtk_widget_set_halign (GTK_WIDGET (wid), 0 == 0.0 ? GTK_ALIGN_START : (0 == 1.0 ? GTK_ALIGN_END : GTK_ALIGN_CENTER));
 	gtk_table_attach (GTK_TABLE (table), wid, 0, 1, 3, 4,
 							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
 	gtk_widget_show (wid);
 
-	hbox = gtk_hbox_new (0, 0);
+	hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
 	gtk_box_set_spacing (GTK_BOX (hbox), 9);
 	gtk_table_attach (GTK_TABLE (table), hbox, 1, 2, 3, 4,
 							GTK_FILL, GTK_FILL, 0, 0);
@@ -852,12 +852,12 @@ chanlist_opengui (server *serv, int do_refresh)
 	/* ============================================================= */
 
 	wid = gtk_label_new (_("Look in:"));
-	gtk_misc_set_alignment (GTK_MISC (wid), 0, 0.5);
+	gtk_widget_set_halign (GTK_WIDGET (wid), 0 == 0.0 ? GTK_ALIGN_START : (0 == 1.0 ? GTK_ALIGN_END : GTK_ALIGN_CENTER));
 	gtk_table_attach (GTK_TABLE (table), wid, 0, 1, 2, 3,
 							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
 	gtk_widget_show (wid);
 
-	hbox = gtk_hbox_new (0, 0);
+	hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
 	gtk_box_set_spacing (GTK_BOX (hbox), 12);
 	gtk_table_attach (GTK_TABLE (table), hbox, 1, 2, 2, 3,
 							GTK_FILL, GTK_FILL, 0, 0);
@@ -884,7 +884,7 @@ chanlist_opengui (server *serv, int do_refresh)
 	/* ============================================================= */
 
 	wid = gtk_label_new (_("Search type:"));
-	gtk_misc_set_alignment (GTK_MISC (wid), 0, 0.5);
+	gtk_widget_set_halign (GTK_WIDGET (wid), 0 == 0.0 ? GTK_ALIGN_START : (0 == 1.0 ? GTK_ALIGN_END : GTK_ALIGN_CENTER));
 	gtk_table_attach (GTK_TABLE (table), wid, 0, 1, 1, 2,
 							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
 	gtk_widget_show (wid);
@@ -903,7 +903,7 @@ chanlist_opengui (server *serv, int do_refresh)
 	/* ============================================================= */
 
 	wid = gtk_label_new (_("Find:"));
-	gtk_misc_set_alignment (GTK_MISC (wid), 0, 0.5);
+	gtk_widget_set_halign (GTK_WIDGET (wid), 0 == 0.0 ? GTK_ALIGN_START : (0 == 1.0 ? GTK_ALIGN_END : GTK_ALIGN_CENTER));
 	gtk_table_attach (GTK_TABLE (table), wid, 0, 1, 0, 1,
 							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
 	gtk_widget_show (wid);
@@ -924,7 +924,7 @@ chanlist_opengui (server *serv, int do_refresh)
 
 	/* ============================================================= */
 
-	wid = gtk_vseparator_new ();
+	wid = gtk_separator_new (GTK_ORIENTATION_VERTICAL);
 	gtk_table_attach (GTK_TABLE (table), wid, 2, 3, 0, 5,
 							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
 	gtk_widget_show (wid);

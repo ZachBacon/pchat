@@ -170,8 +170,8 @@ gtkutil_file_req (const char *title, void *callback, void *userdata, char *filte
 	{
 		dialog = gtk_file_chooser_dialog_new (title, NULL,
 												GTK_FILE_CHOOSER_ACTION_SAVE,
-												GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-												GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
+												"_Cancel", GTK_RESPONSE_CANCEL,
+												"_Save", GTK_RESPONSE_ACCEPT,
 												NULL);
 
 		if (!(flags & FRF_NOASKOVERWRITE))
@@ -180,8 +180,8 @@ gtkutil_file_req (const char *title, void *callback, void *userdata, char *filte
 	else
 		dialog = gtk_file_chooser_dialog_new (title, NULL,
 												GTK_FILE_CHOOSER_ACTION_OPEN,
-												GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-												GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+												"_Cancel", GTK_RESPONSE_CANCEL,
+												"_OK", GTK_RESPONSE_ACCEPT,
 												NULL);
 
 	if (filter && filter[0] && (flags & FRF_FILTERISINITIAL))
@@ -312,8 +312,8 @@ fe_get_str (char *msg, char *def, void *callback, void *userdata)
 	extern GtkWidget *parent_window;
 
 	dialog = gtk_dialog_new_with_buttons (msg, NULL, 0,
-										GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-										GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+										"_Cancel", GTK_RESPONSE_REJECT,
+										"_OK", GTK_RESPONSE_ACCEPT,
 										NULL);
 
 	gtk_window_set_transient_for (GTK_WINDOW (dialog), GTK_WINDOW (parent_window));
@@ -328,7 +328,7 @@ fe_get_str (char *msg, char *def, void *callback, void *userdata)
 		gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_MOUSE);
 	}
 
-	hbox = gtk_hbox_new (TRUE, 0);
+	hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, TRUE);
 
 	g_object_set_data (G_OBJECT (dialog), "cb", callback);
 	g_object_set_data (G_OBJECT (dialog), "ud", userdata);
@@ -407,14 +407,14 @@ fe_get_int (char *msg, int def, void *callback, void *userdata)
 	extern GtkWidget *parent_window;
 
 	dialog = gtk_dialog_new_with_buttons (msg, NULL, 0,
-										GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-										GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+										"_Cancel", GTK_RESPONSE_REJECT,
+										"_OK", GTK_RESPONSE_ACCEPT,
 										NULL);
 	gtk_box_set_homogeneous (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), TRUE);
 	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_MOUSE);
 	gtk_window_set_transient_for (GTK_WINDOW (dialog), GTK_WINDOW (parent_window));
 
-	hbox = gtk_hbox_new (TRUE, 0);
+	hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, TRUE);
 
 	g_object_set_data (G_OBJECT (dialog), "cb", callback);
 	g_object_set_data (G_OBJECT (dialog), "ud", userdata);
@@ -447,8 +447,8 @@ fe_get_bool (char *title, char *prompt, void *callback, void *userdata)
 	extern GtkWidget *parent_window;
 
 	dialog = gtk_dialog_new_with_buttons (title, NULL, 0,
-		GTK_STOCK_NO, GTK_RESPONSE_REJECT,
-		GTK_STOCK_YES, GTK_RESPONSE_ACCEPT,
+		"_No", GTK_RESPONSE_REJECT,
+		"_Yes", GTK_RESPONSE_ACCEPT,
 		NULL);
 	gtk_box_set_homogeneous (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), TRUE);
 	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_MOUSE);
@@ -479,18 +479,18 @@ gtkutil_button (GtkWidget *box, char *stock, char *tip, void *callback,
 	if (labeltext)
 	{
 		gtk_button_set_label (GTK_BUTTON (wid), labeltext);
-		gtk_button_set_image (GTK_BUTTON (wid), gtk_image_new_from_stock (stock, GTK_ICON_SIZE_MENU));
+		gtk_button_set_image (GTK_BUTTON (wid), gtk_image_new_from_icon_name (stock, GTK_ICON_SIZE_BUTTON));
 		gtk_button_set_use_underline (GTK_BUTTON (wid), TRUE);
 		if (box)
 			gtk_container_add (GTK_CONTAINER (box), wid);
 	}
 	else
 	{
-		bbox = gtk_hbox_new (0, 0);
+		bbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
 		gtk_container_add (GTK_CONTAINER (wid), bbox);
 		gtk_widget_show (bbox);
 
-		img = gtk_image_new_from_stock (stock, GTK_ICON_SIZE_MENU);
+		img = gtk_image_new_from_icon_name (stock, GTK_ICON_SIZE_BUTTON);
 		gtk_container_add (GTK_CONTAINER (bbox), img);
 		gtk_widget_show (img);
 		gtk_box_pack_start (GTK_BOX (box), wid, 0, 0, 0);

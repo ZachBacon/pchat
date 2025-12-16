@@ -393,8 +393,7 @@ banlist_button_pressed (GtkWidget *wid, GdkEventButton *event, gpointer userdata
 			gtk_menu_shell_append (GTK_MENU_SHELL(menu), allitem);
 			gtk_widget_show_all (menu);
 
-			gtk_menu_popup (GTK_MENU(menu), NULL, NULL, NULL, NULL,
-							event->button, gtk_get_current_event_time ());
+			gtk_menu_popup_at_pointer (GTK_MENU(menu), (GdkEvent*)event);
 		}
 
 		return TRUE;
@@ -839,14 +838,14 @@ banlist_opengui (struct session *sess)
 	gtk_box_pack_end (GTK_BOX (vbox), bbox, 0, 0, 0);
 	gtk_widget_show (bbox);
 
-	banl->but_remove = gtkutil_button (bbox, GTK_STOCK_REMOVE, 0, banlist_unban, banl,
+	banl->but_remove = gtkutil_button (bbox, "_Remove", 0, banlist_unban, banl,
 	                _("Remove"));
-	banl->but_crop = gtkutil_button (bbox, GTK_STOCK_REMOVE, 0, banlist_crop, banl,
+	banl->but_crop = gtkutil_button (bbox, "_Remove", 0, banlist_crop, banl,
 	                _("Crop"));
-	banl->but_clear = gtkutil_button (bbox, GTK_STOCK_CLEAR, 0, banlist_clear, banl,
+	banl->but_clear = gtkutil_button (bbox, "_Clear", 0, banlist_clear, banl,
 	                _("Clear"));
 
-	banl->but_refresh = gtkutil_button (bbox, GTK_STOCK_REFRESH, 0, banlist_refresh, banl, _("Refresh"));
+	banl->but_refresh = gtkutil_button (bbox, "_Refresh", 0, banlist_refresh, banl, _("Refresh"));
 
 	banlist_do_refresh (banl);
 

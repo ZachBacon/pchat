@@ -342,8 +342,8 @@ fe_notify_ask (char *nick, char *networks)
 	char buf[256];
 
 	dialog = gtk_dialog_new_with_buttons (msg, NULL, 0,
-										GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-										GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+										"_Cancel", GTK_RESPONSE_REJECT,
+										"_OK", GTK_RESPONSE_ACCEPT,
 										NULL);
 	if (parent_window)
 		gtk_window_set_transient_for (GTK_WINDOW (dialog), GTK_WINDOW (parent_window));
@@ -411,13 +411,13 @@ notify_opengui (void)
 	view = notify_treeview_new (vbox);
 	g_object_set_data (G_OBJECT (notify_window), "view", view);
 
-	bbox = gtk_hbutton_box_new ();
+	bbox = gtk_button_box_new (GTK_ORIENTATION_HORIZONTAL);
 	gtk_button_box_set_layout (GTK_BUTTON_BOX (bbox), GTK_BUTTONBOX_SPREAD);
 	gtk_container_set_border_width (GTK_CONTAINER (bbox), 5);
 	gtk_box_pack_end (GTK_BOX (vbox), bbox, 0, 0, 0);
 	gtk_widget_show (bbox);
 
-	gtkutil_button (bbox, GTK_STOCK_NEW, 0, notify_add_clicked, 0,
+	gtkutil_button (bbox, "_New", 0, notify_add_clicked, 0,
 	                _("Add..."));
 
 	notify_button_remove =
