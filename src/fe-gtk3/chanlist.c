@@ -620,14 +620,12 @@ chanlist_button_cb (GtkTreeView *tree, GdkEventButton *event, server *serv)
 	g_object_unref (menu);
 	g_signal_connect (G_OBJECT (menu), "selection-done",
 							G_CALLBACK (chanlist_menu_destroy), NULL);
-	mg_create_icon_item (_("_Join Channel"), gtk_image_new_from_stock(GTK_STOCK_JUMP_TO, GTK_ICON_SIZE_MENU), menu,
-								chanlist_join, serv);
-	mg_create_icon_item (_("_Copy Channel Name"), gtk_image_new_from_stock(GTK_STOCK_COPY, GTK_ICON_SIZE_MENU), menu,
-								chanlist_copychannel, serv);
-	mg_create_icon_item (_("Copy _Topic Text"), gtk_image_new_from_stock(GTK_STOCK_COPY, GTK_ICON_SIZE_MENU), menu,
-								chanlist_copytopic, serv);
-
-	chan = chanlist_get_selected (serv, FALSE);
+	mg_create_icon_item (_("_Join Channel"), GTK_STOCK_JUMP_TO, menu,
+							chanlist_join, serv);
+	mg_create_icon_item (_("_Copy Channel Name"), GTK_STOCK_COPY, menu,
+							chanlist_copychannel, serv);
+	mg_create_icon_item (_("Copy _Topic Text"), GTK_STOCK_COPY, menu,
+							chanlist_copytopic, serv);
 	menu_addfavoritemenu (serv, menu, chan, FALSE);
 	g_free (chan);
 
@@ -790,19 +788,19 @@ chanlist_opengui (server *serv, int do_refresh)
 	gtk_table_attach (GTK_TABLE (table), wid, 3, 4, 3, 4,
 							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
 
-	wid = gtkutil_button (NULL, gtk_image_new_from_stock(GTK_STOCK_REFRESH, GTK_ICON_SIZE_MENU), 0, chanlist_refresh, serv,
-								 _("_Download List"));
+	wid = gtkutil_button (NULL, GTK_STOCK_REFRESH, 0, chanlist_refresh, serv,
+							 _("_Download List"));
 	serv->gui->chanlist_refresh = wid;
 	gtk_table_attach (GTK_TABLE (table), wid, 3, 4, 2, 3,
 							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
 
-	wid = gtkutil_button (NULL, gtk_image_new_from_stock(GTK_STOCK_SAVE_AS, GTK_ICON_SIZE_MENU), 0, chanlist_save, serv,
-								 _("Save _List..."));
+	wid = gtkutil_button (NULL, GTK_STOCK_SAVE_AS, 0, chanlist_save, serv,
+							 _("Save _List..."));
 	serv->gui->chanlist_savelist = wid;
 	gtk_table_attach (GTK_TABLE (table), wid, 3, 4, 1, 2,
 							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
 
-	wid = gtkutil_button (NULL, gtk_image_new_from_stock(GTK_STOCK_JUMP_TO, GTK_ICON_SIZE_MENU), 0, chanlist_join, serv,
+	wid = gtkutil_button (NULL, GTK_STOCK_JUMP_TO, 0, chanlist_join, serv,
 						 _("_Join Channel"));
 	serv->gui->chanlist_join = wid;
 	gtk_table_attach (GTK_TABLE (table), wid, 3, 4, 0, 1,

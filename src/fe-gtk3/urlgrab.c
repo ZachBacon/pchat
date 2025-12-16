@@ -208,11 +208,11 @@ url_opengui ()
 	gtk_box_pack_end (GTK_BOX (vbox), hbox, 0, 0, 0);
 	gtk_widget_show (hbox);
 
-	gtkutil_button (hbox, gtk_image_new_from_stock(GTK_STOCK_CLEAR, GTK_ICON_SIZE_MENU),
+	gtkutil_button (hbox, GTK_STOCK_CLEAR,
 						 _("Clear list"), url_button_clear, 0, _("Clear"));
-	gtkutil_button (hbox, gtk_image_new_from_stock(GTK_STOCK_COPY, GTK_ICON_SIZE_MENU),
+	gtkutil_button (hbox, GTK_STOCK_COPY,
 						 _("Copy selected URL"), url_button_copy, view, _("Copy"));
-	gtkutil_button (hbox, gtk_image_new_from_stock(GTK_STOCK_SAVE_AS, GTK_ICON_SIZE_MENU),
+	gtkutil_button (hbox, GTK_STOCK_SAVE_AS,
 						 _("Save list to a file"), url_button_save, 0, _("Save As..."));
 
 	gtk_widget_show (urlgrabberwindow);
