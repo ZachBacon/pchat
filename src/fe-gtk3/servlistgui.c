@@ -497,7 +497,7 @@ servlist_addnet_cb (GtkWidget *item, GtkTreeView *treeview)
 	ircnet *net;
 
 	net = servlist_net_add (_("New Network"), "", TRUE);
-	net->encoding = strdup (IRC_DEFAULT_CHARSET);
+	net->encoding = g_strdup (IRC_DEFAULT_CHARSET);
 	servlist_server_add (net, "newserver/6667");
 
 	store = (GtkListStore *)gtk_tree_view_get_model (treeview);
@@ -674,7 +674,7 @@ servlist_update_from_entry (char **str, GtkWidget *entry)
 	if (gtk_entry_get_text (GTK_ENTRY (entry))[0] == 0)
 		*str = NULL;
 	else
-		*str = strdup (gtk_entry_get_text (GTK_ENTRY (entry)));
+		*str = g_strdup (gtk_entry_get_text (GTK_ENTRY (entry)));
 }
 
 static void
@@ -1205,7 +1205,7 @@ servlist_celledit_cb (GtkCellRendererText *cell, gchar *arg1, gchar *arg2,
 		}
 
 		netname = net->name;
-		net->name = strdup (arg2);
+		net->name = g_strdup (arg2);
 		gtk_list_store_set (GTK_LIST_STORE (model), &iter, 0, net->name, -1);
 		free (netname);
 	}
@@ -1313,7 +1313,7 @@ servlist_sanitize_hostname (char *host)
 {
 	char *ret, *c, *e;
 
-	ret = strdup (host);
+	ret = g_strdup (host);
 
 	c = strchr  (ret, ':');
 	e = strrchr (ret, ':');
@@ -1512,7 +1512,7 @@ servlist_combo_cb (GtkEntry *entry, gpointer userdata)
 
 	if (selected_net->encoding)
 		free (selected_net->encoding);
-	selected_net->encoding = strdup (gtk_entry_get_text (entry));
+	selected_net->encoding = g_strdup (gtk_entry_get_text (entry));
 }
 
 /* Fills up the network's authentication type so that it's guaranteed to be either NULL or a valid value. */
