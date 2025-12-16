@@ -84,6 +84,7 @@ check_function_exists(memset HAVE_MEMSET)
 check_function_exists(strcasecmp HAVE_STRCASECMP)
 check_function_exists(strdup HAVE_STRDUP)
 check_function_exists(strtoul HAVE_STRTOUL)
+check_function_exists(memrchr HAVE_MEMRCHR)
 
 # Detect system
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
