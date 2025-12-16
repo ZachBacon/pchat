@@ -145,7 +145,7 @@ fe_dcc_send_filereq (struct session *sess, char *nick, int maxcps, int passive)
 
 	mdc = malloc (sizeof (*mdc));
 	mdc->sess = sess;
-	mdc->nick = strdup (nick);
+	mdc->nick = g_strdup (nick);
 	mdc->maxcps = maxcps;
 	mdc->passive = passive;
 
