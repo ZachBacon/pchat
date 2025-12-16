@@ -224,7 +224,7 @@ fe_args (int argc, char *argv[])
 	/* cuts can. So we have to set the current dir manually, to the path  */
 	/* of the exe. */
 	{
-		char *tmp = strdup (argv[0]);
+		char *tmp = g_strdup (argv[0]);
 		char *sl;
 
 		sl = strrchr (tmp, G_DIR_SEPARATOR);
@@ -508,11 +508,11 @@ fe_set_topic (session *sess, char *topic, char *stripped_topic)
 
 		if (prefs.pchat_text_stripcolor_topic)
 		{
-			sess->res->topic_text = strdup (stripped_topic);
+			sess->res->topic_text = g_strdup (stripped_topic);
 		}
 		else
 		{
-			sess->res->topic_text = strdup (topic);
+			sess->res->topic_text = g_strdup (topic);
 		}
 	}
 }
@@ -540,7 +540,7 @@ fe_update_mode_entry (session *sess, GtkWidget *entry, char **text, char *new_te
 		{
 			if (*text)
 				free (*text);
-			*text = strdup (new_text);
+			*text = g_strdup (new_text);
 		}
 	}
 }
@@ -711,7 +711,7 @@ fe_lastlog (session *sess, session *lastlog_sess, char *sstr, gtk_xtext_search_f
 		lbuf->search_lnee = strlen (lbuf->search_nee);
 	}
 	lbuf->search_flags = flags;
-	lbuf->search_text = strdup (sstr);
+	lbuf->search_text = g_strdup (sstr);
 	gtk_xtext_lastlog (lbuf, buf);
 }
 
@@ -753,7 +753,7 @@ fe_set_lag (server *serv, long lag)
 		{
 			if (sess->res->lag_tip)
 				free (sess->res->lag_tip);
-			sess->res->lag_tip = strdup (lagtip);
+			sess->res->lag_tip = g_strdup (lagtip);
 
 			if (!sess->gui->is_tab || current_tab == sess)
 			{
@@ -769,7 +769,7 @@ fe_set_lag (server *serv, long lag)
 				sess->res->lag_value = per;
 				if (sess->res->lag_text)
 					free (sess->res->lag_text);
-				sess->res->lag_text = strdup (lagtext);
+				sess->res->lag_text = g_strdup (lagtext);
 			}
 		}
 		list = list->next;
@@ -799,7 +799,7 @@ fe_set_throttle (server *serv)
 
 			if (sess->res->queue_tip)
 				free (sess->res->queue_tip);
-			sess->res->queue_tip = strdup (tip);
+			sess->res->queue_tip = g_strdup (tip);
 
 			if (!sess->gui->is_tab || current_tab == sess)
 			{
@@ -815,7 +815,7 @@ fe_set_throttle (server *serv)
 				sess->res->queue_value = per;
 				if (sess->res->queue_text)
 					free (sess->res->queue_text);
-				sess->res->queue_text = strdup (tbuf);
+				sess->res->queue_text = g_strdup (tbuf);
 			}
 		}
 		list = list->next;
@@ -970,7 +970,7 @@ fe_set_inputbox_contents (session *sess, char *text)
 	{
 		if (sess->res->input_text)
 			free (sess->res->input_text);
-		sess->res->input_text = strdup (text);
+		sess->res->input_text = g_strdup (text);
 	}
 }
 
