@@ -6,6 +6,7 @@
 #include <config.h>
 #endif
 
+#include <glib.h>
 #include "pchat-platform-support.h"
 
 char *
