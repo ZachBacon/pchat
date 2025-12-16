@@ -1,0 +1,137 @@
+cmake_minimum_required(VERSION 3.12)
+project(pchat VERSION 1.5.4 LANGUAGES C)
+
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
+# Options
+option(ENABLE_IPV6 "Enable IPv6 support" ON)
+option(ENABLE_OPENSSL "Enable OpenSSL support" ON)
+option(ENABLE_GTKFE "Build GTK3 frontend" ON)
+option(ENABLE_TEXTFE "Build text frontend" OFF)
+option(ENABLE_PYTHON "Build Python plugin" OFF)
+option(ENABLE_PERL "Build Perl plugin" OFF)
+option(ENABLE_PLUGIN "Enable plugin support" ON)
+option(ENABLE_DBUS "Enable D-Bus support" ON)
+option(ENABLE_LIBNOTIFY "Enable libnotify support" ON)
+option(ENABLE_LIBCANBERRA "Enable libcanberra support" ON)
+option(ENABLE_LIBPROXY "Enable libproxy support" OFF)
+
+# Find required packages
+find_package(PkgConfig REQUIRED)
+
+# GLib and GTK
+pkg_check_modules(GLIB REQUIRED glib-2.0>=2.34.0 gobject-2.0 gmodule-2.0 gio-2.0)
+
+if(ENABLE_GTKFE)
+    pkg_check_modules(GTK3 REQUIRED gtk+-3.0>=3.10.0)
+endif()
+
+# Optional dependencies
+if(ENABLE_OPENSSL)
+    find_package(OpenSSL REQUIRED)
+    set(USE_OPENSSL 1)
+endif()
+
+if(ENABLE_DBUS)
+    pkg_check_modules(DBUS dbus-1>=0.60 dbus-glib-1>=0.70)
+    if(DBUS_FOUND)
+        set(USE_DBUS 1)
+    endif()
+endif()
+
+if(ENABLE_LIBNOTIFY)
+    pkg_check_modules(LIBNOTIFY libnotify>=0.4)
+    if(LIBNOTIFY_FOUND)
+        set(USE_LIBNOTIFY 1)
+    endif()
+endif()
+
+if(ENABLE_LIBCANBERRA)
+    pkg_check_modules(LIBCANBERRA libcanberra>=0.22)
+    if(LIBCANBERRA_FOUND)
+        set(USE_LIBCANBERRA 1)
+    endif()
+endif()
+
+if(ENABLE_LIBPROXY)
+    pkg_check_modules(LIBPROXY libproxy-1.0)
+    if(LIBPROXY_FOUND)
+        set(USE_LIBPROXY 1)
+    endif()
+endif()
+
+# Gettext
+find_package(Gettext REQUIRED)
+set(GETTEXT_PACKAGE "pchat")
+
+# System checks
+include(CheckIncludeFile)
+include(CheckFunctionExists)
+include(CheckSymbolExists)
+
+check_include_file(sys/types.h HAVE_SYS_TYPES_H)
+check_include_file(sys/stat.h HAVE_SYS_STAT_H)
+check_include_file(stdlib.h HAVE_STDLIB_H)
+check_include_file(string.h HAVE_STRING_H)
+check_include_file(memory.h HAVE_MEMORY_H)
+check_include_file(strings.h HAVE_STRINGS_H)
+check_include_file(inttypes.h HAVE_INTTYPES_H)
+check_include_file(stdint.h HAVE_STDINT_H)
+check_include_file(unistd.h HAVE_UNISTD_H)
+
+check_function_exists(memset HAVE_MEMSET)
+check_function_exists(strcasecmp HAVE_STRCASECMP)
+check_function_exists(strdup HAVE_STRDUP)
+check_function_exists(strtoul HAVE_STRTOUL)
+
+# Detect system
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(USING_LINUX 1)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+    set(USING_FREEBSD 1)
+endif()
+
+if(WIN32)
+    set(OS_W32 1)
+endif()
+
+if(ENABLE_IPV6)
+    set(USE_IPV6 1)
+endif()
+
+if(ENABLE_PLUGIN)
+    set(USE_PLUGIN 1)
+    set(USE_GMODULE 1)
+endif()
+
+# Installation directories
+include(GNUInstallDirs)
+set(PCHAT_LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}/pchat")
+set(PCHAT_SHAREDIR "${CMAKE_INSTALL_FULL_DATADIR}/pchat")
+
+# Configure config.h
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+# Subdirectories
+add_subdirectory(po)
+add_subdirectory(src)
+add_subdirectory(data)
+
+if(ENABLE_PLUGIN)
+    add_subdirectory(plugins)
+endif()
+
+# Summary
+message(STATUS "")
+message(STATUS "PChat ${PROJECT_VERSION} configuration summary:")
+message(STATUS "")
+message(STATUS "  Installation prefix: ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "  IPv6 support: ${ENABLE_IPV6}")
+message(STATUS "  OpenSSL support: ${ENABLE_OPENSSL}")
+message(STATUS "  GTK3 frontend: ${ENABLE_GTKFE}")
+message(STATUS "  Text frontend: ${ENABLE_TEXTFE}")
+message(STATUS "  Plugin support: ${ENABLE_PLUGIN}")
+message(STATUS "  D-Bus support: ${ENABLE_DBUS}")
+message(STATUS "")

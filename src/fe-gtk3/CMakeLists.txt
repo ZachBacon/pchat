@@ -1,0 +1,121 @@
+# GTK3 frontend executable
+add_executable(pchat
+    ascii.c
+    banlist.c
+    chanlist.c
+    chanview.c
+    custom-list.c
+    dccgui.c
+    editlist.c
+    fe-gtk.c
+    fkeys.c
+    gtkutil.c
+    ignoregui.c
+    joind.c
+    menu.c
+    maingui.c
+    notifygui.c
+    palette.c
+    pixmaps.c
+    plugin-tray.c
+    rawlog.c
+    servlistgui.c
+    setup.c
+    sexy-spell-entry.c
+    textgui.c
+    urlgrab.c
+    userlistgui.c
+    xtext.c
+)
+
+# Windows resource file
+if(WIN32)
+    # Convert version to comma-separated format (e.g., "1.5.4" -> "1,5,4")
+    string(REPLACE "." "," VERSION_COMMAS "${PROJECT_VERSION}")
+    
+    # Configure the resource file
+    configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/pchat.rc.in
+        ${CMAKE_CURRENT_BINARY_DIR}/pchat.rc
+        @ONLY
+    )
+    
+    # Add resource file to executable
+    target_sources(pchat PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/pchat.rc)
+endif()
+
+# Plugin GUI (optional)
+if(ENABLE_PLUGIN)
+    target_sources(pchat PRIVATE plugingui.c)
+endif()
+
+# ISO codes support (optional)
+pkg_check_modules(ISO_CODES iso-codes)
+if(ISO_CODES_FOUND)
+    target_sources(pchat PRIVATE sexy-iso-codes.c)
+    # Get ISO codes prefix from pkg-config
+    execute_process(
+        COMMAND ${PKG_CONFIG_EXECUTABLE} --variable=prefix iso-codes
+        OUTPUT_VARIABLE ISO_CODES_PREFIX
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    target_compile_definitions(pchat PRIVATE 
+        HAVE_ISO_CODES=1
+        ISO_CODES_PREFIX="${ISO_CODES_PREFIX}"
+    )
+endif()
+
+# Generate resources
+find_program(GLIB_COMPILE_RESOURCES glib-compile-resources REQUIRED)
+
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/resources.c
+    COMMAND ${GLIB_COMPILE_RESOURCES}
+        --target=${CMAKE_CURRENT_BINARY_DIR}/resources.c
+        --sourcedir=${CMAKE_SOURCE_DIR}/data
+        --generate-source
+        ${CMAKE_SOURCE_DIR}/data/pchat.gresource.xml
+    DEPENDS ${CMAKE_SOURCE_DIR}/data/pchat.gresource.xml
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+target_sources(pchat PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/resources.c)
+
+# Include directories
+target_include_directories(pchat PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/common
+    ${CMAKE_BINARY_DIR}/src/common
+    ${GTK3_INCLUDE_DIRS}
+    ${GLIB_INCLUDE_DIRS}
+)
+
+# Compiler definitions
+target_compile_definitions(pchat PRIVATE
+    HAVE_CONFIG_H
+    LOCALEDIR="${CMAKE_INSTALL_FULL_LOCALEDIR}"
+)
+
+# Link libraries
+target_link_libraries(pchat PRIVATE
+    pchatcommon
+    ${GTK3_LIBRARIES}
+    ${GLIB_LIBRARIES}
+)
+
+if(LIBNOTIFY_FOUND)
+    target_include_directories(pchat PRIVATE ${LIBNOTIFY_INCLUDE_DIRS})
+    target_link_libraries(pchat PRIVATE ${LIBNOTIFY_LIBRARIES})
+endif()
+
+if(LIBCANBERRA_FOUND)
+    target_include_directories(pchat PRIVATE ${LIBCANBERRA_INCLUDE_DIRS})
+    target_link_libraries(pchat PRIVATE ${LIBCANBERRA_LIBRARIES})
+endif()
+
+# Windows resource file
+if(WIN32)
+    # TODO: Add Windows resource compilation if needed
+endif()
+
+# Installation
+install(TARGETS pchat DESTINATION ${CMAKE_INSTALL_BINDIR})
