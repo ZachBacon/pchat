@@ -127,7 +127,7 @@ palette_load (void)
 	char prefname[256];
 	struct stat st;
 	char *cfg;
-	int red, green, blue;
+	guint16 red, green, blue;
 	int upgrade = FALSE;
 
 	fh = xchat_open_file ("colors.conf", O_RDONLY, 0, 0);
