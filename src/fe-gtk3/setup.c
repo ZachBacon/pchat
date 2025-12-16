@@ -825,7 +825,7 @@ static gint
 setup_apply_trans (int *tag)
 {
 	prefs.pchat_gui_transparency = setup_prefs.pchat_gui_transparency;
-	gtk_widget_set_opacity (GTK_WINDOW (current_sess->gui->window),
+	gtk_widget_set_opacity (GTK_WIDGET (current_sess->gui->window),
 							(prefs.pchat_gui_transparency / 255.));
 
 	/* mg_update_xtext (current_sess->gui->xtext); */
