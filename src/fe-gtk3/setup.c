@@ -1369,6 +1369,8 @@ setup_create_page (const setting *set)
 	return box;
 }
 
+#if 0
+/* No longer needed - color selection now uses gtk_dialog_run */
 static void
 setup_color_ok_cb (GtkWidget *button, GtkWidget *dialog)
 {
@@ -1406,37 +1408,51 @@ setup_color_ok_cb (GtkWidget *button, GtkWidget *dialog)
 
 	gtk_widget_destroy (dialog);
 }
+#endif
+
+static void
+setup_update_color_button (GtkWidget *button, GdkRGBA *color)
+{
+	GtkCssProvider *provider;
+	GtkStyleContext *context;
+	gchar *css;
+
+	css = g_strdup_printf ("button { background-color: rgb(%d,%d,%d); }",
+		(int)(color->red * 255),
+		(int)(color->green * 255),
+		(int)(color->blue * 255));
+
+	provider = gtk_css_provider_new ();
+	gtk_css_provider_load_from_data (provider, css, -1, NULL);
+	g_free (css);
+
+	context = gtk_widget_get_style_context (button);
+	gtk_style_context_add_provider (context, GTK_STYLE_PROVIDER (provider),
+		GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+	g_object_unref (provider);
+}
 
 static void
 setup_color_cb (GtkWidget *button, gpointer userdata)
 {
-	GtkWidget *dialog, *cancel_button, *ok_button, *help_button;
-	GtkColorSelectionDialog *cdialog;
+	GtkWidget *dialog;
 	GdkRGBA *color;
+	int response;
 
 	color = &colors[GPOINTER_TO_INT (userdata)];
 
-	dialog = gtk_color_selection_dialog_new (_("Select color"));
-	cdialog = GTK_COLOR_SELECTION_DIALOG (dialog);
+	dialog = gtk_color_chooser_dialog_new (_("Select color"), GTK_WINDOW (current_sess->gui->window));
+	gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog), color);
 
-	g_object_get (G_OBJECT(cdialog), "cancel-button", &cancel_button,
-									"ok-button", &ok_button,
-									"help-button", &help_button, NULL);
+	response = gtk_dialog_run (GTK_DIALOG (dialog));
+	if (response == GTK_RESPONSE_OK)
+	{
+		gtk_color_chooser_get_rgba (GTK_COLOR_CHOOSER (dialog), color);
+		color_change = TRUE;
+		setup_update_color_button (button, color);
+	}
 
-	gtk_widget_hide (help_button);
-	g_signal_connect (G_OBJECT (ok_button), "clicked",
-							G_CALLBACK (setup_color_ok_cb), dialog);
-	g_signal_connect (G_OBJECT (cancel_button), "clicked",
-							G_CALLBACK (gtkutil_destroy), dialog);
-	g_object_set_data (G_OBJECT (ok_button), "c", color);
-	g_object_set_data (G_OBJECT (ok_button), "b", button);
-	gtk_widget_set_sensitive (help_button, FALSE);
-	gtk_color_selection_set_current_color (GTK_COLOR_SELECTION (gtk_color_selection_dialog_get_color_selection (cdialog)), color);
-	gtk_widget_show (dialog);
-
-	g_object_unref (cancel_button);
-	g_object_unref (ok_button);
-	g_object_unref (help_button);
+	gtk_widget_destroy (dialog);
 }
 
 static void
@@ -1999,9 +2015,31 @@ setup_create_tree (GtkWidget *box, GtkWidget *book)
 static void
 setup_apply_entry_style (GtkWidget *entry)
 {
-	gtk_widget_modify_base (entry, GTK_STATE_NORMAL, &colors[COL_BG]);
-	gtk_widget_modify_text (entry, GTK_STATE_NORMAL, &colors[COL_FG]);
-	gtk_widget_modify_font (entry, input_style->font_desc);
+	GtkCssProvider *provider;
+	GtkStyleContext *context;
+	gchar *css;
+
+	/* Use CSS for colors in GTK3 */
+	css = g_strdup_printf ("* { background-color: rgba(%d,%d,%d,%.2f); color: rgba(%d,%d,%d,%.2f); }",
+		(int)(colors[COL_BG].red * 255),
+		(int)(colors[COL_BG].green * 255),
+		(int)(colors[COL_BG].blue * 255),
+		colors[COL_BG].alpha,
+		(int)(colors[COL_FG].red * 255),
+		(int)(colors[COL_FG].green * 255),
+		(int)(colors[COL_FG].blue * 255),
+		colors[COL_FG].alpha);
+
+	provider = gtk_css_provider_new ();
+	gtk_css_provider_load_from_data (provider, css, -1, NULL);
+	g_free (css);
+
+	context = gtk_widget_get_style_context (entry);
+	gtk_style_context_add_provider (context, GTK_STYLE_PROVIDER (provider),
+		GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+	g_object_unref (provider);
+
+	gtk_widget_override_font (entry, input_style->font_desc);
 }
 
 static void
