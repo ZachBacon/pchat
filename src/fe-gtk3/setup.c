@@ -1373,9 +1373,9 @@ static void
 setup_color_ok_cb (GtkWidget *button, GtkWidget *dialog)
 {
 	GtkColorSelectionDialog *cdialog = GTK_COLOR_SELECTION_DIALOG (dialog);
-	GdkColor *col;
-	GdkColor old_color;
-	GtkStyle *style;
+	GdkRGBA *col;
+	GdkRGBA old_color;
+	/* GtkStyle *style; */  /* Unused - deprecated GtkStyle code is disabled */
 
 	col = g_object_get_data (G_OBJECT (button), "c");
 	old_color = *col;
@@ -1412,7 +1412,7 @@ setup_color_cb (GtkWidget *button, gpointer userdata)
 {
 	GtkWidget *dialog, *cancel_button, *ok_button, *help_button;
 	GtkColorSelectionDialog *cdialog;
-	GdkColor *color;
+	GdkRGBA *color;
 
 	color = &colors[GPOINTER_TO_INT (userdata)];
 
@@ -1443,7 +1443,7 @@ static void
 setup_create_color_button (GtkWidget *table, int num, int row, int col)
 {
 	GtkWidget *but;
-	GtkStyle *style;
+	/* GtkStyle *style; */  /* Unused - GtkStyle is deprecated in GTK3 */
 	char buf[64];
 
 	if (num > 31)
@@ -1459,10 +1459,11 @@ setup_create_color_button (GtkWidget *table, int num, int row, int col)
 							GTK_SHRINK | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
 	g_signal_connect (G_OBJECT (but), "clicked",
 							G_CALLBACK (setup_color_cb), GINT_TO_POINTER (num));
-	style = gtk_style_new ();
+	/* GtkStyle is deprecated in GTK3, skip setting colors via GtkStyle */
+	/* style = gtk_style_new ();
 	style->bg[GTK_STATE_NORMAL] = colors[num];
 	gtk_widget_set_style (but, style);
-	g_object_unref (style);
+	g_object_unref (style); */
 }
 
 static void
@@ -2016,12 +2017,9 @@ setup_apply_to_sess (session_gui *gui)
 		extern char cursor_color_rc[];
 		char buf[256];
 		sprintf (buf, cursor_color_rc,
-				(colors[COL_FG].red >> 8),
-				(colors[COL_FG].green >> 8),
-				(colors[COL_FG].blue >> 8));
-		gtk_rc_parse_string (buf);
-
-		setup_apply_entry_style (gui->input_box);
+			(int)(colors[COL_FG].red * 255),
+			(int)(colors[COL_FG].green * 255),
+			(int)(colors[COL_FG].blue * 255));
 		setup_apply_entry_style (gui->limit_entry);
 		setup_apply_entry_style (gui->key_entry);
 		setup_apply_entry_style (gui->topic_entry);

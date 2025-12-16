@@ -20,7 +20,7 @@
 #ifndef HEXCHAT_PALETTE_H
 #define HEXCHAT_PALETTE_H
 
-extern GdkColor colors[];
+extern GdkRGBA colors[];
 
 #define COL_MARK_FG 32
 #define COL_MARK_BG 33

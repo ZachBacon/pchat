@@ -141,7 +141,7 @@ fe_args (int argc, char *argv[])
 		{
 			if (strstr (error->message, "--help-all") != NULL)
 			{
-				buffer = g_strdup_printf (g_option_context_get_help (context, FALSE, NULL));
+				buffer = g_strdup_printf ("%s", g_option_context_get_help (context, FALSE, NULL));
 				gtk_init (&argc, &argv);
 				create_msg_dialog ("Long Help", buffer);
 				g_free (buffer);
@@ -149,7 +149,7 @@ fe_args (int argc, char *argv[])
 			}
 			else if (strstr (error->message, "--help") != NULL || strstr (error->message, "-?") != NULL)
 			{
-				buffer = g_strdup_printf (g_option_context_get_help (context, TRUE, NULL));
+				buffer = g_strdup_printf ("%s", g_option_context_get_help (context, TRUE, NULL));
 				gtk_init (&argc, &argv);
 				create_msg_dialog ("Help", buffer);
 				g_free (buffer);
@@ -274,14 +274,17 @@ create_input_style (GtkStyle *style)
 	if (prefs.pchat_gui_input_style && !done_rc)
 	{
 		done_rc = TRUE;
-		sprintf (buf, cursor_color_rc, (colors[COL_FG].red >> 8),
-			(colors[COL_FG].green >> 8), (colors[COL_FG].blue >> 8));
+		sprintf (buf, cursor_color_rc, (int)(colors[COL_FG].red * 255),
+			(int)(colors[COL_FG].green * 255), (int)(colors[COL_FG].blue * 255));
 		gtk_rc_parse_string (buf);
 	}
 
-	style->bg[GTK_STATE_NORMAL] = colors[COL_FG];
-	style->base[GTK_STATE_NORMAL] = colors[COL_BG];
-	style->text[GTK_STATE_NORMAL] = colors[COL_FG];
+	/* Note: GtkStyle color fields are GdkColor, but we now use GdkRGBA.
+	 * Since GtkStyle is deprecated in GTK3, we skip setting these colors.
+	 * The widget styling should be handled via CSS or GtkStyleContext. */
+	/* style->bg[GTK_STATE_NORMAL] = colors[COL_FG]; */
+	/* style->base[GTK_STATE_NORMAL] = colors[COL_BG]; */
+	/* style->text[GTK_STATE_NORMAL] = colors[COL_FG]; */
 
 	return style;
 }

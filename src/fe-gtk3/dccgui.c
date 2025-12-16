@@ -50,7 +50,7 @@ enum	/* DCC SEND/RECV */
 	COL_ETA,
 	COL_NICK,
 	COL_DCC, /* struct DCC * */
-	COL_COLOR,	/* GdkColor */
+	COL_COLOR,	/* GdkRGBA */
 	N_COLUMNS
 };
 
@@ -62,7 +62,7 @@ enum	/* DCC CHAT */
 	CCOL_SENT,
 	CCOL_START,
 	CCOL_DCC,	/* struct DCC * */
-	CCOL_COLOR,	/* GdkColor * */
+	CCOL_COLOR,	/* GdkRGBA * */
 	CN_COLUMNS
 };
 
@@ -728,7 +728,7 @@ dcc_add_column (GtkWidget *tree, int textcol, int colorcol, char *title, gboolea
 	if (right_justified)
 		g_object_set (G_OBJECT (renderer), "xalign", (float) 1.0, NULL);
 	gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (tree), -1, title, renderer,
-																"text", textcol, "foreground-gdk", colorcol,
+																"text", textcol, "foreground-rgba", colorcol,
 																NULL);
 	gtk_cell_renderer_text_set_fixed_height_from_font (GTK_CELL_RENDERER_TEXT (renderer), 1);
 }

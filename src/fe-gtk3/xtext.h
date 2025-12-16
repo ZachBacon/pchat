@@ -134,9 +134,9 @@ struct _GtkXText
 	int last_win_h;
 	int last_win_w;
 
-	GdkColor bgc;						  /* text background color */
-	GdkColor fgc;						  /* text foreground color */
-	GdkColor palette[XTEXT_COLS];
+	GdkRGBA bgc;						  /* text background color */
+	GdkRGBA fgc;						  /* text foreground color */
+	GdkRGBA palette[XTEXT_COLS];
 
 	gint io_tag;					  /* for delayed refresh events */
 	gint add_io_tag;				  /* "" when adding new text */
@@ -192,6 +192,7 @@ struct _GtkXText
 	int clip_y2;		/* from y to y2 */
 
 	cairo_pattern_t *bg_pattern;
+	cairo_t *draw_cr;	/* cairo context for draw callback */
 
 	/* current text states */
 	unsigned int underline:1;
@@ -238,7 +239,7 @@ struct _GtkXTextClass
 	void (*set_scroll_adjustments) (GtkXText *xtext, GtkAdjustment *hadj, GtkAdjustment *vadj);
 };
 
-GtkWidget *gtk_xtext_new (GdkColor palette[], int separator);
+GtkWidget *gtk_xtext_new (GdkRGBA palette[], int separator);
 void gtk_xtext_append (xtext_buffer *buf, unsigned char *text, int len);
 void gtk_xtext_append_indent (xtext_buffer *buf,
 										unsigned char *left_text, int left_len,
@@ -246,7 +247,7 @@ void gtk_xtext_append_indent (xtext_buffer *buf,
 										time_t stamp);
 int gtk_xtext_set_font (GtkXText *xtext, char *name);
 void gtk_xtext_set_background (GtkXText * xtext, GdkPixbuf * pixbuf);
-void gtk_xtext_set_palette (GtkXText * xtext, GdkColor palette[]);
+void gtk_xtext_set_palette (GtkXText * xtext, GdkRGBA palette[]);
 void gtk_xtext_clear (xtext_buffer *buf, int lines);
 void gtk_xtext_save (GtkXText * xtext, int fh);
 void gtk_xtext_refresh (GtkXText * xtext);
