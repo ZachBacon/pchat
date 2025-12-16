@@ -33,6 +33,7 @@
 #ifndef HEXCHAT_UTIL_H
 #define HEXCHAT_UTIL_H
 
+#include <glib.h>
 
 #define rfc_tolower(c) (rfc_tolowertab[(unsigned char)(c)])
 

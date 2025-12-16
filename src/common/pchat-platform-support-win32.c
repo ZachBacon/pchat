@@ -1,5 +1,6 @@
 #include "pchat-platform-support.h"
 
+#include <glib.h>
 //#include <gio/gwin32inputstream.h>
 
 #define SAVE_DATADIR DATADIR

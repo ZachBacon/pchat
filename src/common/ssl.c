@@ -30,7 +30,8 @@
 #endif
 #include <time.h>				  /* asctime() */
 #include <string.h>				  /* strncpy() */
-#include "ssl.h"				  /* struct cert_info */
+#include "ssl.h"
+#include "util.h"				  /* struct cert_info */
 
 #ifndef HAVE_SNPRINTF
 #include <glib.h>
@@ -73,9 +74,6 @@ SSL_CTX *
 _SSL_context_init (void (*info_cb_func))
 {
 	SSL_CTX *ctx;
-#ifdef _WIN32
-	int i, r;
-#endif
 
 	SSLeay_add_ssl_algorithms ();
 	SSL_load_error_strings ();
@@ -155,14 +153,13 @@ _SSL_get_cert_info (struct cert_info *cert_info, SSL * ssl)
 	broke_oneline (cert_info->subject, cert_info->subject_word);
 	broke_oneline (cert_info->issuer, cert_info->issuer_word);
 
-	alg = OBJ_obj2nid (peer_cert->cert_info->key->algor->algorithm);
-	sign_alg = OBJ_obj2nid (peer_cert->sig_alg->algorithm);
+	peer_pkey = X509_get_pubkey (peer_cert);
+	alg = peer_pkey ? EVP_PKEY_base_id (peer_pkey) : NID_undef;
+	sign_alg = X509_get_signature_nid (peer_cert);
 	ASN1_TIME_snprintf (notBefore, sizeof (notBefore),
 							  X509_get_notBefore (peer_cert));
 	ASN1_TIME_snprintf (notAfter, sizeof (notAfter),
 							  X509_get_notAfter (peer_cert));
-
-	peer_pkey = X509_get_pubkey (peer_cert);
 
 	safe_strcpy (cert_info->algorithm,
 				(alg == NID_undef) ? "Unknown" : OBJ_nid2ln (alg),
@@ -281,10 +278,8 @@ _SSL_socket (SSL_CTX *ctx, int sd)
 		__SSL_critical_error ("SSL_new");
 
 	SSL_set_fd (ssl, sd);
-	if (ctx->method == SSLv23_client_method())
-		SSL_set_connect_state (ssl);
-	else
-	        SSL_set_accept_state(ssl);
+	/* Assume client mode by default */
+	SSL_set_connect_state (ssl);
 
 	return (ssl);
 }
@@ -319,5 +314,5 @@ _SSL_close (SSL * ssl)
 {
 	SSL_set_shutdown (ssl, SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN);
 	SSL_free (ssl);
-	ERR_remove_state (0);		  /* free state buffer */
+	/* Error state cleanup is automatic in OpenSSL 1.1.0+ */
 }

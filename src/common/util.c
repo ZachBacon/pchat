@@ -1450,11 +1450,12 @@ make_ping_time (void)
 #ifndef _WIN32
 	struct timeval timev;
 	gettimeofday (&timev, 0);
-#else
-	GTimeVal timev;
-	g_get_current_time (&timev);
-#endif
 	return (timev.tv_sec - 50000) * 1000 + timev.tv_usec/1000;
+#else
+	/* g_get_real_time() returns microseconds since epoch */
+	gint64 now = g_get_real_time ();
+	return (now / 1000000 - 50000) * 1000 + (now % 1000000) / 1000;
+#endif
 }
 
 
@@ -1999,22 +2000,31 @@ parse_dh (char *str, DH **dh_out, unsigned char **secret_out, int *keysize_out)
 	if (size > data_len)
 		goto fail;
 
-	dh->p = BN_bin2bn (data, size, NULL);
-	data += size;
+	{
+		BIGNUM *p = BN_bin2bn (data, size, NULL);
+		data += size;
 
-	/* Generator */
-	if (data_len < 2)
-		goto fail;
+		/* Generator */
+		if (data_len < 2)
+		{
+			BN_free (p);
+			goto fail;
+		}
 
-	memcpy (&size16, data, sizeof(size16));
-	size = ntohs (size16);
-	data += 2;
-	data_len -= 2;
+		memcpy (&size16, data, sizeof(size16));
+		size = ntohs (size16);
+		data += 2;
+		data_len -= 2;
 
-	if (size > data_len)
-		goto fail;
+		if (size > data_len)
+		{
+			BN_free (p);
+			goto fail;
+		}
 
-	dh->g = BN_bin2bn (data, size, NULL);
+		BIGNUM *g = BN_bin2bn (data, size, NULL);
+		DH_set0_pqg (dh, p, NULL, g);
+	}
 	data += size;
 
 	/* pub key */
@@ -2079,16 +2089,18 @@ encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 		BF_ecb_encrypt ((unsigned char*)in_ptr, (unsigned char*)out_ptr, &key, BF_ENCRYPT);
 
 	/* Create response */
-	length = 2 + BN_num_bytes (dh->pub_key) + pass_len + user_len + 1;
+	const BIGNUM *dh_pub_key;
+	DH_get0_key (dh, &dh_pub_key, NULL);
+	length = 2 + BN_num_bytes (dh_pub_key) + pass_len + user_len + 1;
 	response = (char*)malloc (length);
 	out_ptr = response;
 
 	/* our key */
-	size16 = htons ((guint16)BN_num_bytes (dh->pub_key));
+	size16 = htons ((guint16)BN_num_bytes (dh_pub_key));
 	memcpy (out_ptr, &size16, sizeof(size16));
 	out_ptr += 2;
-	BN_bn2bin (dh->pub_key, (guchar*)out_ptr);
-	out_ptr += BN_num_bytes (dh->pub_key);
+	BN_bn2bin (dh_pub_key, (guchar*)out_ptr);
+	out_ptr += BN_num_bytes (dh_pub_key);
 
 	/* username */
 	memcpy (out_ptr, user, user_len + 1);
@@ -2167,10 +2179,12 @@ encode_sasl_pass_aes (char *user, char *pass, char *data)
 	out_ptr = response;
 
 	/* our key */
+	const BIGNUM *dh_pub_key;
+	DH_get0_key (dh, &dh_pub_key, NULL);
 	size16 = htons ((guint16)key_size);
 	memcpy (out_ptr, &size16, sizeof(size16));
 	out_ptr += 2;
-	BN_bn2bin (dh->pub_key, (guchar*)out_ptr);
+	BN_bn2bin (dh_pub_key, (guchar*)out_ptr);
 	out_ptr += key_size;
 
 	/* iv */

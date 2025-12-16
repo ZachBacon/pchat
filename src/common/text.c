@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <glib.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -302,10 +303,8 @@ scrollback_load (session *sess)
 
 			if (buf[0] == 'T')
 			{
-				if (sizeof (time_t) == 4)
-					stamp = g_ascii_strtoul (buf + 2, NULL, 10);
-				else
-					stamp = g_ascii_strtoull (buf + 2, NULL, 10); /* in case time_t is 64 bits */
+				/* g_ascii_strtoul doesn't exist in modern GLib, use g_ascii_strtoull */
+				stamp = g_ascii_strtoull (buf + 2, NULL, 10);
 				text = strchr (buf + 3, ' ');
 				if (text)
 				{
