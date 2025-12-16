@@ -399,7 +399,7 @@ toggle_cb (GtkWidget *item, char *pref_name)
 static int
 is_in_path (char *cmd)
 {
-	char *prog = strdup (cmd + 1);	/* 1st char is "!" */
+	char *prog = g_strdup (cmd + 1);	/* 1st char is "!" */
 	char *space, *path, *orig;
 
 	orig = prog; /* save for free()ing */
@@ -721,7 +721,7 @@ menu_nickmenu (session *sess, GdkEventButton *event, char *nick, int num_sel)
 
 	if (str_copy)
 		free (str_copy);
-	str_copy = strdup (nick);
+	str_copy = g_strdup (nick);
 
 	submenu_list = 0;	/* first time through, might not be 0 */
 
@@ -938,13 +938,13 @@ menu_urlmenu (GdkEventButton *event, char *url)
 
 	if (str_copy)
 		free (str_copy);
-	str_copy = strdup (url);
+	str_copy = g_strdup (url);
 
 	menu = gtk_menu_new ();
 	/* more than 51 chars? Chop it */
 	if (g_utf8_strlen (str_copy, -1) >= 52)
 	{
-		tmp = strdup (str_copy);
+		tmp = g_strdup (str_copy);
 		chop = g_utf8_offset_to_pointer (tmp, 48);
 		chop[0] = chop[1] = chop[2] = '.';
 		chop[3] = 0;
@@ -1016,7 +1016,7 @@ menu_chanmenu (struct session *sess, GdkEventButton * event, char *chan)
 
 	if (str_copy)
 		free (str_copy);
-	str_copy = strdup (chan);
+	str_copy = g_strdup (chan);
 
 	menu = gtk_menu_new ();
 
@@ -1064,7 +1064,7 @@ menu_addfavoritemenu (server *serv, GtkWidget *menu, char *channel, gboolean ist
 	{
 		if (str_copy)
 			free (str_copy);
-		str_copy = strdup (channel);
+		str_copy = g_strdup (channel);
 	}
 
 	if (istree)
