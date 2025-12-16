@@ -40,7 +40,9 @@ endif()
 # OpenSSL support
 if(ENABLE_OPENSSL)
     target_sources(pchatcommon PRIVATE ssl.c)
-    target_link_libraries(pchatcommon PRIVATE OpenSSL::SSL OpenSSL::Crypto)
+    target_include_directories(pchatcommon PRIVATE ${OPENSSL_INCLUDE_DIRS})
+    target_link_libraries(pchatcommon PRIVATE ${OPENSSL_LIBRARIES})
+    target_link_directories(pchatcommon PRIVATE ${OPENSSL_LIBRARY_DIRS})
 endif()
 
 # Compile definitions

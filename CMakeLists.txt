@@ -29,8 +29,10 @@ endif()
 
 # Optional dependencies
 if(ENABLE_OPENSSL)
-    find_package(OpenSSL REQUIRED)
-    set(USE_OPENSSL 1)
+    pkg_check_modules(OPENSSL REQUIRED openssl)
+    if(OPENSSL_FOUND)
+        set(USE_OPENSSL 1)
+    endif()
 endif()
 
 if(ENABLE_DBUS)
