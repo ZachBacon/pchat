@@ -159,7 +159,7 @@ main (int argc, char **argv)
 	g_print ("Server hook id=%d\n", server_id);
 
 	dbus_g_object_register_marshaller (
-		_xchat_marshal_VOID__POINTER_POINTER_UINT_UINT,
+		_pchat_marshal_VOID__POINTER_POINTER_UINT_UINT,
 		G_TYPE_NONE,
 		G_TYPE_STRV, G_TYPE_STRV, G_TYPE_UINT, G_TYPE_UINT,
 		G_TYPE_INVALID);
