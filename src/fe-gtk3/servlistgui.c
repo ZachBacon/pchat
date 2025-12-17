@@ -969,7 +969,7 @@ servlist_savegui (void)
 		sp[0] = 0;	/* spaces will break the login */
 	/* strcpy (prefs.pchat_irc_real_name, gtk_entry_get_text (GTK_ENTRY (entry_greal))); */
 	servlist_save ();
-	save_config (); /* For nicks stored in xchat.conf */
+	save_config (); /* For nicks stored in pchat.conf */
 
 	return 0;
 }

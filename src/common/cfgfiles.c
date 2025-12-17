@@ -363,7 +363,7 @@ default_file (void)
 
 	if (!dfile)
 	{
-		dfile = g_build_filename (get_xdir (), "xchat.conf", NULL);
+		dfile = g_build_filename (get_xdir (), "pchat.conf", NULL);
 	}
 	return dfile;
 }

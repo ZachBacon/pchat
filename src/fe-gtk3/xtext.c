@@ -209,7 +209,10 @@ xtext_draw_bg (GtkXText *xtext, int x, int y, int width, int height)
 	cairo_rectangle(cr, x, y, width, height);
 
         cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-	cairo_set_source(cr, xtext->bg_pattern);
+	if (xtext->bg_pattern)
+		cairo_set_source(cr, xtext->bg_pattern);
+	else
+		gdk_cairo_set_source_rgba(cr, &xtext->bgc);
 
 	cairo_fill(cr);
 
@@ -2181,12 +2184,21 @@ static gboolean
 gtk_xtext_draw (GtkWidget *widget, cairo_t *cr)
 {
 	GtkXText *xtext = GTK_XTEXT (widget);
+	GtkAllocation allocation;
 	
 	if (!gtk_widget_get_realized (widget))
 		return FALSE;
 	
 	/* Store the cairo context for rendering functions to use */
 	xtext->draw_cr = cr;
+	
+	/* Fill the entire widget with background color */
+	gtk_widget_get_allocation (widget, &allocation);
+	if (xtext->bg_pattern)
+		cairo_set_source (cr, xtext->bg_pattern);
+	else
+		gdk_cairo_set_source_rgba (cr, &xtext->bgc);
+	cairo_paint (cr);
 	
 	/* Render the page content - this will handle backgrounds */
 	gtk_xtext_render_page (xtext);
