@@ -720,24 +720,34 @@ mg_set_topic_tip (session *sess)
 }
 
 static void
-mg_hide_empty_pane (GtkPaned *pane)
+mg_hide_empty_box (GtkBox *box)
 {
-	if ((gtk_paned_get_child1 (pane) == NULL || !gtk_widget_get_visible (gtk_paned_get_child1 (pane))) &&
-		(gtk_paned_get_child2 (pane) == NULL || !gtk_widget_get_visible (gtk_paned_get_child2 (pane))))
-	{
-		gtk_widget_hide (GTK_WIDGET (pane));
-		return;
-	}
+	GList *children, *iter;
+	gboolean has_visible = FALSE;
 
-	gtk_widget_show (GTK_WIDGET (pane));
+	children = gtk_container_get_children (GTK_CONTAINER (box));
+	for (iter = children; iter != NULL; iter = g_list_next (iter))
+	{
+		if (gtk_widget_get_visible (GTK_WIDGET (iter->data)))
+		{
+			has_visible = TRUE;
+			break;
+		}
+	}
+	g_list_free (children);
+
+	if (has_visible)
+		gtk_widget_show (GTK_WIDGET (box));
+	else
+		gtk_widget_hide (GTK_WIDGET (box));
 }
 
 static void
 mg_hide_empty_boxes (session_gui *gui)
 {
-	/* hide empty vpanes - so the handle is not shown */
-	mg_hide_empty_pane ((GtkPaned*)gui->vpane_right);
-	mg_hide_empty_pane ((GtkPaned*)gui->vpane_left);
+	/* hide empty boxes if no visible children */
+	mg_hide_empty_box ((GtkBox*)gui->vpane_right);
+	mg_hide_empty_box ((GtkBox*)gui->vpane_left);
 }
 
 static void
@@ -754,10 +764,7 @@ mg_userlist_showhide (session *sess, int show)
 	{
 		gtk_widget_show (gui->user_box);
 		gui->ul_hidden = 0;
-
-		gtk_widget_get_allocation (gui->hpane_right, &allocation);
-		gtk_widget_style_get (GTK_WIDGET (gui->hpane_right), "handle-size", &handle_size, NULL);
-		gtk_paned_set_position (GTK_PANED (gui->hpane_right), allocation.width - (right_size + handle_size));
+		/* position no longer applicable with box layout */
 	}
 	else
 	{
@@ -2348,10 +2355,14 @@ mg_create_textarea (session *sess, GtkWidget *box)
 	scrolledwindow = gtk_scrolled_window_new (NULL, NULL);
 	gui->vscrollbar = gtk_scrolled_window_get_vscrollbar (GTK_SCROLLED_WINDOW (scrolledwindow)); /* For fkeys */
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW(scrolledwindow), GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
-	gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (scrolledwindow), GTK_SHADOW_IN);
+	gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (scrolledwindow), GTK_SHADOW_NONE);
 	gtk_widget_set_vexpand (scrolledwindow, TRUE);
 	gtk_widget_set_hexpand (scrolledwindow, TRUE);
-	gtk_container_add (GTK_CONTAINER (box), scrolledwindow);
+	gtk_widget_set_margin_start (scrolledwindow, 0);
+	gtk_widget_set_margin_end (scrolledwindow, 0);
+	gtk_widget_set_margin_top (scrolledwindow, 0);
+	gtk_widget_set_margin_bottom (scrolledwindow, 0);
+	gtk_box_pack_start (GTK_BOX (box), scrolledwindow, TRUE, TRUE, 0);
 
 	gui->xtext = gtk_xtext_new (colors, TRUE);
 	xtext = GTK_XTEXT (gui->xtext);
@@ -2476,7 +2487,9 @@ mg_create_userlist (session_gui *gui, GtkWidget *box)
 	GtkWidget *frame, *ulist, *vbox;
 
 	vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
-	gtk_container_add (GTK_CONTAINER (box), vbox);
+	gtk_widget_set_vexpand (vbox, TRUE);
+	gtk_widget_set_hexpand (vbox, TRUE);
+	gtk_box_pack_start (GTK_BOX (box), vbox, TRUE, TRUE, 0);
 
 	frame = gtk_frame_new (NULL);
 	if (prefs.pchat_gui_ulist_count)
@@ -2542,23 +2555,36 @@ mg_create_center (session *sess, session_gui *gui, GtkWidget *box)
 {
 	GtkWidget *vbox, *hbox, *book;
 
-	/* sep between top and bottom of left side */
+	/* container for left side (chanview area) */
 	gui->vpane_left = gtk_paned_new (GTK_ORIENTATION_VERTICAL);
+	gtk_widget_set_vexpand (gui->vpane_left, TRUE);
+	gtk_widget_set_hexpand (gui->vpane_left, FALSE);
+	g_object_set (gui->vpane_left, "wide-handle", FALSE, NULL);
+	gtk_paned_set_wide_handle (GTK_PANED (gui->vpane_left), FALSE);
 
-	/* sep between top and bottom of right side */
+	/* container for right side (userlist area) */
 	gui->vpane_right = gtk_paned_new (GTK_ORIENTATION_VERTICAL);
+	gtk_widget_set_vexpand (gui->vpane_right, TRUE);
+	gtk_widget_set_hexpand (gui->vpane_right, FALSE);
+	g_object_set (gui->vpane_right, "wide-handle", FALSE, NULL);
+	gtk_paned_set_wide_handle (GTK_PANED (gui->vpane_right), FALSE);
 
-	/* sep between left and xtext */
+	/* main horizontal container */
 	gui->hpane_left = gtk_hpaned_new ();
-	gtk_paned_set_position (GTK_PANED (gui->hpane_left), prefs.pchat_gui_pane_left_size);
+	gtk_widget_set_vexpand (gui->hpane_left, TRUE);
+	gtk_widget_set_hexpand (gui->hpane_left, TRUE);
+	g_object_set (gui->hpane_left, "wide-handle", FALSE, NULL);
+	gtk_paned_set_wide_handle (GTK_PANED (gui->hpane_left), FALSE);
 
-	/* sep between xtext and right side */
+	/* container for center (text area) */
 	gui->hpane_right = gtk_hpaned_new ();
+	gtk_widget_set_vexpand (gui->hpane_right, TRUE);
+	gtk_widget_set_hexpand (gui->hpane_right, TRUE);
 
 	if (prefs.pchat_gui_win_swap)
 	{
-		gtk_paned_pack2 (GTK_PANED (gui->hpane_left), gui->vpane_left, FALSE, TRUE);
 		gtk_paned_pack1 (GTK_PANED (gui->hpane_left), gui->hpane_right, TRUE, TRUE);
+		gtk_paned_pack2 (GTK_PANED (gui->hpane_left), gui->vpane_left, FALSE, TRUE);
 	}
 	else
 	{
@@ -2567,20 +2593,40 @@ mg_create_center (session *sess, session_gui *gui, GtkWidget *box)
 	}
 	gtk_paned_pack2 (GTK_PANED (gui->hpane_right), gui->vpane_right, FALSE, TRUE);
 
-	gtk_container_add (GTK_CONTAINER (box), gui->hpane_left);
+	gtk_box_pack_start (GTK_BOX (box), gui->hpane_left, TRUE, TRUE, 0);
 
 	gui->note_book = book = gtk_notebook_new ();
 	gtk_notebook_set_show_tabs (GTK_NOTEBOOK (book), FALSE);
 	gtk_notebook_set_show_border (GTK_NOTEBOOK (book), FALSE);
+	gtk_widget_set_vexpand (book, TRUE);
+	gtk_widget_set_hexpand (book, TRUE);
+	gtk_widget_set_margin_start (book, 0);
+	gtk_widget_set_margin_end (book, 0);
+	gtk_widget_set_margin_top (book, 0);
+	gtk_widget_set_margin_bottom (book, 0);
 	gtk_paned_pack1 (GTK_PANED (gui->hpane_right), book, TRUE, TRUE);
 
 	hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
-	gtk_paned_pack1 (GTK_PANED (gui->vpane_right), hbox, FALSE, TRUE);
+	gtk_widget_set_vexpand (hbox, TRUE);
+	gtk_widget_set_hexpand (hbox, TRUE);
+	gtk_paned_pack2 (GTK_PANED (gui->vpane_right), hbox, FALSE, TRUE);
 	mg_create_userlist (gui, hbox);
+
+	/* Set paned positions */
+	gtk_paned_set_position (GTK_PANED (gui->hpane_left), prefs.pchat_gui_pane_left_size);
+	gtk_paned_set_position (GTK_PANED (gui->hpane_right), prefs.pchat_gui_win_width - prefs.pchat_gui_pane_right_size);
+	gtk_paned_set_position (GTK_PANED (gui->vpane_left), prefs.pchat_gui_pane_left_size);
+	gtk_paned_set_position (GTK_PANED (gui->vpane_right), prefs.pchat_gui_pane_right_size);
 
 	gui->user_box = hbox;
 
 	vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
+	gtk_widget_set_vexpand (vbox, TRUE);
+	gtk_widget_set_hexpand (vbox, TRUE);
+	gtk_widget_set_margin_start (vbox, 0);
+	gtk_widget_set_margin_end (vbox, 0);
+	gtk_widget_set_margin_top (vbox, 0);
+	gtk_widget_set_margin_bottom (vbox, 0);
 	gtk_notebook_append_page (GTK_NOTEBOOK (book), vbox, NULL);
 	mg_create_topicbar (sess, vbox);
 
@@ -2691,23 +2737,23 @@ mg_place_userlist_and_chanview_real (session_gui *gui, GtkWidget *userlist, GtkW
 		case POS_TOP:
 			gtk_table_set_row_spacing (GTK_TABLE (gui->main_table), 1, GUI_SPACING-1);
 			gtk_table_attach (GTK_TABLE (gui->main_table), chanview,
-									1, 2, 1, 2, GTK_FILL, GTK_FILL, 0, 0);
+									1, 2, 1, 2, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
 			break;
 		case POS_HIDDEN:
 			gtk_widget_hide (chanview);
 			/* always attach it to something to avoid ref_count=0 */
 			if (prefs.pchat_gui_ulist_pos == POS_TOP)
 				gtk_table_attach (GTK_TABLE (gui->main_table), chanview,
-										1, 2, 3, 4, GTK_FILL, GTK_FILL, 0, 0);
+										1, 2, 3, 4, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
 
 			else
 				gtk_table_attach (GTK_TABLE (gui->main_table), chanview,
-										1, 2, 1, 2, GTK_FILL, GTK_FILL, 0, 0);
+										1, 2, 1, 2, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
 			break;
 		default:/* POS_BOTTOM */
 			gtk_table_set_row_spacing (GTK_TABLE (gui->main_table), 2, 3);
 			gtk_table_attach (GTK_TABLE (gui->main_table), chanview,
-									1, 2, 3, 4, GTK_FILL, GTK_FILL, 0, 0);
+									1, 2, 3, 4, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
 		}
 	}
 
@@ -2716,26 +2762,22 @@ mg_place_userlist_and_chanview_real (session_gui *gui, GtkWidget *userlist, GtkW
 		switch (prefs.pchat_gui_ulist_pos)
 		{
 		case POS_TOPLEFT:
-			gtk_paned_pack1 (GTK_PANED (gui->vpane_left), userlist, FALSE, TRUE);
+			gtk_paned_pack2 (GTK_PANED (gui->vpane_left), userlist, TRUE, TRUE);
 			break;
 		case POS_BOTTOMLEFT:
-			gtk_paned_pack2 (GTK_PANED (gui->vpane_left), userlist, FALSE, TRUE);
+			gtk_paned_pack1 (GTK_PANED (gui->vpane_left), userlist, TRUE, TRUE);
 			break;
 		case POS_BOTTOMRIGHT:
-			gtk_paned_pack2 (GTK_PANED (gui->vpane_right), userlist, FALSE, TRUE);
+			gtk_paned_pack1 (GTK_PANED (gui->vpane_right), userlist, TRUE, TRUE);
 			break;
 		/*case POS_HIDDEN:
 			break;*/	/* Hide using the VIEW menu instead */
 		default:/* POS_TOPRIGHT */
-			gtk_paned_pack1 (GTK_PANED (gui->vpane_right), userlist, FALSE, TRUE);
+			gtk_paned_pack2 (GTK_PANED (gui->vpane_right), userlist, TRUE, TRUE);
 		}
 	}
 
-	if (mg_is_userlist_and_tree_combined () && prefs.pchat_gui_pane_divider_position != 0)
-	{
-		gtk_paned_set_position (GTK_PANED (gui->vpane_left), prefs.pchat_gui_pane_divider_position);
-		gtk_paned_set_position (GTK_PANED (gui->vpane_right), prefs.pchat_gui_pane_divider_position);
-	}
+	/* paned positions no longer applicable with box layout */
 
 	if (unref_chanview)
 		g_object_unref (chanview);
@@ -3163,6 +3205,8 @@ mg_create_irctab (session *sess, GtkWidget *table)
 	session_gui *gui = sess->gui;
 
 	vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
+	gtk_widget_set_vexpand (vbox, TRUE);
+	gtk_widget_set_hexpand (vbox, TRUE);
 	gtk_table_attach (GTK_TABLE (table), vbox, 1, 2, 2, 3,
 						   GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
 	mg_create_center (sess, gui, vbox);
@@ -3203,6 +3247,8 @@ mg_create_topwindow (session *sess)
 	/* left and right borders */
 	gtk_table_set_col_spacing (GTK_TABLE (table), 0, 1);
 	gtk_table_set_col_spacing (GTK_TABLE (table), 1, 1);
+	gtk_widget_set_vexpand (table, TRUE);
+	gtk_widget_set_hexpand (table, TRUE);
 	gtk_container_add (GTK_CONTAINER (win), table);
 
 	mg_create_irctab (sess, table);

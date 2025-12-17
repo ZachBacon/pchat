@@ -476,18 +476,6 @@ gtk_xtext_init (GtkXText * xtext)
 
 	xtext->vc_signal_tag = g_signal_connect (G_OBJECT (xtext->adj),
 				"value_changed", G_CALLBACK (gtk_xtext_adjustment_changed), xtext);
-	{
-		static const GtkTargetEntry targets[] = {
-			{ "UTF8_STRING", 0, TARGET_UTF8_STRING },
-			{ "STRING", 0, TARGET_STRING },
-			{ "TEXT",   0, TARGET_TEXT },
-			{ "COMPOUND_TEXT", 0, TARGET_COMPOUND_TEXT }
-		};
-		static const gint n_targets = sizeof (targets) / sizeof (targets[0]);
-
-		gtk_selection_add_targets (GTK_WIDGET (xtext), GDK_SELECTION_PRIMARY,
-											targets, n_targets);
-	}
 }
 
 static void
@@ -713,6 +701,20 @@ gtk_xtext_realize (GtkWidget * widget)
 	xtext->resize_cursor = gdk_cursor_new_for_display (gdk_window_get_display (gtk_widget_get_window (widget)), GDK_LEFT_SIDE);
 
 	/* widget->style = gtk_style_attach (widget->style, gtk_widget_get_window (widget)); */
+
+	/* Register selection targets after widget is realized */
+	{
+		static const GtkTargetEntry targets[] = {
+			{ "UTF8_STRING", 0, TARGET_UTF8_STRING },
+			{ "STRING", 0, TARGET_STRING },
+			{ "TEXT",   0, TARGET_TEXT },
+			{ "COMPOUND_TEXT", 0, TARGET_COMPOUND_TEXT }
+		};
+		static const gint n_targets = sizeof (targets) / sizeof (targets[0]);
+
+		gtk_selection_add_targets (GTK_WIDGET (xtext), GDK_SELECTION_PRIMARY,
+											targets, n_targets);
+	}
 
 	backend_init (xtext);
 }
