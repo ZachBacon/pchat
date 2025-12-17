@@ -164,6 +164,9 @@ gtk_xtext_create_cairo_handle (GtkXText *xtext)
 	}
 
 	/* Otherwise create our own (for event-driven drawing) */
+	if (!gtk_widget_get_realized (&xtext->widget))
+		return NULL;
+	
 	cr = gdk_cairo_create (gtk_widget_get_window (&xtext->widget));
 
 	return cr;
@@ -201,6 +204,8 @@ xtext_draw_bg (GtkXText *xtext, int x, int y, int width, int height)
 		return;
 
 	cr = gtk_xtext_create_cairo_handle(xtext);
+	if (!cr)
+		return;
 	cairo_rectangle(cr, x, y, width, height);
 
         cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
@@ -402,6 +407,8 @@ backend_draw_text_emph (GtkXText *xtext, gboolean dofill, int x, int y, char *st
 	cairo_t *cr;
 
 	cr = gtk_xtext_create_cairo_handle(xtext);
+	if (!cr)
+		return;
 	cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
 	pango_layout_set_attributes (xtext->layout, attr_lists[emphasis]);
@@ -647,9 +654,7 @@ gtk_xtext_unrealize (GtkWidget * widget)
 		xtext->bg_pattern = NULL;
 	}
 
-	/* if there are still events in the queue, this'll avoid segfault */
-	gdk_window_set_user_data (gtk_widget_get_window (widget), NULL);
-
+	/* Call parent unrealize first - it will unregister the window */
 	if (parent_class->unrealize)
 		(* GTK_WIDGET_CLASS (parent_class)->unrealize) (widget);
 }

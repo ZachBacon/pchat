@@ -459,7 +459,7 @@ void *
 userlist_create_model (void)
 {
 	return gtk_list_store_new (5, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING,
-										G_TYPE_POINTER, GDK_TYPE_COLOR);
+										G_TYPE_POINTER, GDK_TYPE_RGBA);
 }
 
 static void

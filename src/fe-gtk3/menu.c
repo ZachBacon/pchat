@@ -830,7 +830,7 @@ menu_setting_foreach (void (*callback) (session *), int id, guint state)
 		{
 			if (sess->gui->is_tab)
 				maindone = TRUE;
-			if (id != -1)
+			if (id != -1 && sess->gui->menu_item[id] && GTK_IS_CHECK_MENU_ITEM (sess->gui->menu_item[id]))
 				gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (sess->gui->menu_item[id]), state);
 			if (callback)
 				callback (sess);
@@ -1824,10 +1824,17 @@ create_icon_menu (char *labeltext, void *stock_name, int is_stock)
 	if (is_stock)
 		img = gtk_image_new_from_icon_name (stock_name, GTK_ICON_SIZE_BUTTON);
 	else
-		img = gtk_image_new_from_pixbuf (*((GdkPixbuf **)stock_name));
+	{
+		GdkPixbuf *pixbuf = *((GdkPixbuf **)stock_name);
+		if (pixbuf)
+			img = gtk_image_new_from_pixbuf (pixbuf);
+		else
+			img = gtk_image_new ();
+	}
 	item = gtk_menu_item_new_with_mnemonic (labeltext);
 	/* gtk_image_menu_item_set_image deprecated */;
-	gtk_widget_show (img);
+	if (img)
+		gtk_widget_show (img);
 
 	return item;
 }

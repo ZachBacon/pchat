@@ -825,8 +825,8 @@ load_default_config(void)
 	prefs.pchat_gui_dialog_width = 500;
 	prefs.pchat_gui_lagometer = 1;
 	prefs.pchat_gui_lang = get_default_language();
-	prefs.pchat_gui_pane_left_size = 128;		/* with treeview icons we need a bit bigger space */
-	prefs.pchat_gui_pane_right_size = 100;
+	prefs.pchat_gui_pane_left_size = 150;		/* with treeview icons we need a bit bigger space */
+	prefs.pchat_gui_pane_right_size = 50;
 	prefs.pchat_gui_pane_right_size_min = 80;
 	prefs.pchat_gui_tab_layout = 2;			/* 0=Tabs 1=Reserved 2=Tree */
 	prefs.pchat_gui_tab_newtofront = 2;

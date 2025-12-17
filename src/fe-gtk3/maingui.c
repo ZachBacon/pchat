@@ -262,8 +262,11 @@ mg_set_access_icon (session_gui *gui, GdkPixbuf *pix, gboolean away)
 	if (pix && prefs.pchat_gui_input_icon)
 	{
 		gui->op_xpm = gtk_image_new_from_pixbuf (pix);
-		gtk_box_pack_start (GTK_BOX (gui->nick_box), gui->op_xpm, 0, 0, 0);
-		gtk_widget_show (gui->op_xpm);
+		if (gui->op_xpm)
+		{
+			gtk_box_pack_start (GTK_BOX (gui->nick_box), gui->op_xpm, 0, 0, 0);
+			gtk_widget_show (gui->op_xpm);
+		}
 	}
 
 	mg_set_myself_away (gui, away);
@@ -2537,6 +2540,25 @@ mg_rightpane_cb (GtkPaned *pane, GParamSpec *param, session_gui *gui)
 }
 
 static gboolean
+mg_set_hpane_right_position_idle (session_gui *gui)
+{
+	GtkAllocation allocation;
+	int handle_size;
+	
+	gtk_widget_get_allocation (GTK_WIDGET (gui->hpane_right), &allocation);
+	gtk_widget_style_get (GTK_WIDGET (gui->hpane_right), "handle-size", &handle_size, NULL);
+	
+	/* Set position from the right edge */
+	if (allocation.width > prefs.pchat_gui_pane_right_size)
+	{
+		gtk_paned_set_position (GTK_PANED (gui->hpane_right), 
+			allocation.width - prefs.pchat_gui_pane_right_size - handle_size);
+	}
+	
+	return FALSE;
+}
+
+static gboolean
 mg_add_pane_signals (session_gui *gui)
 {
 	g_signal_connect (G_OBJECT (gui->hpane_right), "notify::position",
@@ -2547,6 +2569,8 @@ mg_add_pane_signals (session_gui *gui)
 							G_CALLBACK (mg_vpane_cb), gui);
 	g_signal_connect (G_OBJECT (gui->vpane_right), "notify::position",
 							G_CALLBACK (mg_vpane_cb), gui);
+	/* Set right pane position in idle callback after full layout */
+	g_idle_add ((GSourceFunc) mg_set_hpane_right_position_idle, gui);
 	return FALSE;
 }
 
@@ -2566,6 +2590,7 @@ mg_create_center (session *sess, session_gui *gui, GtkWidget *box)
 	gui->vpane_right = gtk_paned_new (GTK_ORIENTATION_VERTICAL);
 	gtk_widget_set_vexpand (gui->vpane_right, TRUE);
 	gtk_widget_set_hexpand (gui->vpane_right, FALSE);
+	gtk_widget_set_size_request (gui->vpane_right, prefs.pchat_gui_pane_right_size, -1);
 	g_object_set (gui->vpane_right, "wide-handle", FALSE, NULL);
 	gtk_paned_set_wide_handle (GTK_PANED (gui->vpane_right), FALSE);
 
@@ -2612,9 +2637,8 @@ mg_create_center (session *sess, session_gui *gui, GtkWidget *box)
 	gtk_paned_pack2 (GTK_PANED (gui->vpane_right), hbox, FALSE, TRUE);
 	mg_create_userlist (gui, hbox);
 
-	/* Set paned positions */
+	/* Set paned positions - right pane will be set after size-allocate */
 	gtk_paned_set_position (GTK_PANED (gui->hpane_left), prefs.pchat_gui_pane_left_size);
-	gtk_paned_set_position (GTK_PANED (gui->hpane_right), prefs.pchat_gui_win_width - prefs.pchat_gui_pane_right_size);
 	gtk_paned_set_position (GTK_PANED (gui->vpane_left), prefs.pchat_gui_pane_left_size);
 	gtk_paned_set_position (GTK_PANED (gui->vpane_right), prefs.pchat_gui_pane_right_size);
 
