@@ -1268,7 +1268,8 @@ servlist_create_entry (GtkWidget *table, char *labeltext, int row,
 		*label_ret = label;
 	gtk_widget_show (label);
 	gtk_table_attach (GTK_TABLE (table), label, 0, 1, row, row+1, GTK_FILL, 0, SERVLIST_X_PADDING, SERVLIST_Y_PADDING);
-	gtk_misc_set_alignment (GTK_MISC (label), 0, 0.5);
+	gtk_label_set_xalign (GTK_LABEL (label), 0);
+	gtk_label_set_yalign (GTK_LABEL (label), 0.5);
 
 	entry = gtk_entry_new ();
 	gtk_widget_set_tooltip_text (entry, tip);
@@ -1624,7 +1625,8 @@ bold_label (char *text)
 	snprintf (buf, sizeof (buf), "<b>%s</b>", text);
 	label = gtk_label_new (buf);
 	gtk_label_set_use_markup (GTK_LABEL (label), TRUE);
-	gtk_misc_set_alignment (GTK_MISC (label), 0, 0.5);
+	gtk_label_set_xalign (GTK_LABEL (label), 0);
+	gtk_label_set_yalign (GTK_LABEL (label), 0.5);
 	gtk_widget_show (label);
 
 	return label;
@@ -1671,12 +1673,12 @@ servlist_open_edit (GtkWidget *parent, ircnet *net)
 	gtk_window_set_type_hint (GTK_WINDOW (editwindow), GDK_WINDOW_TYPE_HINT_DIALOG);
 	gtk_window_set_role (GTK_WINDOW (editwindow), "editserv");
 
-	vbox5 = gtk_vbox_new (FALSE, 0);
+	vbox5 = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
 	gtk_container_add (GTK_CONTAINER (editwindow), vbox5);
 
 
 	/* Tabs and buttons */
-	hbox1 = gtk_hbox_new (FALSE, 0);
+	hbox1 = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
 	gtk_box_pack_start (GTK_BOX (vbox5), hbox1, TRUE, TRUE, 4);
 
 	scrolledwindow2 = gtk_scrolled_window_new (NULL, NULL);
@@ -1840,7 +1842,8 @@ servlist_open_edit (GtkWidget *parent, ircnet *net)
 
 	label_logintype = gtk_label_new (_("Login method:"));
 	gtk_table_attach (GTK_TABLE (table3), label_logintype, 0, 1, 10, 11, (GtkAttachOptions) (GTK_FILL), (GtkAttachOptions) (0), SERVLIST_X_PADDING, SERVLIST_Y_PADDING);
-	gtk_misc_set_alignment (GTK_MISC (label_logintype), 0, 0.5);
+	gtk_label_set_xalign (GTK_LABEL (label_logintype), 0);
+	gtk_label_set_yalign (GTK_LABEL (label_logintype), 0.5);
 	combobox_logintypes = servlist_create_logintypecombo (notebook);
 	gtk_table_attach (GTK_TABLE (table3), combobox_logintypes, 1, 2, 10, 11, (GtkAttachOptions) (GTK_FILL), (GtkAttachOptions) (GTK_FILL), 4, 2);
 
@@ -1851,13 +1854,14 @@ servlist_open_edit (GtkWidget *parent, ircnet *net)
 
 	label34 = gtk_label_new (_("Character set:"));
 	gtk_table_attach (GTK_TABLE (table3), label34, 0, 1, 12, 13, (GtkAttachOptions) (GTK_FILL), (GtkAttachOptions) (0), SERVLIST_X_PADDING, SERVLIST_Y_PADDING);
-	gtk_misc_set_alignment (GTK_MISC (label34), 0, 0.5);
+	gtk_label_set_xalign (GTK_LABEL (label34), 0);
+	gtk_label_set_yalign (GTK_LABEL (label34), 0.5);
 	comboboxentry_charset = servlist_create_charsetcombo ();
 	gtk_table_attach (GTK_TABLE (table3), comboboxentry_charset, 1, 2, 12, 13, (GtkAttachOptions) (GTK_FILL), (GtkAttachOptions) (GTK_FILL), 4, 2);
 
 
 	/* Rule and Close button */
-	hseparator2 = gtk_hseparator_new ();
+	hseparator2 = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);
 	gtk_box_pack_start (GTK_BOX (vbox5), hseparator2, FALSE, FALSE, 8);
 
 	hbuttonbox4 = gtk_hbutton_box_new ();
@@ -1936,7 +1940,7 @@ servlist_open_networks (void)
 	if (current_sess)
 		gtk_window_set_transient_for (GTK_WINDOW (servlist), GTK_WINDOW (current_sess->gui->window));
 
-	vbox1 = gtk_vbox_new (FALSE, 0);
+	vbox1 = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
 	gtk_widget_show (vbox1);
 	gtk_container_add (GTK_CONTAINER (servlist), vbox1);
 
@@ -1955,35 +1959,40 @@ servlist_open_networks (void)
 	gtk_table_attach (GTK_TABLE (table1), label3, 0, 1, 0, 1,
 							(GtkAttachOptions) (GTK_FILL),
 							(GtkAttachOptions) (0), 0, 0);
-	gtk_misc_set_alignment (GTK_MISC (label3), 0, 0.5);
+	gtk_label_set_xalign (GTK_LABEL (label3), 0);
+	gtk_label_set_yalign (GTK_LABEL (label3), 0.5);
 
 	label4 = gtk_label_new (_("Second choice:"));
 	gtk_widget_show (label4);
 	gtk_table_attach (GTK_TABLE (table1), label4, 0, 1, 1, 2,
 							(GtkAttachOptions) (GTK_FILL),
 							(GtkAttachOptions) (0), 0, 0);
-	gtk_misc_set_alignment (GTK_MISC (label4), 0, 0.5);
+	gtk_label_set_xalign (GTK_LABEL (label4), 0);
+	gtk_label_set_yalign (GTK_LABEL (label4), 0.5);
 
 	label5 = gtk_label_new (_("Third choice:"));
 	gtk_widget_show (label5);
 	gtk_table_attach (GTK_TABLE (table1), label5, 0, 1, 2, 3,
 							(GtkAttachOptions) (GTK_FILL),
 							(GtkAttachOptions) (0), 0, 0);
-	gtk_misc_set_alignment (GTK_MISC (label5), 0, 0.5);
+	gtk_label_set_xalign (GTK_LABEL (label5), 0);
+	gtk_label_set_yalign (GTK_LABEL (label5), 0.5);
 
 	label6 = gtk_label_new_with_mnemonic (_("_User name:"));
 	gtk_widget_show (label6);
 	gtk_table_attach (GTK_TABLE (table1), label6, 0, 1, 3, 4,
 							(GtkAttachOptions) (GTK_FILL),
 							(GtkAttachOptions) (0), 0, 0);
-	gtk_misc_set_alignment (GTK_MISC (label6), 0, 0.5);
+	gtk_label_set_xalign (GTK_LABEL (label6), 0);
+	gtk_label_set_yalign (GTK_LABEL (label6), 0.5);
 
 	/* label7 = gtk_label_new_with_mnemonic (_("Rea_l name:"));
 	gtk_widget_show (label7);
 	gtk_table_attach (GTK_TABLE (table1), label7, 0, 1, 4, 5,
 							(GtkAttachOptions) (GTK_FILL),
 							(GtkAttachOptions) (0), 0, 0);
-	gtk_misc_set_alignment (GTK_MISC (label7), 0, 0.5);*/
+	gtk_label_set_xalign (GTK_LABEL (label7), 0);
+	gtk_label_set_yalign (GTK_LABEL (label7), 0.5);*/
 
 	entry_nick1 = entry1 = gtk_entry_new ();
 	gtk_entry_set_text (GTK_ENTRY (entry1), prefs.pchat_irc_nick1);
@@ -2020,7 +2029,7 @@ servlist_open_networks (void)
 							(GtkAttachOptions) (GTK_EXPAND | GTK_FILL),
 							(GtkAttachOptions) (0), 0, 0); */
 
-	vbox2 = gtk_vbox_new (FALSE, 0);
+	vbox2 = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
 	gtk_widget_show (vbox2);
 	gtk_box_pack_start (GTK_BOX (vbox1), vbox2, TRUE, TRUE, 0);
 
@@ -2065,7 +2074,7 @@ servlist_open_networks (void)
 								"weight", 2,
 								NULL);
 
-	hbox = gtk_hbox_new (0, FALSE);
+	hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
 	gtk_table_attach (GTK_TABLE (table4), hbox, 0, 2, 1, 2,
 							(GtkAttachOptions) (GTK_FILL),
 							(GtkAttachOptions) (0), 0, 0);
@@ -2135,7 +2144,7 @@ servlist_open_networks (void)
 	gtk_container_add (GTK_CONTAINER (vbuttonbox2), button_sort);
 	gtk_widget_set_can_default (button_sort, TRUE);
 
-	hseparator1 = gtk_hseparator_new ();
+	hseparator1 = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);
 	gtk_widget_show (hseparator1);
 	gtk_box_pack_start (GTK_BOX (vbox1), hseparator1, FALSE, TRUE, 4);
 

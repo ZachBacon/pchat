@@ -791,12 +791,11 @@ setup_create_spin (GtkWidget *table, int row, const setting *set)
 	gtk_widget_set_margin_start (label, LABEL_INDENT);
 	gtk_grid_attach (GTK_GRID (table), label, 2, row, 1, 1);
 
-	align = gtk_alignment_new (0.0, 0.5, 0.0, 0.0);
-	gtk_widget_set_hexpand (align, TRUE);
-	gtk_grid_attach (GTK_GRID (table), align, 3, row, 1, 1);
-
 	rbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
-	gtk_container_add (GTK_CONTAINER (align), rbox);
+	gtk_widget_set_halign (rbox, GTK_ALIGN_START);
+	gtk_widget_set_valign (rbox, GTK_ALIGN_CENTER);
+	gtk_widget_set_hexpand (rbox, TRUE);
+	gtk_grid_attach (GTK_GRID (table), rbox, 3, row, 1, 1);
 
 	wid = gtk_spin_button_new_with_range (0, set->extra, 1);
 	g_object_set_data (G_OBJECT (wid), "lbl", label);

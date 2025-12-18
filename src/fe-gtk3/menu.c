@@ -270,9 +270,6 @@ menu_quick_item (char *cmd, char *label, GtkWidget * menu, int flags,
 	{
 		if (icon)
 		{
-			/*if (flags & XCMENU_MARKUP)
-				item = gtk_image_menu_item_new_with_markup (label);
-			else*/
 				item = gtk_menu_item_new_with_mnemonic (label);
 			img = NULL;
 			if (access (icon, R_OK) == 0)	/* try fullpath */
