@@ -9,7 +9,7 @@
     <key>CFBundleGetInfoString</key>
     <string>@VERSION@</string>
     <key>CFBundleIconFile</key>
-    <string>hexchat.icns</string>
+    <string>PChat.icns</string>
     <key>CFBundleIdentifier</key>
     <string>org.pchat</string>
     <key>CFBundleInfoDictionaryVersion</key>
