@@ -48,6 +48,11 @@
 #include "userlistgui.h"
 #include "chanview.h"
 #include "pixmaps.h"
+
+#ifdef HAVE_GTK_MAC
+#include <gtkosxapplication.h>
+GtkosxApplication *osx_app = NULL;
+#endif
 #include "plugin-tray.h"
 #include "xtext.h"
 #include "sexy-spell-entry.h"
@@ -3192,11 +3197,18 @@ mg_create_headerbar_with_menu (session_gui *gui, GtkWidget *window, int away_sta
 	gui->menu = menu_create_main (accel_group, TRUE, away_state, !gui->is_tab,
 											gui->menu_item);
 	
-	/* Pack the menu bar into the header bar */
-	gtk_header_bar_pack_start (GTK_HEADER_BAR (headerbar), gui->menu);
-
 #ifdef HAVE_GTK_MAC
-	gtkosx_application_set_menu_bar(osx_app, GTK_MENU_SHELL(gui->menu));
+	/* On macOS, integrate with native menu bar instead of showing in headerbar */
+	if (!osx_app)
+	{
+		osx_app = gtkosx_application_get ();
+	}
+	gtkosx_application_set_menu_bar (osx_app, GTK_MENU_SHELL (gui->menu));
+	gtkosx_application_ready (osx_app);
+	/* Don't pack menu into headerbar on macOS - it's in the native menu bar */
+#else
+	/* Pack the menu bar into the header bar on other platforms */
+	gtk_header_bar_pack_start (GTK_HEADER_BAR (headerbar), gui->menu);
 #endif
 
 	return headerbar;

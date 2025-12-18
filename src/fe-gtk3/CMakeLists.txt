@@ -96,6 +96,11 @@ target_compile_definitions(pchat PRIVATE
 )
 
 # Link libraries
+target_link_directories(pchat PRIVATE
+    ${GTK3_LIBRARY_DIRS}
+    ${GLIB_LIBRARY_DIRS}
+)
+
 target_link_libraries(pchat PRIVATE
     pchatcommon
     ${GTK3_LIBRARIES}
@@ -104,12 +109,21 @@ target_link_libraries(pchat PRIVATE
 
 if(LIBNOTIFY_FOUND)
     target_include_directories(pchat PRIVATE ${LIBNOTIFY_INCLUDE_DIRS})
+    target_link_directories(pchat PRIVATE ${LIBNOTIFY_LIBRARY_DIRS})
     target_link_libraries(pchat PRIVATE ${LIBNOTIFY_LIBRARIES})
 endif()
 
 if(LIBCANBERRA_FOUND)
     target_include_directories(pchat PRIVATE ${LIBCANBERRA_INCLUDE_DIRS})
+    target_link_directories(pchat PRIVATE ${LIBCANBERRA_LIBRARY_DIRS})
     target_link_libraries(pchat PRIVATE ${LIBCANBERRA_LIBRARIES})
+endif()
+
+# macOS integration
+if(GTK_MAC_INTEGRATION_FOUND)
+    target_include_directories(pchat PRIVATE ${GTK_MAC_INTEGRATION_INCLUDE_DIRS})
+    target_link_directories(pchat PRIVATE ${GTK_MAC_INTEGRATION_LIBRARY_DIRS})
+    target_link_libraries(pchat PRIVATE ${GTK_MAC_INTEGRATION_LIBRARIES})
 endif()
 
 # Windows resource file
@@ -119,3 +133,38 @@ endif()
 
 # Installation
 install(TARGETS pchat DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+# macOS Bundle targets
+if(APPLE)
+    # Bundle with ad-hoc signing (for local testing)
+    add_custom_target(bundle
+        COMMAND ${CMAKE_SOURCE_DIR}/osx/create-bundle.sh ${PROJECT_VERSION} ${CMAKE_BINARY_DIR}
+        DEPENDS pchat
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Creating macOS application bundle (ad-hoc signed)..."
+    )
+    
+    # Bundle with proper code signing (requires CODESIGN_IDENTITY to be set)
+    add_custom_target(bundle-signed
+        COMMAND ${CMAKE_SOURCE_DIR}/osx/create-bundle.sh ${PROJECT_VERSION} ${CMAKE_BINARY_DIR} "$ENV{CODESIGN_IDENTITY}"
+        DEPENDS pchat
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Creating macOS application bundle (signed with $$CODESIGN_IDENTITY)..."
+    )
+    
+    # Create DMG (requires bundle to exist)
+    add_custom_target(dmg
+        COMMAND ${CMAKE_SOURCE_DIR}/osx/create-dmg.sh ${PROJECT_VERSION} ${CMAKE_BINARY_DIR}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Creating distributable DMG..."
+    )
+    
+    message(STATUS "")
+    message(STATUS "macOS bundle targets:")
+    message(STATUS "  make bundle        - Create bundle with ad-hoc signing (local testing)")
+    message(STATUS "  make bundle-signed - Create bundle with proper code signing")
+    message(STATUS "                       Set CODESIGN_IDENTITY env var first:")
+    message(STATUS "                       export CODESIGN_IDENTITY=\"Developer ID Application: Your Name\"")
+    message(STATUS "  make dmg           - Create DMG from existing bundle")
+    message(STATUS "")
+endif()

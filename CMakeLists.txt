@@ -20,6 +20,24 @@ option(ENABLE_LIBPROXY "Enable libproxy support" OFF)
 # Find required packages
 find_package(PkgConfig REQUIRED)
 
+# On macOS, help find packages installed via Homebrew or MacPorts
+if(APPLE)
+    # Homebrew paths (try Apple Silicon location first, then Intel)
+    if(EXISTS /opt/homebrew)
+        list(APPEND CMAKE_PREFIX_PATH /opt/homebrew /opt/homebrew/opt/openssl@3 /opt/homebrew/opt/openssl@1.1)
+        set(ENV{PKG_CONFIG_PATH} "/opt/homebrew/lib/pkgconfig:/opt/homebrew/opt/openssl@3/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}")
+    elseif(EXISTS /usr/local/Homebrew)
+        list(APPEND CMAKE_PREFIX_PATH /usr/local /usr/local/opt/openssl@3 /usr/local/opt/openssl@1.1)
+        set(ENV{PKG_CONFIG_PATH} "/usr/local/lib/pkgconfig:/usr/local/opt/openssl@3/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}")
+    endif()
+    
+    # MacPorts paths
+    if(EXISTS /opt/local)
+        list(APPEND CMAKE_PREFIX_PATH /opt/local)
+        set(ENV{PKG_CONFIG_PATH} "/opt/local/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}")
+    endif()
+endif()
+
 # GLib and GTK
 pkg_check_modules(GLIB REQUIRED glib-2.0>=2.34.0 gobject-2.0 gmodule-2.0 gio-2.0)
 
@@ -32,6 +50,7 @@ if(ENABLE_OPENSSL)
     pkg_check_modules(OPENSSL REQUIRED openssl)
     if(OPENSSL_FOUND)
         set(USE_OPENSSL 1)
+        message(STATUS "Found OpenSSL: ${OPENSSL_INCLUDE_DIRS}")
     endif()
 endif()
 
@@ -60,6 +79,17 @@ if(ENABLE_LIBPROXY)
     pkg_check_modules(LIBPROXY libproxy-1.0)
     if(LIBPROXY_FOUND)
         set(USE_LIBPROXY 1)
+    endif()
+endif()
+
+# macOS integration
+if(APPLE)
+    pkg_check_modules(GTK_MAC_INTEGRATION gtk-mac-integration-gtk3)
+    if(GTK_MAC_INTEGRATION_FOUND)
+        set(HAVE_GTK_MAC 1)
+        message(STATUS "Found gtk-mac-integration: ${GTK_MAC_INTEGRATION_VERSION}")
+    else()
+        message(STATUS "gtk-mac-integration not found - install with: brew install gtk-mac-integration")
     endif()
 endif()
 

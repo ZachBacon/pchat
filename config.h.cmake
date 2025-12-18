@@ -29,6 +29,7 @@
 #cmakedefine USE_LIBNOTIFY 1
 #cmakedefine USE_LIBCANBERRA 1
 #cmakedefine USE_LIBPROXY 1
+#cmakedefine HAVE_GTK_MAC 1
 #cmakedefine SOCKS 1
 
 /* System detection */
