@@ -179,7 +179,7 @@ cfg_get_str (char *cfg, const char *var, char *dest, int dest_len)
 {
 	char buffer[128];	/* should be plenty for a variable name */
 
-	sprintf (buffer, "%s ", var);	/* add one space, this way it works against var - var2 checks too */
+	g_snprintf (buffer, sizeof (buffer), "%s ", var);	/* add one space, this way it works against var - var2 checks too */
 
 	while (1)
 	{
@@ -846,8 +846,8 @@ load_default_config(void)
 	prefs.pchat_url_grabber_limit = 100; 		/* 0 means unlimited */
 
 	/* STRINGS */
-	strcpy (prefs.pchat_away_reason, _("I'm busy"));
-	strcpy (prefs.pchat_completion_suffix, ",");
+	g_strlcpy (prefs.pchat_away_reason, _("I'm busy"), sizeof (prefs.pchat_away_reason));
+	g_strlcpy (prefs.pchat_completion_suffix, ",", sizeof (prefs.pchat_completion_suffix));
 #ifdef _WIN32
 	if (portable_mode () || !get_reg_str ("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Personal", out, sizeof (out)))
 	{
@@ -860,34 +860,38 @@ load_default_config(void)
 #else
 	if (g_get_user_special_dir (G_USER_DIRECTORY_DOWNLOAD))
 	{
-		strcpy (prefs.pchat_dcc_dir, g_get_user_special_dir (G_USER_DIRECTORY_DOWNLOAD));
+		g_strlcpy (prefs.pchat_dcc_dir, g_get_user_special_dir (G_USER_DIRECTORY_DOWNLOAD), sizeof (prefs.pchat_dcc_dir));
 	}
 	else
 	{
-		strcpy (prefs.pchat_dcc_dir, g_build_filename (g_get_home_dir (), "Downloads", NULL));
+		char *downloads_path = g_build_filename (g_get_home_dir (), "Downloads", NULL);
+		g_strlcpy (prefs.pchat_dcc_dir, downloads_path, sizeof (prefs.pchat_dcc_dir));
+		g_free (downloads_path);
 	}
 #endif
-	strcpy (prefs.pchat_gui_ulist_doubleclick, "QUERY %s");
-	strcpy (prefs.pchat_input_command_char, "/");
-	strcpy (prefs.pchat_irc_logmask, g_build_filename ("%n", "%c.log", NULL));
-	strcpy (prefs.pchat_irc_nick1, username);
-	strcpy (prefs.pchat_irc_nick2, username);
-	strcat (prefs.pchat_irc_nick2, "_");
-	strcpy (prefs.pchat_irc_nick3, username);
-	strcat (prefs.pchat_irc_nick3, "__");
-	strcpy (prefs.pchat_irc_no_hilight, "NickServ,ChanServ,InfoServ,N,Q");
-	strcpy (prefs.pchat_irc_part_reason, _("Leaving"));
-	strcpy (prefs.pchat_irc_quit_reason, prefs.pchat_irc_part_reason);
-	strcpy (prefs.pchat_irc_real_name, realname);
-	strcpy (prefs.pchat_irc_user_name, username);
-	strcpy (prefs.pchat_stamp_log_format, "%b %d %H:%M:%S ");
-	strcpy (prefs.pchat_stamp_text_format, "[%H:%M:%S] ");
+	g_strlcpy (prefs.pchat_gui_ulist_doubleclick, "QUERY %s", sizeof (prefs.pchat_gui_ulist_doubleclick));
+	g_strlcpy (prefs.pchat_input_command_char, "/", sizeof (prefs.pchat_input_command_char));
+	char *logmask_path = g_build_filename ("%n", "%c.log", NULL);
+	g_strlcpy (prefs.pchat_irc_logmask, logmask_path, sizeof (prefs.pchat_irc_logmask));
+	g_free (logmask_path);
+	g_strlcpy (prefs.pchat_irc_nick1, username, sizeof (prefs.pchat_irc_nick1));
+	g_strlcpy (prefs.pchat_irc_nick2, username, sizeof (prefs.pchat_irc_nick2));
+	g_strlcat (prefs.pchat_irc_nick2, "_", sizeof (prefs.pchat_irc_nick2));
+	g_strlcpy (prefs.pchat_irc_nick3, username, sizeof (prefs.pchat_irc_nick3));
+	g_strlcat (prefs.pchat_irc_nick3, "__", sizeof (prefs.pchat_irc_nick3));
+	g_strlcpy (prefs.pchat_irc_no_hilight, "NickServ,ChanServ,InfoServ,N,Q", sizeof (prefs.pchat_irc_no_hilight));
+	g_strlcpy (prefs.pchat_irc_part_reason, _("Leaving"), sizeof (prefs.pchat_irc_part_reason));
+	g_strlcpy (prefs.pchat_irc_quit_reason, prefs.pchat_irc_part_reason, sizeof (prefs.pchat_irc_quit_reason));
+	g_strlcpy (prefs.pchat_irc_real_name, realname, sizeof (prefs.pchat_irc_real_name));
+	g_strlcpy (prefs.pchat_irc_user_name, username, sizeof (prefs.pchat_irc_user_name));
+	g_strlcpy (prefs.pchat_stamp_log_format, "%b %d %H:%M:%S ", sizeof (prefs.pchat_stamp_log_format));
+	g_strlcpy (prefs.pchat_stamp_text_format, "[%H:%M:%S] ", sizeof (prefs.pchat_stamp_text_format));
 
 	font = fe_get_default_font ();
 	if (font)
 	{
-		strcpy (prefs.pchat_text_font, font);
-		strcpy (prefs.pchat_text_font_main, font);
+		g_strlcpy (prefs.pchat_text_font, font, sizeof (prefs.pchat_text_font));
+		g_strlcpy (prefs.pchat_text_font_main, font, sizeof (prefs.pchat_text_font_main));
 	}
 	else
 	{

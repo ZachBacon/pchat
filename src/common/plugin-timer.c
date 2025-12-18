@@ -115,7 +115,7 @@ timer_add (int ref, float timeout, int repeat, char *command)
 		}
 	}
 
-	tim = malloc (sizeof (timer));
+	tim = g_malloc (sizeof (timer));
 	tim->ref = ref;
 	tim->repeat = repeat;
 	tim->timeout = timeout;

@@ -1571,8 +1571,8 @@ pevent_trigger_load (int *i_penum, char **i_text, char **i_snd)
 	{
 		len = strlen (text) + 1;
 		if (pntevts_text[penum])
-			free (pntevts_text[penum]);
-		pntevts_text[penum] = malloc (len);
+			g_free (pntevts_text[penum]);
+		pntevts_text[penum] = g_malloc (len);
 		memcpy (pntevts_text[penum], text, len);
 	}
 
@@ -1629,7 +1629,7 @@ pevent_load (char *filename)
 		return 1;
 	if (fstat (fd, &st) != 0)
 		return 1;
-	ibuf = malloc (st.st_size);
+	ibuf = g_malloc (st.st_size);
 	read (fd, ibuf, st.st_size);
 	close (fd);
 
@@ -1702,7 +1702,7 @@ pevent_load (char *filename)
 	}
 
 	pevent_trigger_load (&penum, &text, &snd);
-	free (ibuf);
+	g_free (ibuf);
 	return 0;
 }
 
@@ -1839,7 +1839,7 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 	int oi, ii, max = -1, len, x;
 
 	len = strlen (input);
-	i = malloc (len + 1);
+	i = g_malloc (len + 1);
 	memcpy (i, input, len + 1);
 	check_special_chars (i, TRUE);
 
@@ -1864,14 +1864,14 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 		}
 		if (oi > 0)
 		{
-			s = (struct pevt_stage1 *) malloc (sizeof (struct pevt_stage1));
+			s = (struct pevt_stage1 *) g_malloc (sizeof (struct pevt_stage1));
 			if (base == NULL)
 				base = s;
 			if (last != NULL)
 				last->next = s;
 			last = s;
 			s->next = NULL;
-			s->data = malloc (oi + sizeof (int) + 1);
+			s->data = g_malloc (oi + sizeof (int) + 1);
 			s->len = oi + sizeof (int) + 1;
 			clen += oi + sizeof (int) + 1;
 			s->data[0] = 0;
@@ -1918,14 +1918,14 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 		if (d == 't')
 		{
 			/* Tab - if tabnicks is set then write '\t' else ' ' */
-			s = (struct pevt_stage1 *) malloc (sizeof (struct pevt_stage1));
+			s = (struct pevt_stage1 *) g_malloc (sizeof (struct pevt_stage1));
 			if (base == NULL)
 				base = s;
 			if (last != NULL)
 				last->next = s;
 			last = s;
 			s->next = NULL;
-			s->data = malloc (1);
+			s->data = g_malloc (1);
 			s->len = 1;
 			clen += 1;
 			s->data[0] = 3;
@@ -1941,14 +1941,14 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 		d -= '0';
 		if (max < d)
 			max = d;
-		s = (struct pevt_stage1 *) malloc (sizeof (struct pevt_stage1));
+		s = (struct pevt_stage1 *) g_malloc (sizeof (struct pevt_stage1));
 		if (base == NULL)
-			base = s;
+				base = s;
 		if (last != NULL)
-			last->next = s;
+				last->next = s;
 		last = s;
 		s->next = NULL;
-		s->data = malloc (2);
+		s->data = g_malloc (2);
 		s->len = 2;
 		clen += 2;
 		s->data[0] = 1;
@@ -1963,7 +1963,7 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 			last->next = s;
 		last = s;
 		s->next = NULL;
-		s->data = malloc (oi + sizeof (int) + 1);
+		s->data = g_malloc (oi + sizeof (int) + 1);
 		s->len = oi + sizeof (int) + 1;
 		clen += oi + sizeof (int) + 1;
 		s->data[0] = 0;
@@ -1971,7 +1971,7 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 		memcpy (&(s->data[1 + sizeof (int)]), o, oi);
 		oi = 0;
 	}
-	s = (struct pevt_stage1 *) malloc (sizeof (struct pevt_stage1));
+	s = (struct pevt_stage1 *) g_malloc (sizeof (struct pevt_stage1));
 	if (base == NULL)
 		base = s;
 	if (last != NULL)
@@ -1985,18 +1985,18 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 
 	oi = 0;
 	s = base;
-	obuf = malloc (clen);
+	obuf = g_malloc (clen);
 	while (s)
 	{
 		next = s->next;
 		memcpy (&obuf[oi], s->data, s->len);
 		oi += s->len;
-		free (s->data);
-		free (s);
+		g_free (s->data);
+		g_free (s);
 		s = next;
 	}
 
-	free (i);
+	g_free (i);
 
 	if (max_arg)
 		*max_arg = max;

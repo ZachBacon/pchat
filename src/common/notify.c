@@ -47,7 +47,7 @@ int notify_tag = 0;
 static char *
 despacify_dup (char *str)
 {
-	char *p, *res = malloc (strlen (str) + 1);
+	char *p, *res = g_malloc (strlen (str) + 1);
 
 	p = res;
 	while (1)
@@ -70,11 +70,11 @@ notify_netcmp (char *str, void *serv)
 
 	if (rfc_casecmp (str, net) == 0)
 	{
-		free (net);
+		g_free (net);
 		return 0;	/* finish & return FALSE from token_foreach() */
 	}
 
-	free (net);
+	g_free (net);
 	return 1;	/* keep going... */
 }
 
@@ -111,10 +111,9 @@ notify_find_server_entry (struct notify *notify, struct server *serv)
 	if (!notify_do_network (notify, serv))
 		return NULL;
 
-	servnot = malloc (sizeof (struct notify_per_server));
+	servnot = g_malloc0 (sizeof (struct notify_per_server));
 	if (servnot)
 	{
-		memset (servnot, 0, sizeof (struct notify_per_server));
 		servnot->server = serv;
 		servnot->notify = notify;
 		notify->server_list = g_slist_prepend (notify->server_list, servnot);
@@ -247,10 +246,13 @@ notify_announce_online (server * serv, struct notify_per_server *servnot,
 
 	    /* Let's do whois with idle time (like in /quote WHOIS %s %s) */
 
-	    char *wii_str = malloc (strlen (nick) * 2 + 2);
-	    sprintf (wii_str, "%s %s", nick, nick);
-	    serv->p_whois (serv, wii_str);
-	    free (wii_str);
+	    char *wii_str = g_malloc (strlen (nick) * 2 + 2);
+	    if (wii_str)
+	    {
+	        g_snprintf (wii_str, strlen (nick) * 2 + 2, "%s %s", nick, nick);
+	        serv->p_whois (serv, wii_str);
+	        g_free (wii_str);
+	    }
 	}
 }
 
@@ -590,14 +592,14 @@ notify_deluser (char *name)
 				servnot = (struct notify_per_server *) notify->server_list->data;
 				notify->server_list =
 					g_slist_remove (notify->server_list, servnot);
-				free (servnot);
+				g_free (servnot);
 			}
 			notify_list = g_slist_remove (notify_list, notify);
 			notify_watch_all (notify, FALSE);
 			if (notify->networks)
-				free (notify->networks);
-			free (notify->name);
-			free (notify);
+				g_free (notify->networks);
+			g_free (notify->name);
+			g_free (notify);
 			fe_notify_update (0);
 			return 1;
 		}
@@ -609,13 +611,12 @@ notify_deluser (char *name)
 void
 notify_adduser (char *name, char *networks)
 {
-	struct notify *notify = malloc (sizeof (struct notify));
+	struct notify *notify = g_malloc0 (sizeof (struct notify));
 	if (notify)
 	{
-		memset (notify, 0, sizeof (struct notify));
 		if (strlen (name) >= NICKLEN)
 		{
-			notify->name = malloc (NICKLEN);
+			notify->name = g_malloc (NICKLEN);
 			safe_strcpy (notify->name, name, NICKLEN);
 		} else
 		{

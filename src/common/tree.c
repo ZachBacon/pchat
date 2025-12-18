@@ -25,6 +25,7 @@ a tree, but it could be :)
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <glib.h>
 
 #include "tree.h"
 
@@ -42,7 +43,7 @@ struct _tree
 tree *
 tree_new (tree_cmp_func *cmp, void *data)
 {
-	tree *t = calloc (1, sizeof (tree));
+	tree *t = g_malloc0 (sizeof (tree));
 	t->cmp = cmp;
 	t->data = data;
 	return t;

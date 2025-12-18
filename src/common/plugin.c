@@ -197,7 +197,7 @@ plugin_list_add (xchat_context *ctx, char *filename, const char *name,
 {
 	xchat_plugin *pl;
 
-	pl = malloc (sizeof (xchat_plugin));
+	pl = g_malloc (sizeof (xchat_plugin));
 	pl->handle = handle;
 	pl->filename = filename;
 	pl->context = ctx;
@@ -857,8 +857,7 @@ plugin_add_hook (xchat_plugin *pl, int type, int pri, const char *name,
 {
 	xchat_hook *hook;
 
-	hook = malloc (sizeof (xchat_hook));
-	memset (hook, 0, sizeof (xchat_hook));
+	hook = g_malloc0 (sizeof (xchat_hook));
 
 	hook->type = type;
 	hook->pri = pri;
@@ -1320,7 +1319,7 @@ xchat_list_get (xchat_plugin *ph, const char *name)
 {
 	xchat_list *list;
 
-	list = malloc (sizeof (xchat_list));
+	list = g_malloc (sizeof (xchat_list));
 	list->pos = NULL;
 
 	switch (str_hash (name))
@@ -1966,7 +1965,7 @@ xchat_pluginpref_get_str (xchat_plugin *pl, const char *var, char *dest)
 	}
 
 	fstat (fh, &st);
-	cfg = malloc (st.st_size + 1);
+	cfg = g_malloc (st.st_size + 1);
 
 	if (!cfg)
 	{

@@ -986,7 +986,7 @@ server_read_child (GIOChannel *source, GIOCondition condition, server *serv)
 		prefs.local_ip = inet_addr (tbuf);
 		break;
 	case '7':						  /* gethostbyname (prefs.pchat_net_bind_host) failed */
-		sprintf (outbuf,
+		g_snprintf (outbuf, sizeof (outbuf),
 					_("Cannot resolve hostname %s\nCheck your IP Settings!\n"),
 					prefs.pchat_net_bind_host);
 		PrintText (sess, outbuf);
@@ -1090,7 +1090,7 @@ server_disconnect (session * sess, int sendquit, int err)
 		notc_msg (sess);
 		return;
 	case 1:							  /* it was in the process of connecting */
-		sprintf (tbuf, "%d", sess->server->childpid);
+		g_snprintf (tbuf, sizeof (tbuf), "%d", sess->server->childpid);
 		EMIT_SIGNAL (XP_TE_STOPCONNECT, sess, tbuf, NULL, NULL, NULL, 0);
 		return;
 	case 3:

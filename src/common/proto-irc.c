@@ -1475,9 +1475,9 @@ irc_inline (server *serv, char *buf, int len)
 	char *pdibuf = pdibuf_static;
 	message_tags_data tags_data = MESSAGE_TAGS_DATA_INIT;
 
-	/* need more than 522? fall back to malloc */
+	/* need more than 522? fall back to g_malloc */
 	if (len >= sizeof (pdibuf_static))
-		pdibuf = malloc (len + 1);
+		pdibuf = g_malloc (len + 1);
 
 	sess = serv->front_session;
 
@@ -1557,7 +1557,7 @@ irc_inline (server *serv, char *buf, int len)
 
 xit:
 	if (pdibuf != pdibuf_static)
-		free (pdibuf);
+		g_free (pdibuf);
 }
 
 void

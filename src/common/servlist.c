@@ -570,8 +570,7 @@ servlist_favchan_copy (favchannel *fav)
 {
 	favchannel *newfav;
 
-	newfav = malloc (sizeof (favchannel));
-	memset (newfav, 0, sizeof (favchannel));
+	newfav = g_malloc0 (sizeof (favchannel));
 
 	newfav->name = g_strdup (fav->name);
 	newfav->key = g_strdup (fav->key);		/* g_strdup() can handle NULLs so no need to check it */
@@ -928,8 +927,7 @@ servlist_server_add (ircnet *net, char *name)
 {
 	ircserver *serv;
 
-	serv = malloc (sizeof (ircserver));
-	memset (serv, 0, sizeof (ircserver));
+	serv = g_malloc0 (sizeof (ircserver));
 	serv->hostname = g_strdup (name);
 
 	net->servlist = g_slist_append (net->servlist, serv);
@@ -942,8 +940,7 @@ servlist_command_add (ircnet *net, char *cmd)
 {
 	commandentry *entry;
 
-	entry = malloc (sizeof (commandentry));
-	memset (entry, 0, sizeof (commandentry));
+	entry = g_malloc0 (sizeof (commandentry));
 	entry->command = g_strdup (cmd);
 
 	net->commandlist = g_slist_append (net->commandlist, entry);
@@ -956,8 +953,7 @@ servlist_favchan_listadd (GSList *chanlist, char *channel, char *key)
 {
 	favchannel *chan;
 
-	chan = malloc (sizeof (favchannel));
-	memset (chan, 0, sizeof (favchannel));
+	chan = g_malloc0 (sizeof (favchannel));
 
 	chan->name = g_strdup (channel);
 	chan->key = g_strdup (key);
@@ -1114,8 +1110,7 @@ servlist_net_add (char *name, char *comment, int prepend)
 {
 	ircnet *net;
 
-	net = malloc (sizeof (ircnet));
-	memset (net, 0, sizeof (ircnet));
+	net = g_malloc0 (sizeof (ircnet));
 	net->name = g_strdup (name);
 /*	net->comment = g_strdup (comment);*/
 	net->flags = FLAG_CYCLE | FLAG_USE_GLOBAL | FLAG_USE_PROXY;
