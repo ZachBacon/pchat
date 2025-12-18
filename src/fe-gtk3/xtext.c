@@ -17,9 +17,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  * =========================================================================
  *
- *   - direct manipulation of video memory
- *   - overall speed
- *   - other things
+ * Rendering: Uses GTK3 + Cairo + Pango
+ *   - Cairo backend is determined by GTK3 build (Win32 on Windows, X11 on Linux)
+ *   - Direct2D would require custom Cairo build with D2D backend enabled
+ *   - Font rendering optimized per-platform (ClearType hints on Windows, subpixel on Unix)
+ *   - Hardware acceleration depends on GTK/GDK backend capabilities
  */
 
 #define GDK_MULTIHEAD_SAFE
@@ -153,6 +155,7 @@ static cairo_t *
 gtk_xtext_create_cairo_handle (GtkXText *xtext)
 {
 	cairo_t *cr;
+	cairo_surface_t *surface;
 
 	g_return_val_if_fail(xtext != NULL, NULL);
 	
@@ -168,6 +171,19 @@ gtk_xtext_create_cairo_handle (GtkXText *xtext)
 		return NULL;
 	
 	cr = gdk_cairo_create (gtk_widget_get_window (&xtext->widget));
+	
+	/* Enable performance hints for the Cairo surface
+	 * This helps on all platforms, especially Windows */
+	if (cr)
+	{
+		surface = cairo_get_target (cr);
+		if (surface)
+		{
+			/* Hint that we'll be doing lots of similar operations */
+			cairo_surface_set_mime_data (surface, "application/x-cairo-hint-rendering",
+			                              (const unsigned char *)"fast", 4, NULL, NULL);
+		}
+	}
 
 	return cr;
 }
@@ -199,8 +215,9 @@ xtext_draw_bg (GtkXText *xtext, int x, int y, int width, int height)
 
 	g_return_if_fail(xtext != NULL);
 
-	/* Skip background fills during draw callback - we already filled the entire background */
-	if (xtext->draw_cr)
+	/* Skip background fills during draw callback ONLY if using default background
+	 * We need to draw custom backgrounds for selection highlighting */
+	if (xtext->draw_cr && !xtext->backcolor)
 		return;
 
 	cr = gtk_xtext_create_cairo_handle(xtext);
@@ -209,7 +226,7 @@ xtext_draw_bg (GtkXText *xtext, int x, int y, int width, int height)
 	cairo_rectangle(cr, x, y, width, height);
 
         cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-	if (xtext->bg_pattern)
+	if (xtext->bg_pattern && !xtext->backcolor)
 		cairo_set_source(cr, xtext->bg_pattern);
 	else
 		gdk_cairo_set_source_rgba(cr, &xtext->bgc);
@@ -296,9 +313,34 @@ backend_init (GtkXText *xtext)
 {
 	if (xtext->layout == NULL)
 	{
+		PangoContext *context;
+		cairo_font_options_t *font_options;
+		
 		xtext->layout = gtk_widget_create_pango_layout (GTK_WIDGET (xtext), 0);
 		if (xtext->font)
 			pango_layout_set_font_description (xtext->layout, xtext->font->font);
+		
+		/* Set platform-optimized font rendering options */
+		context = pango_layout_get_context (xtext->layout);
+		if (context)
+		{
+			font_options = cairo_font_options_create ();
+#ifdef _WIN32
+			/* On Windows, use grayscale antialiasing which integrates well with ClearType
+			 * Note: Direct2D backend is not used as GTK3/Cairo defaults to Win32 backend
+			 * For Direct2D, GTK4 or custom Cairo builds would be needed */
+			cairo_font_options_set_antialias (font_options, CAIRO_ANTIALIAS_GRAY);
+			cairo_font_options_set_hint_style (font_options, CAIRO_HINT_STYLE_FULL);
+			cairo_font_options_set_hint_metrics (font_options, CAIRO_HINT_METRICS_ON);
+#else
+			/* On Linux/Unix, subpixel antialiasing typically provides better results */
+			cairo_font_options_set_antialias (font_options, CAIRO_ANTIALIAS_SUBPIXEL);
+			cairo_font_options_set_hint_style (font_options, CAIRO_HINT_STYLE_SLIGHT);
+#endif
+			pango_cairo_context_set_font_options (context, font_options);
+			cairo_font_options_destroy (font_options);
+			pango_layout_context_changed (xtext->layout);
+		}
 	}
 }
 
@@ -1235,7 +1277,8 @@ gtk_xtext_selection_draw (GtkXText * xtext, GdkEventMotion * event, gboolean ren
 		return;
 	}
 	else if (tmp) {
-		offset_start = xtext->buffer->last_offset_start;
+		/* out of bounds (clicked in indent area), use offset 0 */
+		offset_start = 0;
 	}
 
 	ent_end = gtk_xtext_find_char (xtext, high_x, high_y, &offset_end, &tmp);
@@ -1252,7 +1295,8 @@ gtk_xtext_selection_draw (GtkXText * xtext, GdkEventMotion * event, gboolean ren
 	}
 	else if (tmp)
 	{
-		offset_end = xtext->buffer->last_offset_end;
+		/* out of bounds (clicked in indent area), use offset 0 */
+		offset_end = 0;
 	}
 
 	/* marking less than a complete line? */
@@ -1263,6 +1307,10 @@ gtk_xtext_selection_draw (GtkXText * xtext, GdkEventMotion * event, gboolean ren
 		offset_start = offset_end;
 		offset_end = tmp;
 	}
+
+	/* Don't create zero-length selections */
+	if (ent_start == ent_end && offset_start == offset_end)
+		return;
 
 	/* has the selection changed? Dont render unless necessary
 	if (xtext->buffer->last_ent_start == ent_start &&
@@ -1302,7 +1350,11 @@ gtk_xtext_selection_draw (GtkXText * xtext, GdkEventMotion * event, gboolean ren
 	}
 
 	if (render)
+	{
 		gtk_xtext_selection_render (xtext, ent_start, offset_start, ent_end, offset_end);
+		/* In GTK3, we need to queue a draw to actually show the selection */
+		gtk_widget_queue_draw (GTK_WIDGET (xtext));
+	}
 }
 
 static int
@@ -1615,7 +1667,10 @@ gtk_xtext_motion_notify (GtkWidget * widget, GdkEventMotion * event)
 	textentry *word_ent;
 	int word_type;
 
-	gdk_window_get_pointer (gtk_widget_get_window (widget), &x, &y, &mask);
+	/* Use event coordinates directly instead of deprecated gdk_window_get_pointer */
+	x = event->x;
+	y = event->y;
+	mask = event->state;
 
 	if (xtext->moving_separator)
 	{
@@ -1873,7 +1928,10 @@ gtk_xtext_button_press (GtkWidget * widget, GdkEventButton * event)
 	unsigned char *word;
 	int line_x, x, y, offset, len;
 
-	gdk_window_get_pointer (gtk_widget_get_window (widget), &x, &y, &mask);
+	/* Use event coordinates directly instead of deprecated gdk_window_get_pointer */
+	x = event->x;
+	y = event->y;
+	mask = event->state;
 
 	if (event->button == 3 || event->button == 2) /* right/middle click */
 	{
@@ -1947,6 +2005,8 @@ gtk_xtext_button_press (GtkWidget * widget, GdkEventButton * event)
 	xtext->button_down = TRUE;
 	xtext->select_start_x = x;
 	xtext->select_start_y = y;
+	xtext->select_end_x = x;
+	xtext->select_end_y = y;
 	xtext->select_start_adj = gtk_adjustment_get_value (xtext->adj);
 
 	return FALSE;
