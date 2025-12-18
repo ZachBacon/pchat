@@ -210,7 +210,7 @@ url_opengui ()
 
 	gtkutil_button (hbox, "_Clear",
 						 _("Clear list"), url_button_clear, 0, _("Clear"));
-	gtkutil_button (hbox, GTK_STOCK_COPY,
+	gtkutil_button (hbox, "edit-copy",
 						 _("Copy selected URL"), url_button_copy, view, _("Copy"));
 	gtkutil_button (hbox, "_Save",
 						 _("Save list to a file"), url_button_save, 0, _("Save As..."));

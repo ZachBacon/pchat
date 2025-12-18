@@ -58,8 +58,10 @@
 #ifdef USE_OPENSSL
 #include <openssl/bn.h>
 #include <openssl/rand.h>
-#include <openssl/blowfish.h>
-#include <openssl/aes.h>
+#include <openssl/evp.h>
+#include <openssl/dh.h>
+#include <openssl/core_names.h>
+#include <openssl/param_build.h>
 #ifndef _WIN32
 #include <netinet/in.h>
 #endif
@@ -1975,18 +1977,23 @@ encode_sasl_pass_plain (char *user, char *pass)
 /* Adapted from ZNC's SASL module */
 
 static int
-parse_dh (char *str, DH **dh_out, unsigned char **secret_out, int *keysize_out)
+parse_dh (char *str, EVP_PKEY **pkey_out, unsigned char **secret_out, int *keysize_out)
 {
-	DH *dh;
-	guchar *data, *decoded_data;
-	guchar *secret;
+	EVP_PKEY *pkey = NULL;
+	EVP_PKEY *peer_pkey = NULL;
+	EVP_PKEY_CTX *pctx = NULL;
+	EVP_PKEY_CTX *kctx = NULL;
+	OSSL_PARAM_BLD *param_bld = NULL;
+	OSSL_PARAM *params = NULL;
+	guchar *data, *decoded_data = NULL;
+	guchar *secret = NULL;
 	gsize data_len;
 	guint size;
 	guint16 size16;
-	BIGNUM *pubkey;
+	BIGNUM *p = NULL, *g = NULL, *peer_pub = NULL;
+	size_t secret_len;
 	gint key_size;
 
-	dh = DH_new();
 	data = decoded_data = g_base64_decode (str, &data_len);
 	if (data_len < 2)
 		goto fail;
@@ -2000,34 +2007,69 @@ parse_dh (char *str, DH **dh_out, unsigned char **secret_out, int *keysize_out)
 	if (size > data_len)
 		goto fail;
 
-	{
-		BIGNUM *p = BN_bin2bn (data, size, NULL);
-		data += size;
-
-		/* Generator */
-		if (data_len < 2)
-		{
-			BN_free (p);
-			goto fail;
-		}
-
-		memcpy (&size16, data, sizeof(size16));
-		size = ntohs (size16);
-		data += 2;
-		data_len -= 2;
-
-		if (size > data_len)
-		{
-			BN_free (p);
-			goto fail;
-		}
-
-		BIGNUM *g = BN_bin2bn (data, size, NULL);
-		DH_set0_pqg (dh, p, NULL, g);
-	}
+	p = BN_bin2bn (data, size, NULL);
+	if (!p)
+		goto fail;
 	data += size;
 
-	/* pub key */
+	/* Generator */
+	if (data_len < 2)
+		goto fail;
+
+	memcpy (&size16, data, sizeof(size16));
+	size = ntohs (size16);
+	data += 2;
+	data_len -= 2;
+
+	if (size > data_len)
+		goto fail;
+
+	g = BN_bin2bn (data, size, NULL);
+	if (!g)
+		goto fail;
+	data += size;
+
+	/* Build DH parameters */
+	param_bld = OSSL_PARAM_BLD_new();
+	if (!param_bld)
+		goto fail;
+
+	if (!OSSL_PARAM_BLD_push_BN(param_bld, OSSL_PKEY_PARAM_FFC_P, p))
+		goto fail;
+	if (!OSSL_PARAM_BLD_push_BN(param_bld, OSSL_PKEY_PARAM_FFC_G, g))
+		goto fail;
+
+	params = OSSL_PARAM_BLD_to_param(param_bld);
+	if (!params)
+		goto fail;
+
+	/* Create DH key context */
+	pctx = EVP_PKEY_CTX_new_from_name(NULL, "DH", NULL);
+	if (!pctx)
+		goto fail;
+
+	if (EVP_PKEY_fromdata_init(pctx) <= 0)
+		goto fail;
+
+	if (EVP_PKEY_fromdata(pctx, &pkey, EVP_PKEY_KEY_PARAMETERS, params) <= 0)
+		goto fail;
+
+	/* Generate our keypair */
+	kctx = EVP_PKEY_CTX_new(pkey, NULL);
+	if (!kctx)
+		goto fail;
+
+	if (EVP_PKEY_keygen_init(kctx) <= 0)
+		goto fail;
+
+	EVP_PKEY *temp_pkey = NULL;
+	if (EVP_PKEY_keygen(kctx, &temp_pkey) <= 0)
+		goto fail;
+
+	EVP_PKEY_free(pkey);
+	pkey = temp_pkey;
+
+	/* Parse peer's public key */
 	if (data_len < 2)
 		goto fail;
 
@@ -2036,18 +2078,98 @@ parse_dh (char *str, DH **dh_out, unsigned char **secret_out, int *keysize_out)
 	data += 2;
 	data_len -= 2;
 
-	pubkey = BN_bin2bn (data, size, NULL);
-	if (!(DH_generate_key (dh)))
+	peer_pub = BN_bin2bn (data, size, NULL);
+	if (!peer_pub)
 		goto fail;
 
-	secret = (unsigned char*)malloc (DH_size(dh));
-	key_size = DH_compute_key (secret, pubkey, dh);
-	if (key_size == -1)
+	/* Build peer's public key */
+	OSSL_PARAM_BLD *peer_bld = OSSL_PARAM_BLD_new();
+	if (!peer_bld)
 		goto fail;
+
+	if (!OSSL_PARAM_BLD_push_BN(peer_bld, OSSL_PKEY_PARAM_FFC_P, p))
+	{
+		OSSL_PARAM_BLD_free(peer_bld);
+		goto fail;
+	}
+	if (!OSSL_PARAM_BLD_push_BN(peer_bld, OSSL_PKEY_PARAM_FFC_G, g))
+	{
+		OSSL_PARAM_BLD_free(peer_bld);
+		goto fail;
+	}
+	if (!OSSL_PARAM_BLD_push_BN(peer_bld, OSSL_PKEY_PARAM_PUB_KEY, peer_pub))
+	{
+		OSSL_PARAM_BLD_free(peer_bld);
+		goto fail;
+	}
+
+	OSSL_PARAM *peer_params = OSSL_PARAM_BLD_to_param(peer_bld);
+	OSSL_PARAM_BLD_free(peer_bld);
+	if (!peer_params)
+		goto fail;
+
+	EVP_PKEY_CTX *peer_ctx = EVP_PKEY_CTX_new_from_name(NULL, "DH", NULL);
+	if (!peer_ctx)
+	{
+		OSSL_PARAM_free(peer_params);
+		goto fail;
+	}
+
+	if (EVP_PKEY_fromdata_init(peer_ctx) <= 0 ||
+	    EVP_PKEY_fromdata(peer_ctx, &peer_pkey, EVP_PKEY_PUBLIC_KEY, peer_params) <= 0)
+	{
+		EVP_PKEY_CTX_free(peer_ctx);
+		OSSL_PARAM_free(peer_params);
+		goto fail;
+	}
+
+	EVP_PKEY_CTX_free(peer_ctx);
+	OSSL_PARAM_free(peer_params);
+
+	/* Derive shared secret */
+	EVP_PKEY_CTX *derive_ctx = EVP_PKEY_CTX_new(pkey, NULL);
+	if (!derive_ctx)
+		goto fail;
+
+	if (EVP_PKEY_derive_init(derive_ctx) <= 0)
+	{
+		EVP_PKEY_CTX_free(derive_ctx);
+		goto fail;
+	}
+
+	if (EVP_PKEY_derive_set_peer(derive_ctx, peer_pkey) <= 0)
+	{
+		EVP_PKEY_CTX_free(derive_ctx);
+		goto fail;
+	}
+
+	if (EVP_PKEY_derive(derive_ctx, NULL, &secret_len) <= 0)
+	{
+		EVP_PKEY_CTX_free(derive_ctx);
+		goto fail;
+	}
+
+	secret = (unsigned char*)malloc(secret_len);
+	if (EVP_PKEY_derive(derive_ctx, secret, &secret_len) <= 0)
+	{
+		EVP_PKEY_CTX_free(derive_ctx);
+		goto fail;
+	}
+
+	EVP_PKEY_CTX_free(derive_ctx);
+	key_size = secret_len;
 
 	g_free (decoded_data);
+	BN_free(p);
+	BN_free(g);
+	BN_free(peer_pub);
+	EVP_PKEY_free(peer_pkey);
+	OSSL_PARAM_free(params);
+	OSSL_PARAM_BLD_free(param_bld);
+	EVP_PKEY_CTX_free(pctx);
+	EVP_PKEY_CTX_free(kctx);
 
-	*dh_out = dh;
+	*pkey_out = pkey;
 	*secret_out = secret;
 	*keysize_out = key_size;
 	return 1;
@@ -2055,52 +2177,88 @@ parse_dh (char *str, DH **dh_out, unsigned char **secret_out, int *keysize_out)
 fail:
 	if (decoded_data)
 		g_free (decoded_data);
+	if (p)
+		BN_free(p);
+	if (g)
+		BN_free(g);
+	if (peer_pub)
+		BN_free(peer_pub);
+	if (peer_pkey)
+		EVP_PKEY_free(peer_pkey);
+	if (pkey)
+		EVP_PKEY_free(pkey);
+	if (secret)
+		free(secret);
+	if (params)
+		OSSL_PARAM_free(params);
+	if (param_bld)
+		OSSL_PARAM_BLD_free(param_bld);
+	if (pctx)
+		EVP_PKEY_CTX_free(pctx);
+	if (kctx)
+		EVP_PKEY_CTX_free(kctx);
 	return 0;
 }
 
 char *
 encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 {
-	DH *dh;
-	char *response, *ret;
-	unsigned char *secret;
-	unsigned char *encrypted_pass;
-	char *plain_pass;
-	BF_KEY key;
+	EVP_PKEY *pkey = NULL;
+	char *response, *ret = NULL;
+	unsigned char *secret = NULL;
+	unsigned char *encrypted_pass = NULL;
+	char *plain_pass = NULL;
+	EVP_CIPHER_CTX *ctx = NULL;
 	int key_size, length;
 	int pass_len = strlen (pass) + (8 - (strlen (pass) % 8));
 	int user_len = strlen (user);
 	guint16 size16;
-	char *in_ptr, *out_ptr;
+	char *out_ptr;
+	BIGNUM *pub_key = NULL;
+	int pub_key_len;
 
-	if (!parse_dh (data, &dh, &secret, &key_size))
+	if (!parse_dh (data, &pkey, &secret, &key_size))
 		return NULL;
-	BF_set_key (&key, key_size, secret);
+
+	/* Encrypt password with Blowfish ECB */
+	ctx = EVP_CIPHER_CTX_new();
+	if (!ctx)
+		goto cleanup;
 
 	encrypted_pass = (guchar*)malloc (pass_len);
 	memset (encrypted_pass, 0, pass_len);
 	plain_pass = (char*)malloc (pass_len);
 	memset (plain_pass, 0, pass_len);
-	memcpy (plain_pass, pass, pass_len);
-	out_ptr = (char*)encrypted_pass;
-	in_ptr = (char*)plain_pass;
+	memcpy (plain_pass, pass, strlen(pass));
 
-	for (length = pass_len; length; length -= 8, in_ptr += 8, out_ptr += 8)
-		BF_ecb_encrypt ((unsigned char*)in_ptr, (unsigned char*)out_ptr, &key, BF_ENCRYPT);
+	/* Blowfish ECB encryption */
+	if (EVP_EncryptInit_ex(ctx, EVP_bf_ecb(), NULL, secret, NULL) <= 0)
+		goto cleanup;
+	EVP_CIPHER_CTX_set_padding(ctx, 0);
 
-	/* Create response */
-	const BIGNUM *dh_pub_key;
-	DH_get0_key (dh, &dh_pub_key, NULL);
-	length = 2 + BN_num_bytes (dh_pub_key) + pass_len + user_len + 1;
+	int outlen;
+	for (int i = 0; i < pass_len; i += 8)
+	{
+		if (EVP_EncryptUpdate(ctx, encrypted_pass + i, &outlen, 
+		                      (unsigned char*)plain_pass + i, 8) <= 0)
+			goto cleanup;
+	}
+
+	/* Get our public key */
+	if (!EVP_PKEY_get_bn_param(pkey, OSSL_PKEY_PARAM_PUB_KEY, &pub_key))
+		goto cleanup;
+
+	pub_key_len = BN_num_bytes(pub_key);
+	length = 2 + pub_key_len + pass_len + user_len + 1;
 	response = (char*)malloc (length);
 	out_ptr = response;
 
 	/* our key */
-	size16 = htons ((guint16)BN_num_bytes (dh_pub_key));
+	size16 = htons ((guint16)pub_key_len);
 	memcpy (out_ptr, &size16, sizeof(size16));
 	out_ptr += 2;
-	BN_bn2bin (dh_pub_key, (guchar*)out_ptr);
-	out_ptr += BN_num_bytes (dh_pub_key);
+	BN_bn2bin (pub_key, (guchar*)out_ptr);
+	out_ptr += pub_key_len;
 
 	/* username */
 	memcpy (out_ptr, user, user_len + 1);
@@ -2110,12 +2268,21 @@ encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 	memcpy (out_ptr, encrypted_pass, pass_len);
 
 	ret = g_base64_encode ((const guchar*)response, length);
-
-	DH_free (dh);
-	free (plain_pass);
-	free (encrypted_pass);
-	free (secret);
 	free (response);
+
+cleanup:
+	if (ctx)
+		EVP_CIPHER_CTX_free(ctx);
+	if (pkey)
+		EVP_PKEY_free(pkey);
+	if (plain_pass)
+		free(plain_pass);
+	if (encrypted_pass)
+		free(encrypted_pass);
+	if (secret)
+		free(secret);
+	if (pub_key)
+		BN_free(pub_key);
 
 	return ret;
 }
@@ -2123,22 +2290,25 @@ encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 char *
 encode_sasl_pass_aes (char *user, char *pass, char *data)
 {
-	DH *dh;
-	AES_KEY key;
+	EVP_PKEY *pkey = NULL;
+	EVP_CIPHER_CTX *ctx = NULL;
 	char *response = NULL;
 	char *out_ptr, *ret = NULL;
-	unsigned char *secret, *ptr;
-	unsigned char *encrypted_userpass, *plain_userpass;
+	unsigned char *secret = NULL, *ptr;
+	unsigned char *encrypted_userpass = NULL, *plain_userpass = NULL;
 	int key_size, length;
 	guint16 size16;
-	unsigned char iv[16], iv_copy[16];
+	unsigned char iv[16];
 	int user_len = strlen (user) + 1;
 	int pass_len = strlen (pass) + 1;
 	int len = user_len + pass_len;
 	int padlen = 16 - (len % 16);
 	int userpass_len = len + padlen;
+	BIGNUM *pub_key = NULL;
+	int pub_key_len;
+	int outlen;
 
-	if (!parse_dh (data, &dh, &secret, &key_size))
+	if (!parse_dh (data, &pkey, &secret, &key_size))
 		return NULL;
 
 	encrypted_userpass = (guchar*)malloc (userpass_len);
@@ -2166,26 +2336,44 @@ encode_sasl_pass_aes (char *user, char *pass, char *data)
 	if (!RAND_bytes (iv, sizeof (iv)))
 		goto end;
 
-	memcpy (iv_copy, iv, sizeof(iv));
+	/* Encrypt with AES-CBC */
+	ctx = EVP_CIPHER_CTX_new();
+	if (!ctx)
+		goto end;
 
-	/* Encrypt */
-	AES_set_encrypt_key (secret, key_size * 8, &key);
-	AES_cbc_encrypt(plain_userpass, encrypted_userpass, userpass_len, &key, iv_copy, AES_ENCRYPT);
+	const EVP_CIPHER *cipher;
+	if (key_size == 16)
+		cipher = EVP_aes_128_cbc();
+	else if (key_size == 32)
+		cipher = EVP_aes_256_cbc();
+	else
+		goto end;
+
+	if (EVP_EncryptInit_ex(ctx, cipher, NULL, secret, iv) <= 0)
+		goto end;
+	EVP_CIPHER_CTX_set_padding(ctx, 0);
+
+	if (EVP_EncryptUpdate(ctx, encrypted_userpass, &outlen, plain_userpass, userpass_len) <= 0)
+		goto end;
+
+	/* Get our public key */
+	if (!EVP_PKEY_get_bn_param(pkey, OSSL_PKEY_PARAM_PUB_KEY, &pub_key))
+		goto end;
+
+	pub_key_len = BN_num_bytes(pub_key);
 
 	/* Create response */
 	/* format of:  <size pubkey><pubkey><iv (always 16 bytes)><ciphertext> */
-	length = 2 + key_size + sizeof(iv) + userpass_len;
+	length = 2 + pub_key_len + sizeof(iv) + userpass_len;
 	response = (char*)malloc (length);
 	out_ptr = response;
 
 	/* our key */
-	const BIGNUM *dh_pub_key;
-	DH_get0_key (dh, &dh_pub_key, NULL);
-	size16 = htons ((guint16)key_size);
+	size16 = htons ((guint16)pub_key_len);
 	memcpy (out_ptr, &size16, sizeof(size16));
 	out_ptr += 2;
-	BN_bn2bin (dh_pub_key, (guchar*)out_ptr);
-	out_ptr += key_size;
+	BN_bn2bin (pub_key, (guchar*)out_ptr);
+	out_ptr += pub_key_len;
 
 	/* iv */
 	memcpy (out_ptr, iv, sizeof(iv));
@@ -2197,12 +2385,20 @@ encode_sasl_pass_aes (char *user, char *pass, char *data)
 	ret = g_base64_encode ((const guchar*)response, length);
 
 end:
-	DH_free (dh);
-	free (plain_userpass);
-	free (encrypted_userpass);
-	free (secret);
+	if (ctx)
+		EVP_CIPHER_CTX_free(ctx);
+	if (pkey)
+		EVP_PKEY_free(pkey);
+	if (plain_userpass)
+		free(plain_userpass);
+	if (encrypted_userpass)
+		free(encrypted_userpass);
+	if (secret)
+		free(secret);
+	if (pub_key)
+		BN_free(pub_key);
 	if (response)
-		free (response);
+		free(response);
 
 	return ret;
 }

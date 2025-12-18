@@ -16,6 +16,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+/* NOTE: gtk_status_icon is deprecated in GTK 3.14+ with no direct replacement
+ * in GTK3. The recommended alternatives (libappindicator or StatusNotifierItem)
+ * require additional dependencies. For GTK3 compatibility, we continue using
+ * gtk_status_icon. A future GTK4 port will need to use GtkApplication with
+ * proper notification/indicator support. */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 #include <string.h>
 #include "../common/xchat-plugin.h"
 #include "../common/xchat.h"
@@ -653,10 +661,10 @@ tray_menu_cb (GtkWidget *widget, guint button, guint time, gpointer userdata)
 	menu_add_plugin_items (menu, "\x5$TRAY", NULL);
 #ifdef _WIN32
 	tray_make_item (menu, NULL, tray_menu_quit_cb, NULL);
-	mg_create_icon_item (_("_Preferences"), GTK_STOCK_PREFERENCES, menu, tray_menu_settings, NULL);
+	mg_create_icon_item (_("_Preferences"), "preferences-system", menu, tray_menu_settings, NULL);
 #endif
 	tray_make_item (menu, NULL, tray_menu_quit_cb, NULL);
-	mg_create_icon_item (_("_Quit"), GTK_STOCK_QUIT, menu, tray_menu_quit_cb, NULL);
+	mg_create_icon_item (_("_Quit"), "application-exit", menu, tray_menu_quit_cb, NULL);
 
 	g_object_ref (menu);
 	g_object_ref_sink (menu);
@@ -906,3 +914,5 @@ tray_plugin_deinit (xchat_plugin *plugin_handle)
 #endif
 	return 1;
 }
+
+#pragma GCC diagnostic pop

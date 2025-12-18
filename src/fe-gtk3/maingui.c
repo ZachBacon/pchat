@@ -1233,24 +1233,25 @@ mg_open_quit_dialog (gboolean minimize_button)
 	dialog_vbox1 = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
 	gtk_widget_show (dialog_vbox1);
 
-	table1 = gtk_table_new (2, 2, FALSE);
+	table1 = gtk_grid_new ();
 	gtk_widget_show (table1);
 	gtk_box_pack_start (GTK_BOX (dialog_vbox1), table1, TRUE, TRUE, 0);
 	gtk_container_set_border_width (GTK_CONTAINER (table1), 6);
-	gtk_table_set_row_spacings (GTK_TABLE (table1), 12);
-	gtk_table_set_col_spacings (GTK_TABLE (table1), 12);
+	gtk_grid_set_row_spacing (GTK_GRID (table1), 12);
+	gtk_grid_set_column_spacing (GTK_GRID (table1), 12);
 
 	image = gtk_image_new_from_icon_name ("gtk-dialog-warning", GTK_ICON_SIZE_BUTTON);
 	gtk_widget_show (image);
-	gtk_table_attach (GTK_TABLE (table1), image, 0, 1, 0, 1,
-							(GtkAttachOptions) (GTK_FILL),
-							(GtkAttachOptions) (GTK_FILL), 0, 0);
+	gtk_grid_attach (GTK_GRID (table1), image, 0, 0, 1, 1);
+	gtk_widget_set_halign (image, GTK_ALIGN_FILL);
+	gtk_widget_set_valign (image, GTK_ALIGN_FILL);
 
 	checkbutton1 = gtk_check_button_new_with_mnemonic (_("Don't ask next time."));
 	gtk_widget_show (checkbutton1);
-	gtk_table_attach (GTK_TABLE (table1), checkbutton1, 0, 2, 1, 2,
-							(GtkAttachOptions) (GTK_EXPAND | GTK_FILL),
-							(GtkAttachOptions) (0), 0, 4);
+	gtk_grid_attach (GTK_GRID (table1), checkbutton1, 0, 1, 2, 1);
+	gtk_widget_set_hexpand (checkbutton1, TRUE);
+	gtk_widget_set_halign (checkbutton1, GTK_ALIGN_FILL);
+	gtk_widget_set_margin_top (checkbutton1, 4);
 
 	connecttext = g_strdup_printf (_("You are connected to %i IRC networks."), cons);
 	text = g_strdup_printf ("<span weight=\"bold\" size=\"larger\">%s</span>\n\n%s\n%s",
@@ -1261,9 +1262,10 @@ mg_open_quit_dialog (gboolean minimize_button)
 	label = gtk_label_new (text);
 	g_free (text);
 	gtk_widget_show (label);
-	gtk_table_attach (GTK_TABLE (table1), label, 1, 2, 0, 1,
-							(GtkAttachOptions) (GTK_EXPAND | GTK_SHRINK | GTK_FILL),
-							(GtkAttachOptions) (GTK_EXPAND | GTK_SHRINK), 0, 0);
+	gtk_grid_attach (GTK_GRID (table1), label, 1, 0, 1, 1);
+	gtk_widget_set_hexpand (label, TRUE);
+	gtk_widget_set_vexpand (label, TRUE);
+	gtk_widget_set_halign (label, GTK_ALIGN_FILL);
 	gtk_label_set_use_markup (GTK_LABEL (label), TRUE);
 	gtk_widget_set_halign (GTK_WIDGET (label), 0 == 0.0 ? GTK_ALIGN_START : (0 == 1.0 ? GTK_ALIGN_END : GTK_ALIGN_CENTER));
 
@@ -1279,13 +1281,15 @@ mg_open_quit_dialog (gboolean minimize_button)
 		gtk_dialog_add_action_widget (GTK_DIALOG (dialog), button, 1);
 	}
 
-	button = gtk_button_new_with_mnemonic ("gtk-cancel");
+button = gtk_button_new_with_mnemonic (_("_Cancel"));
+	gtk_button_set_image (GTK_BUTTON (button), gtk_image_new_from_icon_name ("gtk-cancel", GTK_ICON_SIZE_BUTTON));
 	gtk_widget_show (button);
 	gtk_dialog_add_action_widget (GTK_DIALOG (dialog), button,
 											GTK_RESPONSE_CANCEL);
 	gtk_widget_grab_focus (button);
 
-	button = gtk_button_new_with_mnemonic ("gtk-quit");
+	button = gtk_button_new_with_mnemonic (_("_Quit"));
+	gtk_button_set_image (GTK_BUTTON (button), gtk_image_new_from_icon_name ("application-exit", GTK_ICON_SIZE_BUTTON));
 	gtk_widget_show (button);
 	gtk_dialog_add_action_widget (GTK_DIALOG (dialog), button, 0);
 
@@ -1619,7 +1623,7 @@ mg_create_tabmenu (session *sess, GdkEventButton *event, chan *ch)
 			menu_addconnectmenu (sess->server, menu);
 	}
 
-	mg_create_icon_item (_("_Detach"), GTK_STOCK_REDO, menu,
+	mg_create_icon_item (_("_Detach"), "edit-redo", menu,
 								mg_detach_tab_cb, ch);
 	mg_create_icon_item (_("_Close"), "_Close", menu,
 								mg_destroy_tab_cb, ch);
@@ -1752,7 +1756,9 @@ mg_userlist_button (GtkWidget * box, char *label, char *cmd,
 	GtkWidget *wid = gtk_button_new_with_label (label);
 	g_signal_connect (G_OBJECT (wid), "clicked",
 							G_CALLBACK (userlist_button_cb), cmd);
-	gtk_table_attach_defaults (GTK_TABLE (box), wid, a, b, c, d);
+	gtk_grid_attach (GTK_GRID (box), wid, a, c, b - a, d - c);
+	gtk_widget_set_hexpand (wid, TRUE);
+	gtk_widget_set_vexpand (wid, TRUE);
 	show_and_unfocus (wid);
 }
 
@@ -1764,7 +1770,7 @@ mg_create_userlistbuttons (GtkWidget *box)
 	int a = 0, b = 0;
 	GtkWidget *tab;
 
-	tab = gtk_table_new (5, 2, FALSE);
+	tab = gtk_grid_new ();
 	gtk_box_pack_end (GTK_BOX (box), tab, FALSE, FALSE, 0);
 
 	while (list)
@@ -2128,7 +2134,7 @@ mg_create_link_buttons (GtkWidget *box, gpointer userdata)
 						 mg_x_click_cb, userdata, 0);
 
 	if (!userdata)
-	gtkutil_button (box, GTK_STOCK_REDO, _("Attach/Detach this tab"),
+	gtkutil_button (box, "edit-redo", _("Attach/Detach this tab"),
 						 mg_link_cb, userdata, 0);
 }*/
 
@@ -2219,7 +2225,7 @@ mg_create_topicbar (session *sess, GtkWidget *box)
 	mg_create_dialogbuttons (bbox);
 
 	if (!prefs.pchat_gui_ulist_resizable)
-		gtkutil_button (hbox, GTK_STOCK_GOTO_LAST, _("Show/Hide userlist"),
+		gtkutil_button (hbox, "go-last", _("Show/Hide userlist"),
 							 mg_userlist_toggle_cb, 0, 0);
 }
 
@@ -2600,14 +2606,14 @@ mg_create_center (session *sess, session_gui *gui, GtkWidget *box)
 	gtk_paned_set_wide_handle (GTK_PANED (gui->vpane_right), FALSE);
 
 	/* main horizontal container */
-	gui->hpane_left = gtk_hpaned_new ();
+	gui->hpane_left = gtk_paned_new (GTK_ORIENTATION_HORIZONTAL);
 	gtk_widget_set_vexpand (gui->hpane_left, TRUE);
 	gtk_widget_set_hexpand (gui->hpane_left, TRUE);
 	g_object_set (gui->hpane_left, "wide-handle", FALSE, NULL);
 	gtk_paned_set_wide_handle (GTK_PANED (gui->hpane_left), FALSE);
 
 	/* container for center (text area) */
-	gui->hpane_right = gtk_hpaned_new ();
+	gui->hpane_right = gtk_paned_new (GTK_ORIENTATION_HORIZONTAL);
 	gtk_widget_set_vexpand (gui->hpane_right, TRUE);
 	gtk_widget_set_hexpand (gui->hpane_right, TRUE);
 
@@ -2745,8 +2751,8 @@ mg_place_userlist_and_chanview_real (session_gui *gui, GtkWidget *userlist, GtkW
 		/* incase the previous pos was POS_HIDDEN */
 		gtk_widget_show (chanview);
 
-		gtk_table_set_row_spacing (GTK_TABLE (gui->main_table), 1, 0);
-		gtk_table_set_row_spacing (GTK_TABLE (gui->main_table), 2, 2);
+		gtk_grid_set_row_spacing (GTK_GRID (gui->main_table), 0);
+		/* Note: gtk_grid_set_row_spacing sets spacing between all rows, not individual rows */
 
 		/* then place them back in their new positions */
 		switch (prefs.pchat_gui_tab_pos)
@@ -2764,25 +2770,34 @@ mg_place_userlist_and_chanview_real (session_gui *gui, GtkWidget *userlist, GtkW
 			gtk_paned_pack2 (GTK_PANED (gui->vpane_right), chanview, FALSE, TRUE);
 			break;
 		case POS_TOP:
-			gtk_table_set_row_spacing (GTK_TABLE (gui->main_table), 1, GUI_SPACING-1);
-			gtk_table_attach (GTK_TABLE (gui->main_table), chanview,
-									1, 2, 1, 2, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
+			gtk_grid_set_row_spacing (GTK_GRID (gui->main_table), GUI_SPACING-1);
+			gtk_grid_attach (GTK_GRID (gui->main_table), chanview,
+									1, 1, 1, 1);
+			gtk_widget_set_hexpand (chanview, TRUE);
+			gtk_widget_set_halign (chanview, GTK_ALIGN_FILL);
+			gtk_widget_set_valign (chanview, GTK_ALIGN_FILL);
 			break;
 		case POS_HIDDEN:
 			gtk_widget_hide (chanview);
 			/* always attach it to something to avoid ref_count=0 */
 			if (prefs.pchat_gui_ulist_pos == POS_TOP)
-				gtk_table_attach (GTK_TABLE (gui->main_table), chanview,
-										1, 2, 3, 4, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
+				gtk_grid_attach (GTK_GRID (gui->main_table), chanview,
+										1, 3, 1, 1);
 
 			else
-				gtk_table_attach (GTK_TABLE (gui->main_table), chanview,
-										1, 2, 1, 2, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
+				gtk_grid_attach (GTK_GRID (gui->main_table), chanview,
+										1, 1, 1, 1);
+			gtk_widget_set_hexpand (chanview, TRUE);
+			gtk_widget_set_halign (chanview, GTK_ALIGN_FILL);
+			gtk_widget_set_valign (chanview, GTK_ALIGN_FILL);
 			break;
 		default:/* POS_BOTTOM */
-			gtk_table_set_row_spacing (GTK_TABLE (gui->main_table), 2, 3);
-			gtk_table_attach (GTK_TABLE (gui->main_table), chanview,
-									1, 2, 3, 4, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
+			gtk_grid_set_row_spacing (GTK_GRID (gui->main_table), 3);
+			gtk_grid_attach (GTK_GRID (gui->main_table), chanview,
+									1, 3, 1, 1);
+			gtk_widget_set_hexpand (chanview, TRUE);
+			gtk_widget_set_halign (chanview, GTK_ALIGN_FILL);
+			gtk_widget_set_valign (chanview, GTK_ALIGN_FILL);
 		}
 	}
 
@@ -3226,8 +3241,10 @@ mg_create_menu (session_gui *gui, GtkWidget *table, int away_state)
 
 	gui->menu = menu_create_main (accel_group, TRUE, away_state, !gui->is_tab,
 											gui->menu_item);
-	gtk_table_attach (GTK_TABLE (table), gui->menu, 0, 3, 0, 1,
-						   GTK_EXPAND | GTK_FILL, GTK_SHRINK | GTK_FILL, 0, 0);
+	gtk_grid_attach (GTK_GRID (table), gui->menu, 0, 0, 3, 1);
+	gtk_widget_set_hexpand (gui->menu, TRUE);
+	gtk_widget_set_halign (gui->menu, GTK_ALIGN_FILL);
+	gtk_widget_set_valign (gui->menu, GTK_ALIGN_FILL);
 
 #ifdef HAVE_GTK_MAC
 	gtkosx_application_set_menu_bar(osx_app, GTK_MENU_SHELL(gui->menu));
@@ -3243,8 +3260,9 @@ mg_create_irctab (session *sess, GtkWidget *table)
 	vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
 	gtk_widget_set_vexpand (vbox, TRUE);
 	gtk_widget_set_hexpand (vbox, TRUE);
-	gtk_table_attach (GTK_TABLE (table), vbox, 1, 2, 2, 3,
-						   GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
+	gtk_grid_attach (GTK_GRID (table), vbox, 1, 2, 1, 1);
+	gtk_widget_set_halign (vbox, GTK_ALIGN_FILL);
+	gtk_widget_set_valign (vbox, GTK_ALIGN_FILL);
 	mg_create_center (sess, gui, vbox);
 }
 
@@ -3278,11 +3296,10 @@ mg_create_topwindow (session *sess)
 	GtkWidget *headerbar = mg_create_headerbar_with_menu (sess->gui, win, sess->server->is_away);
 	gtk_window_set_titlebar (GTK_WINDOW (win), headerbar);
 
-	table = gtk_table_new (4, 3, FALSE);
+	table = gtk_grid_new ();
 	/* No spacing needed since menu is now in header bar */
 	/* left and right borders */
-	gtk_table_set_col_spacing (GTK_TABLE (table), 0, 1);
-	gtk_table_set_col_spacing (GTK_TABLE (table), 1, 1);
+	gtk_grid_set_column_spacing (GTK_GRID (table), 1);
 	gtk_widget_set_vexpand (table, TRUE);
 	gtk_widget_set_hexpand (table, TRUE);
 	gtk_container_add (GTK_CONTAINER (win), table);
@@ -3392,11 +3409,10 @@ mg_create_tabwindow (session *sess)
 	GtkWidget *headerbar = mg_create_headerbar_with_menu (sess->gui, win, sess->server->is_away);
 	gtk_window_set_titlebar (GTK_WINDOW (win), headerbar);
 
-	sess->gui->main_table = table = gtk_table_new (4, 3, FALSE);
+	sess->gui->main_table = table = gtk_grid_new ();
 	/* No spacing needed since menu is now in header bar */
 	/* left and right borders */
-	gtk_table_set_col_spacing (GTK_TABLE (table), 0, 1);
-	gtk_table_set_col_spacing (GTK_TABLE (table), 1, 1);
+	gtk_grid_set_column_spacing (GTK_GRID (table), 1);
 	gtk_container_add (GTK_CONTAINER (win), table);
 
 	mg_create_irctab (sess, table);

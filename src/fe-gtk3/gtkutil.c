@@ -615,7 +615,7 @@ gtkutil_treeview_new (GtkWidget *box, GtkTreeModel *model,
 	char *title, *attr;
 
 	win = gtk_scrolled_window_new (0, 0);
-	gtk_container_add (GTK_CONTAINER (box), win);
+	gtk_box_pack_start (GTK_BOX (box), win, TRUE, TRUE, 0);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (win),
 											  GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 	gtk_widget_show (win);

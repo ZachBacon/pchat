@@ -636,6 +636,8 @@ setup_headlabel (GtkWidget *tab, int row, int col, char *text)
 
 	label = gtk_label_new (NULL);
 	gtk_label_set_markup (GTK_LABEL (label), buf);
+	gtk_label_set_justify (GTK_LABEL (label), GTK_JUSTIFY_CENTER);
+	gtk_widget_set_halign (label, GTK_ALIGN_CENTER);
 	gtk_widget_set_margin_start (label, 4);
 	gtk_grid_attach (GTK_GRID (tab), label, col, row, 1, 1);
 }
@@ -665,6 +667,7 @@ setup_create_3oggle (GtkWidget *tab, int row, const setting *set)
 	gtk_grid_attach (GTK_GRID (tab), label, 2, row, 1, 1);
 
 	wid = gtk_check_button_new ();
+	gtk_widget_set_halign (wid, GTK_ALIGN_CENTER);
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (wid),
 											setup_get_int3 (&setup_prefs, offsets[0]));
 	g_signal_connect (G_OBJECT (wid), "toggled",
@@ -672,6 +675,7 @@ setup_create_3oggle (GtkWidget *tab, int row, const setting *set)
 	gtk_grid_attach (GTK_GRID (tab), wid, 3, row, 1, 1);
 
 	wid = gtk_check_button_new ();
+	gtk_widget_set_halign (wid, GTK_ALIGN_CENTER);
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (wid),
 											setup_get_int3 (&setup_prefs, offsets[1]));
 	g_signal_connect (G_OBJECT (wid), "toggled",
@@ -679,6 +683,7 @@ setup_create_3oggle (GtkWidget *tab, int row, const setting *set)
 	gtk_grid_attach (GTK_GRID (tab), wid, 4, row, 1, 1);
 
 	wid = gtk_check_button_new ();
+	gtk_widget_set_halign (wid, GTK_ALIGN_CENTER);
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (wid),
 											setup_get_int3 (&setup_prefs, offsets[2]));
 	g_signal_connect (G_OBJECT (wid), "toggled",
@@ -854,7 +859,7 @@ setup_create_hscale (GtkWidget *table, int row, const setting *set)
 	gtk_widget_set_margin_start (wid, LABEL_INDENT);
 	gtk_grid_attach (GTK_GRID (table), wid, 2, row, 1, 1);
 
-	wid = gtk_hscale_new_with_range (0., 255., 1.);
+	wid = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 0., 255., 1.);
 	gtk_scale_set_value_pos (GTK_SCALE (wid), GTK_POS_RIGHT);
 	gtk_range_set_value (GTK_RANGE (wid), setup_get_int (&setup_prefs, set));
 	g_signal_connect (G_OBJECT(wid), "value_changed",
@@ -864,7 +869,7 @@ setup_create_hscale (GtkWidget *table, int row, const setting *set)
 
 #ifndef _WIN32 /* Windows always supports this */
 	/* Only used for transparency currently */
-	if (!gtk_widget_is_composited (current_sess->gui->window))
+	if (!gdk_screen_is_composited (gtk_widget_get_screen (current_sess->gui->window)))
 		gtk_widget_set_sensitive (wid, FALSE);
 #endif
 }
@@ -1068,25 +1073,18 @@ setup_fontsel_destroy (GtkWidget *button, GtkFontSelectionDialog *dialog)
 }
 
 static void
-setup_fontsel_cb (GtkWidget *button, GtkFontSelectionDialog *dialog)
+setup_fontsel_cb (GtkWidget *dialog, gint response, GtkWidget *entry)
 {
-	GtkWidget *entry;
 	char *font_name;
 
-	entry = g_object_get_data (G_OBJECT (button), "e");
-	font_name = gtk_font_selection_dialog_get_font_name (dialog);
+	if (response == GTK_RESPONSE_OK)
+	{
+		font_name = gtk_font_chooser_get_font (GTK_FONT_CHOOSER (dialog));
+		gtk_entry_set_text (GTK_ENTRY (entry), font_name);
+		g_free (font_name);
+	}
 
-	gtk_entry_set_text (GTK_ENTRY (entry), font_name);
-
-	g_free (font_name);
-	gtk_widget_destroy (GTK_WIDGET (dialog));
-	font_dialog = NULL;
-}
-
-static void
-setup_fontsel_cancel (GtkWidget *button, GtkFontSelectionDialog *dialog)
-{
-	gtk_widget_destroy (GTK_WIDGET (dialog));
+	gtk_widget_destroy (dialog);
 	font_dialog = NULL;
 }
 
@@ -1099,29 +1097,20 @@ setup_browsefolder_cb (GtkWidget *button, GtkEntry *entry)
 static void
 setup_browsefont_cb (GtkWidget *button, GtkWidget *entry)
 {
-	GtkFontSelection *sel;
-	GtkFontSelectionDialog *dialog;
-	GtkWidget *ok_button;
+	GtkWidget *dialog;
 
-	dialog = (GtkFontSelectionDialog *) gtk_font_selection_dialog_new (_("Select font"));
-	font_dialog = (GtkWidget *)dialog;	/* global var */
-
-	sel = (GtkFontSelection *) gtk_font_selection_dialog_get_font_selection (dialog);
+	dialog = gtk_font_chooser_dialog_new (_("Select font"), GTK_WINDOW (gtk_widget_get_toplevel (entry)));
+	font_dialog = dialog;	/* global var */
 
 	if (gtk_entry_get_text (GTK_ENTRY (entry))[0])
-		gtk_font_selection_set_font_name (sel, gtk_entry_get_text (GTK_ENTRY (entry)));
-
-	ok_button = gtk_font_selection_dialog_get_ok_button (dialog);
-	g_object_set_data (G_OBJECT (ok_button), "e", entry);
+		gtk_font_chooser_set_font (GTK_FONT_CHOOSER (dialog), gtk_entry_get_text (GTK_ENTRY (entry)));
 
 	g_signal_connect (G_OBJECT (dialog), "destroy",
 							G_CALLBACK (setup_fontsel_destroy), dialog);
-	g_signal_connect (G_OBJECT (ok_button), "clicked",
-							G_CALLBACK (setup_fontsel_cb), dialog);
-	g_signal_connect (G_OBJECT (gtk_font_selection_dialog_get_cancel_button (dialog)), "clicked",
-							G_CALLBACK (setup_fontsel_cancel), dialog);
+	g_signal_connect (G_OBJECT (dialog), "response",
+							G_CALLBACK (setup_fontsel_cb), entry);
 
-	gtk_widget_show (GTK_WIDGET (dialog));
+	gtk_widget_show (dialog);
 }
 
 static void
@@ -1408,9 +1397,29 @@ setup_update_color_button (GtkWidget *button, GdkRGBA *color)
 {
 	GtkCssProvider *provider;
 	GtkStyleContext *context;
+	GtkWidget *label;
 	gchar *css;
 
-	css = g_strdup_printf ("button { background-color: rgb(%d,%d,%d); }",
+	/* Set CSS on button to override theme */
+	css = g_strdup_printf ("button { "
+	                       "background: rgb(%d,%d,%d); "
+	                       "background-color: rgb(%d,%d,%d); "
+	                       "background-image: none; "
+	                       "box-shadow: inset 0 0 0 1px rgba(0,0,0,0.2); "
+	                       "border: 1px solid rgba(0,0,0,0.3); }"
+	                       "button:hover { "
+	                       "background: rgb(%d,%d,%d); "
+	                       "background-color: rgb(%d,%d,%d); "
+	                       "background-image: none; }",
+		(int)(color->red * 255),
+		(int)(color->green * 255),
+		(int)(color->blue * 255),
+		(int)(color->red * 255),
+		(int)(color->green * 255),
+		(int)(color->blue * 255),
+		(int)(color->red * 255),
+		(int)(color->green * 255),
+		(int)(color->blue * 255),
 		(int)(color->red * 255),
 		(int)(color->green * 255),
 		(int)(color->blue * 255));
@@ -1421,8 +1430,20 @@ setup_update_color_button (GtkWidget *button, GdkRGBA *color)
 
 	context = gtk_widget_get_style_context (button);
 	gtk_style_context_add_provider (context, GTK_STYLE_PROVIDER (provider),
-		GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		GTK_STYLE_PROVIDER_PRIORITY_USER);
 	g_object_unref (provider);
+	
+	/* Make label background transparent */
+	label = gtk_bin_get_child (GTK_BIN (button));
+	if (label && GTK_IS_LABEL (label)) {
+		provider = gtk_css_provider_new ();
+		gtk_css_provider_load_from_data (provider, 
+			"label { background: transparent; background-color: transparent; }", -1, NULL);
+		context = gtk_widget_get_style_context (label);
+		gtk_style_context_add_provider (context, GTK_STYLE_PROVIDER (provider),
+			GTK_STYLE_PROVIDER_PRIORITY_USER);
+		g_object_unref (provider);
+	}
 }
 
 static void
@@ -1467,11 +1488,8 @@ setup_create_color_button (GtkWidget *table, int num, int row, int col)
 	gtk_grid_attach (GTK_GRID (table), but, col, row, 1, 1);
 	g_signal_connect (G_OBJECT (but), "clicked",
 							G_CALLBACK (setup_color_cb), GINT_TO_POINTER (num));
-	/* GtkStyle is deprecated in GTK3, skip setting colors via GtkStyle */
-	/* style = gtk_style_new ();
-	style->bg[GTK_STATE_NORMAL] = colors[num];
-	gtk_widget_set_style (but, style);
-	g_object_unref (style); */
+	/* Set button background color using CSS */
+	setup_update_color_button (but, &colors[num]);
 }
 
 static void
@@ -1748,11 +1766,11 @@ setup_create_sound_page (void)
 
 	vbox2 = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
 	gtk_widget_show (vbox2);
-	gtk_container_add (GTK_CONTAINER (vbox1), vbox2);
+	gtk_box_pack_start (GTK_BOX (vbox1), vbox2, TRUE, TRUE, 0);
 
 	scrolledwindow1 = gtk_scrolled_window_new (NULL, NULL);
 	gtk_widget_show (scrolledwindow1);
-	gtk_container_add (GTK_CONTAINER (vbox2), scrolledwindow1);
+	gtk_box_pack_start (GTK_BOX (vbox2), scrolledwindow1, TRUE, TRUE, 0);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledwindow1),
 											  GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
 	gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (scrolledwindow1),
@@ -1827,10 +1845,13 @@ setup_add_page (const char *title, GtkWidget *book, GtkWidget *tab)
 	label = gtk_label_new (NULL);
 	snprintf (buf, sizeof (buf), "<b><big>%s</big></b>", _(title));
 	gtk_label_set_markup (GTK_LABEL (label), buf);
-	gtk_misc_set_padding (GTK_MISC (label), 2, 1);
+	gtk_widget_set_margin_start (label, 2);
+	gtk_widget_set_margin_end (label, 2);
+	gtk_widget_set_margin_top (label, 1);
+	gtk_widget_set_margin_bottom (label, 1);
 	gtk_container_add (GTK_CONTAINER (frame), label);
 
-	gtk_container_add (GTK_CONTAINER (vvbox), tab);
+	gtk_box_pack_start (GTK_BOX (vvbox), tab, TRUE, TRUE, 0);
 
 	gtk_notebook_append_page (GTK_NOTEBOOK (book), oframe, NULL);
 }
@@ -2015,7 +2036,7 @@ setup_apply_entry_style (GtkWidget *entry)
 		GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 	g_object_unref (provider);
 
-	gtk_widget_override_font (entry, input_style->font_desc);
+	/* Font is set via CSS provider above, no need for deprecated override_font */
 }
 
 static void
@@ -2024,7 +2045,23 @@ setup_apply_to_sess (session_gui *gui)
 	mg_update_xtext (gui->xtext);
 
 	if (prefs.pchat_gui_ulist_style)
-		gtk_widget_set_style (gui->user_tree, input_style);
+	{
+		/* Style is applied via CSS provider in setup_apply_entry_style */
+		GtkStyleContext *context = gtk_widget_get_style_context (gui->user_tree);
+		GtkCssProvider *provider = gtk_css_provider_new ();
+		char css[256];
+		const PangoFontDescription *font_desc = input_style->font_desc;
+		if (font_desc)
+		{
+			char *font_str = pango_font_description_to_string (font_desc);
+			snprintf (css, sizeof(css), "treeview { font: %s; }", font_str);
+			g_free (font_str);
+			gtk_css_provider_load_from_data (provider, css, -1, NULL);
+			gtk_style_context_add_provider (context, GTK_STYLE_PROVIDER (provider),
+				GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		}
+		g_object_unref (provider);
+	}
 
 	if (prefs.pchat_gui_input_style)
 	{

@@ -3479,7 +3479,6 @@ gtk_xtext_set_palette (GtkXText * xtext, GdkRGBA palette[])
 	{
 		xtext_set_fg (xtext,  XTEXT_FG);
 		xtext_set_bg (xtext,  XTEXT_BG);
-		xtext_set_fg (xtext,  XTEXT_BG);
 		
 		/* Update background pattern with new background color */
 		if (xtext->bg_pattern)

@@ -269,9 +269,11 @@ static GtkWidget *
 make_sbutton (GtkArrowType type, void *click_cb, void *userdata)
 {
 	GtkWidget *button, *arrow;
+	const char *arrow_text;
 
 	button = gtk_button_new ();
-	arrow = gtk_arrow_new (type, GTK_SHADOW_NONE);
+	arrow_text = (type == GTK_ARROW_LEFT) ? "◀" : "▶";
+	arrow = gtk_label_new (arrow_text);
 	gtk_container_add (GTK_CONTAINER (button), arrow);
 	gtk_button_set_relief (GTK_BUTTON (button), GTK_RELIEF_NONE);
 	g_signal_connect (G_OBJECT (button), "clicked",

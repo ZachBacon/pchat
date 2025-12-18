@@ -229,7 +229,8 @@ joind_show_dialog (server *serv)
 	gtk_widget_show (dialog_action_area1);
 	gtk_button_box_set_layout (GTK_BUTTON_BOX (dialog_action_area1), GTK_BUTTONBOX_END);
 
-	okbutton1 = gtk_button_new_with_mnemonic ("gtk-ok");
+	okbutton1 = gtk_button_new_with_mnemonic (_("_OK"));
+	gtk_button_set_image (GTK_BUTTON (okbutton1), gtk_image_new_from_icon_name ("gtk-ok", GTK_ICON_SIZE_BUTTON));
 	gtk_widget_show (okbutton1);
 	gtk_box_pack_end (GTK_BOX (gtk_dialog_get_action_area (GTK_DIALOG (dialog1))), okbutton1, FALSE, TRUE, 0);
 	gtk_widget_set_can_default (okbutton1, TRUE);
