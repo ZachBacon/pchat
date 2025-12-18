@@ -6,4 +6,8 @@ if DO_PERL
 perldir = perl
 endif
 
-SUBDIRS = $(pythondir) $(perldir)
+if DO_AUDIOPLAYER
+audioplayerdir = audioplayer
+endif
+
+SUBDIRS = $(pythondir) $(perldir) $(audioplayerdir)
