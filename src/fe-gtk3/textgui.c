@@ -431,5 +431,5 @@ pevent_dialog_show ()
 	g_signal_connect (G_OBJECT (wid), "clicked",
 							G_CALLBACK (pevent_ok_cb), NULL);
 
-	gtk_widget_show_all (pevent_dialog);
+	gtk_widget_show (pevent_dialog);
 }

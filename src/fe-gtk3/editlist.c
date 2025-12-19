@@ -355,7 +355,7 @@ editlist_gui_open (char *title1, char *title2, GSList *list, char *title, char *
 	gtk_button_box_set_layout (GTK_BUTTON_BOX (box), GTK_BUTTONBOX_SPREAD);
 	gtk_box_pack_start (GTK_BOX (vbox), box, FALSE, FALSE, 2);
 	gtk_container_set_border_width (GTK_CONTAINER (box), 5);
-	gtk_widget_show (box);
+	gtk_widget_show_all (box);
 
 	gtkutil_button (box, "_New", 0, editlist_add,
 					NULL, _("Add"));

@@ -783,7 +783,7 @@ chanlist_opengui (server *serv, int do_refresh)
 	gtk_grid_set_column_spacing (GTK_GRID (table), 12);
 	gtk_grid_set_row_spacing (GTK_GRID (table), 3);
 	gtk_box_pack_start (GTK_BOX (vbox), table, 0, 1, 0);
-	gtk_widget_show (table);
+	gtk_widget_show_all (table);
 
 	wid = gtkutil_button (NULL, "_Find", 0, chanlist_search_pressed, serv,
 								 _("_Search"));

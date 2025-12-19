@@ -1113,7 +1113,7 @@ setup_browsefont_cb (GtkWidget *button, GtkWidget *entry)
 	g_signal_connect (G_OBJECT (dialog), "response",
 							G_CALLBACK (setup_fontsel_cb), entry);
 
-	gtk_widget_show (dialog);
+	gtk_widget_show_all (dialog);
 }
 
 static void
@@ -1449,27 +1449,42 @@ setup_update_color_button (GtkWidget *button, GdkRGBA *color)
 	}
 }
 
+typedef struct {
+	GtkWidget *button;
+	GdkRGBA *color;
+} ColorDialogData;
+
+static void
+setup_color_response_cb (GtkDialog *dialog, gint response, gpointer user_data)
+{
+	ColorDialogData *data = (ColorDialogData *) user_data;
+	
+	if (response == GTK_RESPONSE_OK)
+	{
+		gtk_color_chooser_get_rgba (GTK_COLOR_CHOOSER (dialog), data->color);
+		color_change = TRUE;
+		setup_update_color_button (data->button, data->color);
+	}
+	
+	gtk_widget_destroy (GTK_WIDGET (dialog));
+	g_free (data);
+}
+
 static void
 setup_color_cb (GtkWidget *button, gpointer userdata)
 {
 	GtkWidget *dialog;
-	GdkRGBA *color;
-	int response;
+	ColorDialogData *data;
 
-	color = &colors[GPOINTER_TO_INT (userdata)];
+	data = g_new (ColorDialogData, 1);
+	data->button = button;
+	data->color = &colors[GPOINTER_TO_INT (userdata)];
 
 	dialog = gtk_color_chooser_dialog_new (_("Select color"), GTK_WINDOW (current_sess->gui->window));
-	gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog), color);
+	gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog), data->color);
 
-	response = gtk_dialog_run (GTK_DIALOG (dialog));
-	if (response == GTK_RESPONSE_OK)
-	{
-		gtk_color_chooser_get_rgba (GTK_COLOR_CHOOSER (dialog), color);
-		color_change = TRUE;
-		setup_update_color_button (button, color);
-	}
-
-	gtk_widget_destroy (dialog);
+	g_signal_connect (dialog, "response", G_CALLBACK (setup_color_response_cb), data);
+	gtk_widget_show_all (dialog);
 }
 
 static void
@@ -2338,7 +2353,7 @@ setup_window_open (void)
 	wid = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);
 	gtk_box_pack_end (GTK_BOX (vbox), wid, FALSE, FALSE, 0);
 
-	gtk_widget_show_all (win);
+	gtk_widget_show (win);
 
 	return win;
 }

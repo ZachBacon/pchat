@@ -768,7 +768,7 @@ dcc_exp_cb (GtkWidget *exp, GtkWidget *box)
 	}
 	else
 	{
-		gtk_widget_show (box);
+		gtk_widget_show_all (box);
 	}
 }
 
@@ -898,7 +898,7 @@ fe_dcc_open_recv_win (int passive)
 	gtk_widget_set_sensitive (dccfwin.abort_button, FALSE);
 
 	dcc_fill_window (3);
-	gtk_widget_show_all (dccfwin.window);
+	gtk_widget_show (dccfwin.window);
 	gtk_widget_hide (detailbox);
 
 	return FALSE;
@@ -1093,7 +1093,7 @@ fe_dcc_open_chat_win (int passive)
 	gtk_widget_set_sensitive (dcccwin.abort_button, FALSE);
 
 	dcc_chat_fill_win ();
-	gtk_widget_show_all (dcccwin.window);
+	gtk_widget_show (dcccwin.window);
 
 	return FALSE;
 }

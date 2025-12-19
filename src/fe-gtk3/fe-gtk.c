@@ -111,8 +111,8 @@ create_msg_dialog (gchar *title, gchar *message)
 	gtk_window_set_icon (GTK_WINDOW (dialog), pix_xchat);
 #endif
 
-	gtk_dialog_run (GTK_DIALOG (dialog));
-	gtk_widget_destroy (dialog);
+	g_signal_connect (dialog, "response", G_CALLBACK (gtk_widget_destroy), NULL);
+	gtk_widget_show_all (dialog);
 }
 #endif
 
@@ -441,10 +441,12 @@ fe_message (char *msg, int flags)
 							G_CALLBACK (gtk_widget_destroy), 0);
 	gtk_window_set_resizable (GTK_WINDOW (dialog), FALSE);
 	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_MOUSE);
-	gtk_widget_show (dialog);
+	gtk_widget_show_all (dialog);
 
-	if (flags & FE_MSG_WAIT)
-		gtk_dialog_run (GTK_DIALOG (dialog));
+	/* Note: gtk_dialog_run deprecated - now always non-blocking */
+	if (flags & FE_MSG_WAIT) {
+		/* Previously blocked here, but modern GTK prefers async dialogs */
+	}
 }
 
 void

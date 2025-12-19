@@ -297,7 +297,7 @@ ignore_clear_entry_clicked (GtkWidget * wid)
 	g_signal_connect (G_OBJECT (dialog), "response",
 							G_CALLBACK (ignore_clear_cb), NULL);
 	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_MOUSE);
-	gtk_widget_show (dialog);
+	gtk_widget_show_all (dialog);
 }
 
 static void
@@ -378,7 +378,7 @@ ignore_gui_open ()
 	gtk_button_box_set_layout (GTK_BUTTON_BOX (box), GTK_BUTTONBOX_SPREAD);
 	gtk_box_pack_start (GTK_BOX (vbox), box, FALSE, FALSE, 2);
 	gtk_container_set_border_width (GTK_CONTAINER (box), 5);
-	gtk_widget_show (box);
+	gtk_widget_show_all (box);
 
 	gtkutil_button (box, "_New", 0, ignore_new_entry_clicked, 0,
 						 _("Add..."));

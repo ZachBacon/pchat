@@ -1140,7 +1140,7 @@ mg_tab_close (session *sess)
 		{
 			gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER_ON_PARENT);
 		}
-		gtk_widget_show (dialog);
+		gtk_widget_show_all (dialog);
 	}
 }
 
@@ -1198,10 +1198,43 @@ mg_count_dccs (void)
 	return dccs;
 }
 
+static GtkWidget *quit_dialog = NULL;
+
+static void
+mg_quit_dialog_response_cb (GtkDialog *dlg, gint response, gpointer user_data)
+{
+	GtkWidget *check = g_object_get_data (G_OBJECT (dlg), "pchat-checkbutton");
+	
+	switch (response)
+	{
+	case 0: /* Quit */
+		if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (check)))
+			prefs.pchat_gui_quit_dialog = 0;
+		xchat_exit ();
+		break;
+	case 1: /* minimize to tray */
+		if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (check)))
+		{
+			prefs.pchat_gui_tray_close = 1;
+		}
+		/* force tray icon ON, if not already */
+		if (!prefs.pchat_gui_tray)
+		{
+			prefs.pchat_gui_tray = 1;
+			tray_apply_setup ();
+		}
+		tray_toggle_visibility (TRUE);
+		break;
+	}
+	
+	gtk_widget_destroy (GTK_WIDGET (dlg));
+	quit_dialog = NULL;
+}
+
 void
 mg_open_quit_dialog (gboolean minimize_button)
 {
-	static GtkWidget *dialog = NULL;
+	GtkWidget *dialog = quit_dialog;
 	GtkWidget *dialog_vbox1;
 	GtkWidget *table1;
 	GtkWidget *image;
@@ -1227,7 +1260,7 @@ mg_open_quit_dialog (gboolean minimize_button)
 		return;
 	}
 
-	dialog = gtk_dialog_new ();
+	quit_dialog = dialog = gtk_dialog_new ();
 	gtk_container_set_border_width (GTK_CONTAINER (dialog), 6);
 	gtk_window_set_title (GTK_WINDOW (dialog), _("Quit PChat?"));
 	gtk_window_set_transient_for (GTK_WINDOW (dialog), GTK_WINDOW (parent_window));
@@ -1296,33 +1329,11 @@ button = gtk_button_new_with_mnemonic (_("_Cancel"));
 	gtk_widget_show (button);
 	gtk_dialog_add_action_widget (GTK_DIALOG (dialog), button, 0);
 
-	gtk_widget_show (dialog);
+	/* Store checkbutton as object data for response callback */
+	g_object_set_data (G_OBJECT (dialog), "pchat-checkbutton", checkbutton1);
+	g_signal_connect (dialog, "response", G_CALLBACK (mg_quit_dialog_response_cb), NULL);
 
-	switch (gtk_dialog_run (GTK_DIALOG (dialog)))
-	{
-	case 0:
-		if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (checkbutton1)))
-			prefs.pchat_gui_quit_dialog = 0;
-		xchat_exit ();
-		break;
-	case 1: /* minimize to tray */
-		if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (checkbutton1)))
-		{
-			prefs.pchat_gui_tray_close = 1;
-			/*prefs.pchat_gui_quit_dialog = 0;*/
-		}
-		/* force tray icon ON, if not already */
-		if (!prefs.pchat_gui_tray)
-		{
-			prefs.pchat_gui_tray = 1;
-			tray_apply_setup ();
-		}
-		tray_toggle_visibility (TRUE);
-		break;
-	}
-
-	gtk_widget_destroy (dialog);
-	dialog = NULL;
+	gtk_widget_show_all (dialog);
 }
 
 void
@@ -2495,7 +2506,7 @@ mg_update_meters (session_gui *gui)
 	gui->throttleinfo = NULL;
 
 	mg_create_meters (gui, gui->button_box_parent);
-	gtk_widget_show_all (gui->meter_box);
+	gtk_widget_show (gui->meter_box);
 }
 
 static void
@@ -2983,7 +2994,7 @@ mg_search_toggle(session *sess)
 		gtk_entry_set_icon_from_icon_name (GTK_ENTRY (sess->gui->shentry), GTK_ENTRY_ICON_SECONDARY, NULL);
 
 		/* Show and focus */
-		gtk_widget_show(sess->gui->shbox);
+		gtk_widget_show_all(sess->gui->shbox);
 		gtk_widget_grab_focus(sess->gui->shentry);
 	}
 }
@@ -3425,8 +3436,9 @@ mg_create_tabwindow (session *sess)
 
 	gtk_widget_show_all (table);
 	
-	/* Show the header bar (menu is now part of it) */
-	gtk_widget_show_all (headerbar);
+	/* Show the header bar and menu */
+	gtk_widget_show (headerbar);
+	gtk_widget_show (sess->gui->menu);
 
 	if (prefs.pchat_gui_hide_menu)
 		gtk_widget_hide (sess->gui->menu);
@@ -3480,7 +3492,7 @@ mg_add_generic_tab (char *name, char *title, void *family, GtkWidget *box)
 	chan *ch;
 
 	gtk_notebook_append_page (GTK_NOTEBOOK (mg_gui->note_book), box, NULL);
-	gtk_widget_show (box);
+	gtk_widget_show_all (box);
 
 	ch = chanview_add (mg_gui->chanview, name, NULL, box, TRUE, TAG_UTIL, pix_tree_util);
 	chan_set_color (ch, plain_list);

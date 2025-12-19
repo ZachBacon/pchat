@@ -767,7 +767,7 @@ key_dialog_show ()
 	store = GTK_LIST_STORE (gtk_tree_view_get_model (GTK_TREE_VIEW (view)));
 	key_dialog_load (store);
 
-	gtk_widget_show_all (key_dialog);
+	gtk_widget_show (key_dialog);
 }
 
 static int

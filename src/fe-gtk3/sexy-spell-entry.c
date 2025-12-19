@@ -545,11 +545,11 @@ build_suggestion_menu(SexySpellEntry *entry, GtkWidget *menu, struct EnchantDict
 		for (i = 0; i < n_suggestions; i++) {
 			if ((i != 0) && (i % 10 == 0)) {
 				mi = gtk_separator_menu_item_new();
-				gtk_widget_show(mi);
+				gtk_widget_show_all(mi);
 				gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
 
 				mi = gtk_menu_item_new_with_label(_("More..."));
-				gtk_widget_show(mi);
+				gtk_widget_show_all(mi);
 				gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
 
 				menu = gtk_menu_new();
@@ -559,7 +559,7 @@ build_suggestion_menu(SexySpellEntry *entry, GtkWidget *menu, struct EnchantDict
 			mi = gtk_menu_item_new_with_label(suggestions[i]);
 			g_object_set_data(G_OBJECT(mi), "enchant-dict", dict);
 			g_signal_connect(G_OBJECT(mi), "activate", G_CALLBACK(replace_word), entry);
-			gtk_widget_show(mi);
+			gtk_widget_show_all(mi);
 			gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
 		}
 	}
@@ -606,7 +606,7 @@ build_spelling_menu(SexySpellEntry *entry, const gchar *word)
 			}
 			g_free(lang);
 
-			gtk_widget_show(mi);
+			gtk_widget_show_all(mi);
 			gtk_menu_shell_append(GTK_MENU_SHELL(topmenu), mi);
 			menu = gtk_menu_new();
 			gtk_menu_item_set_submenu(GTK_MENU_ITEM(mi), menu);
@@ -616,7 +616,7 @@ build_spelling_menu(SexySpellEntry *entry, const gchar *word)
 
 	/* Separator */
 	mi = gtk_separator_menu_item_new ();
-	gtk_widget_show(mi);
+	gtk_widget_show_all(mi);
 	gtk_menu_shell_append(GTK_MENU_SHELL(topmenu), mi);
 
 	/* + Add to Dictionary */
@@ -624,7 +624,7 @@ build_spelling_menu(SexySpellEntry *entry, const gchar *word)
 	mi = gtk_menu_item_new_with_label(label);
 	g_free(label);
 
-	gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(mi), gtk_image_new_from_stock("_Add", GTK_ICON_SIZE_MENU));
+	/* gtk_image_menu_item deprecated - icons in menu items not recommended in modern GTK */
 
 	if (g_slist_length(entry->priv->dict_list) == 1) {
 		dict = (struct EnchantDict *) entry->priv->dict_list->data;
@@ -656,7 +656,7 @@ build_spelling_menu(SexySpellEntry *entry, const gchar *word)
 
 			g_signal_connect(G_OBJECT(submi), "activate", G_CALLBACK(add_to_dictionary), entry);
 
-			gtk_widget_show(submi);
+			gtk_widget_show_all(submi);
 			gtk_menu_shell_append(GTK_MENU_SHELL(menu), submi);
 		}
 	}
@@ -666,7 +666,7 @@ build_spelling_menu(SexySpellEntry *entry, const gchar *word)
 
 	/* - Ignore All */
 	mi = gtk_menu_item_new_with_label(_("Ignore All"));
-	gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(mi), gtk_image_new_from_stock("_Remove", GTK_ICON_SIZE_MENU));
+	/* gtk_image_menu_item deprecated - icons in menu items not recommended in modern GTK */
 	g_signal_connect(G_OBJECT(mi), "activate", G_CALLBACK(ignore_all), entry);
 	gtk_widget_show_all(mi);
 	gtk_menu_shell_append(GTK_MENU_SHELL(topmenu), mi);
@@ -695,13 +695,12 @@ sexy_spell_entry_populate_popup(SexySpellEntry *entry, GtkMenu *menu, gpointer d
 
 	/* separator */
 	mi = gtk_separator_menu_item_new();
-	gtk_widget_show(mi);
+	gtk_widget_show_all(mi);
 	gtk_menu_shell_prepend(GTK_MENU_SHELL(menu), mi);
 
 	/* Above the separator, show the suggestions menu */
-	icon = gtk_image_new_from_icon_name("tools-check-spelling", GTK_ICON_SIZE_MENU);
+	/* gtk_image_menu_item deprecated - icons in menu items not recommended in modern GTK */
 	mi = gtk_menu_item_new_with_label(_("Spelling Suggestions"));
-	gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(mi), icon);
 
 	word = gtk_editable_get_chars(GTK_EDITABLE(entry), start, end);
 	g_assert(word != NULL);

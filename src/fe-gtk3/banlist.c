@@ -394,7 +394,7 @@ banlist_button_pressed (GtkWidget *wid, GdkEventButton *event, gpointer userdata
 			g_signal_connect (allitem, "activate", G_CALLBACK(banlist_copyentry), wid);
 			gtk_menu_shell_append (GTK_MENU_SHELL(menu), maskitem);
 			gtk_menu_shell_append (GTK_MENU_SHELL(menu), allitem);
-			gtk_widget_show_all (menu);
+			gtk_widget_show (menu);
 
 			gtk_menu_popup_at_pointer (GTK_MENU(menu), (GdkEvent*)event);
 		}
@@ -572,7 +572,7 @@ banlist_clear (GtkWidget * wid, banlist_info *banl)
 	g_signal_connect (G_OBJECT (dialog), "response",
 							G_CALLBACK (banlist_clear_cb), banl);
 	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_MOUSE);
-	gtk_widget_show (dialog);
+	gtk_widget_show_all (dialog);
 }
 
 static void
@@ -854,5 +854,5 @@ banlist_opengui (struct session *sess)
 
 	banlist_do_refresh (banl);
 
-	gtk_widget_show_all (banl->window);
+	gtk_widget_show (banl->window);
 }

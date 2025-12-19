@@ -238,7 +238,7 @@ gtkutil_file_req (const char *title, void *callback, void *userdata, char *filte
 							G_CALLBACK (gtkutil_file_req_response), freq);
 	g_signal_connect (G_OBJECT (dialog), "destroy",
 						   G_CALLBACK (gtkutil_file_req_destroy), (gpointer) freq);
-	gtk_widget_show (dialog);
+	gtk_widget_show_all (dialog);
 }
 
 static gboolean
@@ -557,9 +557,7 @@ gtkutil_window_new (char *title, char *role, int width, int height, int flags)
 
 	win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 	gtkutil_set_icon (win);
-#ifdef _WIN32
-	gtk_window_set_wmclass (GTK_WINDOW (win), "PChat", "pchat");
-#endif
+	/* gtk_window_set_wmclass deprecated in GTK 3.22+ */
 	gtk_window_set_title (GTK_WINDOW (win), title);
 	gtk_window_set_default_size (GTK_WINDOW (win), width, height);
 	gtk_window_set_role (GTK_WINDOW (win), role);

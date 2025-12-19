@@ -322,7 +322,7 @@ cv_tabs_init (chanview *cv)
 		box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
 	((tabview *)cv)->inner = box;
 	gtk_container_add (GTK_CONTAINER (viewport), box);
-	gtk_widget_show (box);
+	gtk_widget_show_all (box);
 
 	/* if vertical, the buttons can be side by side */
 	if (cv->vertical)
@@ -510,7 +510,7 @@ tab_add_real (chanview *cv, GtkWidget *tab, chan *ch)
 	g_object_set_data (G_OBJECT (box), "f", ch->family);
 	gtk_box_pack_start (GTK_BOX (box), tab, 0, 0, 0);
 	gtk_widget_show (tab);
-	gtk_widget_show (box);
+	gtk_widget_show_all (box);
 	gtk_widget_queue_resize (gtk_widget_get_parent(inner));
 }
 

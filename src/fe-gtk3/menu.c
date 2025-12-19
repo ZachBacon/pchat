@@ -316,7 +316,7 @@ menu_quick_item (char *cmd, char *label, GtkWidget * menu, int flags,
 								G_CALLBACK (popup_menu_cb), cmd);
 	if (flags & XCMENU_SHADED)
 		gtk_widget_set_sensitive (GTK_WIDGET (item), FALSE);
-	gtk_widget_show_all (item);
+	gtk_widget_show (item);
 
 	return item;
 }
@@ -1691,7 +1691,7 @@ menu_about (GtkWidget *wid, gpointer sess)
 	g_signal_connect (G_OBJECT(dialog), "response", G_CALLBACK(about_dialog_close), NULL);
 	g_signal_connect (G_OBJECT(dialog), "activate-link", G_CALLBACK(about_dialog_openurl), NULL);
 
-	gtk_widget_show_all (GTK_WIDGET(dialog));
+	gtk_widget_show (GTK_WIDGET(dialog));
 }
 
 static struct mymenu mymenu[] = {

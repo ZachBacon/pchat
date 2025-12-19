@@ -762,7 +762,7 @@ servlist_deletenet_cb (GtkWidget *item, ircnet *net)
 	g_signal_connect (dialog, "response",
 							G_CALLBACK (servlist_deletenetdialog_cb), net);
 	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_MOUSE);
-	gtk_widget_show (dialog);
+	gtk_widget_show_all (dialog);
 }
 
 static void
@@ -1920,7 +1920,7 @@ servlist_open_edit (GtkWidget *parent, ircnet *net)
 	gtk_widget_grab_focus (button10);
 	gtk_widget_grab_default (button10);
 
-	gtk_widget_show_all (editwindow);
+	gtk_widget_show (editwindow);
 
 	/* We can't set the active tab without child elements being shown, so this must be *after* gtk_widget_show()s! */
 	gtk_notebook_set_current_page (GTK_NOTEBOOK (notebook), netedit_active_tab);

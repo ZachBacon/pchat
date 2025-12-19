@@ -257,7 +257,7 @@ joind_show_dialog (server *serv)
 		}
 
 	gtk_widget_grab_focus (okbutton1);
-	gtk_widget_show_all (dialog1);
+	gtk_widget_show (dialog1);
 }
 
 void
