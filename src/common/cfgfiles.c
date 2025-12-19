@@ -35,7 +35,7 @@
 #include <io.h>
 #else
 #include <unistd.h>
-#define XCHAT_DIR "xchat"
+#define XCHAT_DIR "pchat"
 #endif
 
 #define DEF_FONT "Monospace 9"
