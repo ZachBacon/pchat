@@ -7,6 +7,9 @@
 #include "gui.h"
 #include "audioplayer.h"
 
+/* Undefine xchat macros to allow direct struct member access */
+#undef xchat_printf
+
 /* GUI state */
 static GtkWidget *main_window = NULL;
 static GtkWidget *playlist_view = NULL;
@@ -218,9 +221,18 @@ static void update_playlist_view(void) {
         GtkTreeIter iter;
         gtk_list_store_append(playlist_store, &iter);
         
-        gchar *display_title = g_strdup_printf("%s%s",
-            (item == current) ? "▶ " : "",
-            item->title);
+        /* Format: [▶] Artist - Title */
+        gchar *display_title;
+        if (item->artist && item->title) {
+            display_title = g_strdup_printf("%s%s - %s",
+                (item == current) ? "▶ " : "",
+                item->artist,
+                item->title);
+        } else {
+            display_title = g_strdup_printf("%s%s",
+                (item == current) ? "▶ " : "",
+                item->title);
+        }
         
         gtk_list_store_set(playlist_store, &iter,
             COL_TITLE, display_title,
@@ -247,7 +259,20 @@ static void update_now_playing(void) {
             default: state_str = "Stopped"; break;
         }
         
-        gchar *text = g_strdup_printf("<b>%s:</b> %s", state_str, current->title);
+        gchar *text;
+        if (current->artist && current->title) {
+            /* Show "Artist - Title [Album]" if metadata available */
+            if (current->album) {
+                text = g_strdup_printf("<b>%s:</b> %s - %s <i>[%s]</i>",
+                    state_str, current->artist, current->title, current->album);
+            } else {
+                text = g_strdup_printf("<b>%s:</b> %s - %s",
+                    state_str, current->artist, current->title);
+            }
+        } else {
+            text = g_strdup_printf("<b>%s:</b> %s", state_str, current->title);
+        }
+        
         gtk_label_set_markup(GTK_LABEL(now_playing_label), text);
         g_free(text);
     } else {

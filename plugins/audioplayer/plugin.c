@@ -13,13 +13,19 @@
 #include "audioplayer.h"
 #include "gui.h"
 
+/* Undefine xchat macros to allow direct struct member access */
+#undef xchat_hook_command
+#undef xchat_print
+#undef xchat_printf
+#undef xchat_command
+#undef xchat_commandf
+
 #define PNAME "AudioPlayer"
 #define PDESC "Audio player with FFmpeg decoding and FAudio output"
 #define PVERSION "1.0"
 
 static xchat_plugin *ph;   /* plugin handle */
 static AudioPlayer *player = NULL;
-static void *gui_handle = NULL;  /* GUI menu handle */
 
 /* Command callbacks */
 static int play_cb(char *word[], char *word_eol[], void *userdata);
@@ -372,12 +378,31 @@ static int nowplaying_cb(char *word[], char *word_eol[], void *userdata) {
         return XCHAT_EAT_ALL;
     }
     
+    /* Build formatted track info with metadata */
+    char track_info[512];
+    if (track->artist && track->title) {
+        /* Show "Artist - Title" if both available */
+        snprintf(track_info, sizeof(track_info), "%s - %s", track->artist, track->title);
+        if (track->album) {
+            /* Add album if available */
+            char temp[512];
+            snprintf(temp, sizeof(temp), "%s [%s]", track_info, track->album);
+            strncpy(track_info, temp, sizeof(track_info) - 1);
+        }
+    } else if (track->title) {
+        /* Just title if no artist */
+        snprintf(track_info, sizeof(track_info), "%s", track->title);
+    } else {
+        /* Fallback to filename */
+        snprintf(track_info, sizeof(track_info), "%s", track->filepath);
+    }
+    
     const char *state_str = (state == STATE_PLAYING) ? "Playing" : "Paused";
-    print_msg("%s: %s", state_str, track->title);
+    print_msg("%s: %s", state_str, track_info);
     
     /* Optionally print to channel if specified */
     if (word[2] && strcasecmp(word[2], "say") == 0) {
-        ph->xchat_commandf(ph, "SAY ♪ Now Playing: %s", track->title);
+        ph->xchat_commandf(ph, "SAY ♪ Now Playing: %s", track_info);
     }
     
     return XCHAT_EAT_ALL;
@@ -433,12 +458,6 @@ int xchat_plugin_init(xchat_plugin *plugin_handle,
     ph->xchat_hook_command(ph, "APLAYER", XCHAT_PRI_NORM, gui_cb,
                       "APLAYER - Show audio player GUI", NULL);
     
-    /* Add GUI menu item to Window menu */
-    gui_handle = ph->xchat_plugingui_add(ph, "audioplayer.so",
-                                          "Audio Player",
-                                          "Audio player with playlist support",
-                                          PVERSION, NULL);
-    
     /* Add to user menu automatically */
     ph->xchat_command(ph, "MENU -p5 ADD \"Audio Player\" \"APLAYER\" \"\"");
     
@@ -454,12 +473,6 @@ int xchat_plugin_deinit(void)
 {
     /* Remove from user menu */
     ph->xchat_command(ph, "MENU DEL \"Audio Player\"");
-    
-    /* Remove GUI menu item */
-    if (gui_handle) {
-        ph->xchat_plugingui_remove(ph, gui_handle);
-        gui_handle = NULL;
-    }
     
     audioplayer_gui_cleanup();
     

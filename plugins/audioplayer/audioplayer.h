@@ -20,7 +20,11 @@ typedef struct PlaylistItem PlaylistItem;
 /* Playlist item structure */
 struct PlaylistItem {
     char *filepath;
-    char *title;
+    char *title;        /* Display title (from tags or filename) */
+    char *artist;       /* Artist from metadata */
+    char *album;        /* Album from metadata */
+    char *genre;        /* Genre from metadata */
+    char *year;         /* Year from metadata */
     int duration;
     PlaylistItem *next;
     PlaylistItem *prev;

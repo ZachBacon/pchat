@@ -401,15 +401,51 @@ static PlaylistItem* create_playlist_item(const char *filepath) {
     memset(item, 0, sizeof(PlaylistItem));
     item->filepath = strdup(filepath);
     
-    /* Extract title from filepath */
-    const char *filename = strrchr(filepath, '/');
-    if (!filename) {
-        filename = strrchr(filepath, '\\');
+    /* Try to extract metadata from the file */
+    AVFormatContext *fmt_ctx = NULL;
+    if (avformat_open_input(&fmt_ctx, filepath, NULL, NULL) == 0) {
+        avformat_find_stream_info(fmt_ctx, NULL);
+        
+        /* Extract metadata tags */
+        AVDictionaryEntry *tag = NULL;
+        
+        tag = av_dict_get(fmt_ctx->metadata, "title", NULL, 0);
+        if (tag) item->title = strdup(tag->value);
+        
+        tag = av_dict_get(fmt_ctx->metadata, "artist", NULL, 0);
+        if (tag) item->artist = strdup(tag->value);
+        
+        tag = av_dict_get(fmt_ctx->metadata, "album", NULL, 0);
+        if (tag) item->album = strdup(tag->value);
+        
+        tag = av_dict_get(fmt_ctx->metadata, "genre", NULL, 0);
+        if (tag) item->genre = strdup(tag->value);
+        
+        tag = av_dict_get(fmt_ctx->metadata, "date", NULL, 0);
+        if (tag) {
+            item->year = strdup(tag->value);
+        } else {
+            tag = av_dict_get(fmt_ctx->metadata, "year", NULL, 0);
+            if (tag) item->year = strdup(tag->value);
+        }
+        
+        /* Get duration */
+        if (fmt_ctx->duration != AV_NOPTS_VALUE) {
+            item->duration = (int)(fmt_ctx->duration / AV_TIME_BASE);
+        }
+        
+        avformat_close_input(&fmt_ctx);
     }
-    filename = filename ? filename + 1 : filepath;
     
-    item->title = strdup(filename);
-    item->duration = 0; /* Will be filled when decoded */
+    /* Fallback: Extract title from filepath if no metadata */
+    if (!item->title) {
+        const char *filename = strrchr(filepath, '/');
+        if (!filename) {
+            filename = strrchr(filepath, '\\');
+        }
+        filename = filename ? filename + 1 : filepath;
+        item->title = strdup(filename);
+    }
     
     return item;
 }
@@ -421,6 +457,10 @@ static void free_playlist_item(PlaylistItem *item) {
     
     free(item->filepath);
     free(item->title);
+    free(item->artist);
+    free(item->album);
+    free(item->genre);
+    free(item->year);
     free(item);
 }
 
