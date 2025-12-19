@@ -1,5 +1,9 @@
-/* PChat
+/* HexChat
  * Copyright (C) 1998-2010 Peter Zelezny.
+ * Copyright (C) 2009-2013 Berke Viktor.
+ *
+ * PChat
+ * Copyright (C) 2025 Zach Bacon
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,6 +80,6 @@ struct prefs
 #define TYPE_INT 1
 #define TYPE_BOOL 2
 
-#define XCHAT_SOUND_DIR "sounds"
+#define PCHAT_SOUND_DIR "sounds"
 
 #endif

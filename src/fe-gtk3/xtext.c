@@ -1,5 +1,8 @@
 /* X-Chat
  * Copyright (C) 1998 Peter Zelezny.
+ *
+ * PChat
+ * Copyright (C) 2025 Zach Bacon
  * Portions taken from conspire
  *
  * This program is free software; you can redistribute it and/or modify

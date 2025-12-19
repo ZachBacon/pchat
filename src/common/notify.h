@@ -2,6 +2,10 @@
  * Copyright (C) 1998-2010 Peter Zelezny.
  * Copyright (C) 2009-2013 Berke Viktor.
  *
+ * PChat
+ * Copyright (C) 2025 Zach Bacon
+ *
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -19,8 +23,8 @@
 
 #include "proto-irc.h"
 
-#ifndef HEXCHAT_NOTIFY_H
-#define HEXCHAT_NOTIFY_H
+#ifndef PCHAT_NOTIFY_H
+#define PCHAT_NOTIFY_H
 
 struct notify
 {

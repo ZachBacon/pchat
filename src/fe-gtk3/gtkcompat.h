@@ -1,5 +1,8 @@
 /* HexChat
  *
+ * PChat
+ * Copyright (C) 2025 Zach Bacon
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -15,8 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_GTKCOMPAT_H
-#define HEXCHAT_GTKCOMPAT_H
+#ifndef PCHAT_GTKCOMPAT_H
+#define PCHAT_GTKCOMPAT_H
 
 /* chanview-tabs.c */
 #if GTK_CHECK_VERSION (3, 0, 0)
@@ -33,4 +36,4 @@
 #define gtk_widget_get_allocated_width(widget)((GTK_WIDGET(widget))->GSEAL(allocation).width)
 #endif
 
-#endif /* HEXCHAT_GTKCOMPAT_H */
+#endif /* PCHAT_GTKCOMPAT_H */

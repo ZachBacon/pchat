@@ -2,6 +2,10 @@
  * Copyright (C) 1998-2010 Peter Zelezny.
  * Copyright (C) 2009-2013 Berke Viktor.
  *
+ * PChat
+ * Copyright (C) 2025 Zach Bacon
+ *
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -20,8 +24,8 @@
 #include "userlist.h"
 #include "dcc.h"
 
-#ifndef HEXCHAT_FE_H
-#define HEXCHAT_FE_H
+#ifndef PCHAT_FE_H
+#define PCHAT_FE_H
 
 /* for storage of /menu entries */
 typedef struct

@@ -2,6 +2,9 @@
  * Copyright (C) 1998-2006 Peter Zelezny.
  * Copyright (C) 2006 Damjan Jovanovic
  *
+ * PChat
+ * Copyright (C) 2025 Zach Bacon
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or

@@ -1,5 +1,9 @@
-/* X-Chat
- * Copyright (C) 1998 Peter Zelezny.
+/* HexChat
+ * Copyright (C) 1998-2010 Peter Zelezny.
+ * Copyright (C) 2009-2013 Berke Viktor.
+ *
+ * PChat
+ * Copyright (C) 2025 Zach Bacon
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -930,7 +934,7 @@ make_config_dirs (void)
 	}
 	g_free (buf);
 
-	buf = g_build_filename (get_xdir (), XCHAT_SOUND_DIR, NULL);
+	buf = g_build_filename (get_xdir (), PCHAT_SOUND_DIR, NULL);
 	if (g_mkdir (buf, 0700) != 0)
 	{
 		g_free (buf);

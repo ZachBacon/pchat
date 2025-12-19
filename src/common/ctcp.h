@@ -2,6 +2,9 @@
  * Copyright (C) 1998-2010 Peter Zelezny.
  * Copyright (C) 2009-2013 Berke Viktor.
  *
+ * PChat
+ * Copyright (C) 2025 Zach Bacon
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -17,8 +20,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef HEXCHAT_CTCP_H
-#define HEXCHAT_CTCP_H
+#ifndef PCHAT_CTCP_H
+#define PCHAT_CTCP_H
 
 void ctcp_handle (session *sess, char *to, char *nick, char *ip, char *msg,
 						char *word[], char *word_eol[], int id,

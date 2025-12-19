@@ -1,6 +1,9 @@
 /* X-Chat
  * Copyright (C) 1998 Peter Zelezny.
  *
+ * PChat
+ * Copyright (C) 2025 Zach Bacon
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -2215,7 +2218,7 @@ sound_play (const char *file, gboolean quiet)
 	}
 	else
 	{
-		wavfile = g_build_filename (get_xdir (), XCHAT_SOUND_DIR, file, NULL);
+		wavfile = g_build_filename (get_xdir (), PCHAT_SOUND_DIR, file, NULL);
 	}
 
 	if (g_access (wavfile, R_OK) == 0)
