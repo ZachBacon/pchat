@@ -104,7 +104,7 @@ fe_new_window (struct session *sess, int focus)
 				glib_major_version, glib_minor_version, glib_micro_version);
 	fe_print_text (sess, buf, 0, FALSE);
 
-	fe_print_text (sess, "\n\nCompiled in Features\0032:\017 "
+	fe_print_text (sess, "\n\nCompiled in Features\00302:\017 "
 #ifdef USE_PLUGIN
 	"Plugin "
 #endif

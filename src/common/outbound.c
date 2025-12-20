@@ -620,7 +620,7 @@ cmd_charset (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 			PrintTextf (sess, "Charset changed to: %s\n", word[2 + offset]);
 	} else
 	{
-		PrintTextf (sess, "\0034Unknown charset:\017 %s\n", word[2 + offset]);
+		PrintTextf (sess, "\00304Unknown charset:\017 %s\n", word[2 + offset]);
 	}
 
 	return TRUE;
@@ -2148,9 +2148,9 @@ show_help_line (session *sess, help_list *hl, char *name, char *usage)
 	if (hl->longfmt)	/* long format for /HELP -l */
 	{
 		if (!usage || usage[0] == 0)
-			PrintTextf (sess, "   \0034%s\003 :\n", name);
+			PrintTextf (sess, "   \00304%s\003 :\n", name);
 		else
-			PrintTextf (sess, "   \0034%s\003 : %s\n", name, _(usage));
+			PrintTextf (sess, "   \00304%s\003 : %s\n", name, _(usage));
 		return;
 	}
 
@@ -3750,7 +3750,7 @@ userlist_cb (struct User *user, session *sess)
 	else
 		lt = time (0) - user->lasttalk;
 	PrintTextf (sess,
-				"\00306%s\t\00314[\00310%-38s\00314] \017ov\0033=\017%d%d away=%u lt\0033=\017%d\n",
+				"\00306%s\t\00314[\00310%-38s\00314] \017ov\00303=\017%d%d away=%u lt\00303=\017%d\n",
 				user->nick, user->hostname, user->op, user->voice, user->away, lt);
 
 	return TRUE;

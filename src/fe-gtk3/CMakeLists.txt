@@ -23,6 +23,7 @@ add_executable(pchat
     setup.c
     sexy-spell-entry.c
     textgui.c
+    textview-chat.c
     urlgrab.c
     userlistgui.c
     xtext.c

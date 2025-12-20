@@ -57,7 +57,7 @@
 GtkosxApplication *osx_app = NULL;
 #endif
 #include "plugin-tray.h"
-#include "xtext.h"
+#include "textview-chat.h"
 #include "sexy-spell-entry.h"
 
 #define GUI_SPACING (3)
@@ -922,7 +922,7 @@ mg_populate (session *sess)
 	if (vis != gui->ul_hidden && allocation.width > 1)
 		render = FALSE;
 
-	gtk_xtext_buffer_show (GTK_XTEXT (gui->xtext), res->buffer, render);
+	pchat_chat_buffer_show (PCHAT_TEXTVIEW_CHAT (gui->xtext), res->buffer);
 
 	if (gui->is_tab)
 		gtk_widget_set_sensitive (gui->menu, TRUE);
@@ -1039,8 +1039,16 @@ mg_topdestroy_cb (GtkWidget *win, session *sess)
 {
 /*	printf("enter mg_topdestroy. sess %p was destroyed\n", sess);*/
 
+	/* Detach buffer from widget before freeing to avoid GTK issues */
+	if (sess->gui && sess->gui->xtext && sess->res->buffer)
+	{
+		GtkTextBuffer *empty_buf = gtk_text_buffer_new (NULL);
+		gtk_text_view_set_buffer (GTK_TEXT_VIEW (sess->gui->xtext), empty_buf);
+		g_object_unref (empty_buf);
+	}
+	
 	/* kill the text buffer */
-	gtk_xtext_buffer_free (sess->res->buffer);
+	pchat_chat_buffer_free (sess->res->buffer);
 	/* kill the user list */
 	g_object_unref (G_OBJECT (sess->res->user_model));
 
@@ -1054,8 +1062,16 @@ mg_ircdestroy (session *sess)
 {
 	GSList *list;
 
+	/* Detach buffer from widget before freeing to avoid GTK issues */
+	if (sess->gui && sess->gui->xtext && sess->res->buffer)
+	{
+		GtkTextBuffer *empty_buf = gtk_text_buffer_new (NULL);
+		gtk_text_view_set_buffer (GTK_TEXT_VIEW (sess->gui->xtext), empty_buf);
+		g_object_unref (empty_buf);
+	}
+	
 	/* kill the text buffer */
-	gtk_xtext_buffer_free (sess->res->buffer);
+	pchat_chat_buffer_free (sess->res->buffer);
 	/* kill the user list */
 	g_object_unref (G_OBJECT (sess->res->user_model));
 
@@ -1757,8 +1773,8 @@ mg_add_chan (session *sess)
 
 	if (sess->res->buffer == NULL)
 	{
-		sess->res->buffer = gtk_xtext_buffer_new (GTK_XTEXT (sess->gui->xtext));
-		gtk_xtext_set_time_stamp (sess->res->buffer, prefs.pchat_stamp_text);
+		sess->res->buffer = pchat_chat_buffer_new (PCHAT_TEXTVIEW_CHAT (sess->gui->xtext));
+		pchat_textview_chat_set_show_timestamps (PCHAT_TEXTVIEW_CHAT (sess->gui->xtext), prefs.pchat_stamp_text);
 		sess->res->user_model = userlist_create_model ();
 	}
 }
@@ -1908,7 +1924,7 @@ mg_link_irctab (session *sess, int focus)
 	win = mg_changui_destroy (sess);
 	mg_changui_new (sess, sess->res, 1, focus);
 	/* the buffer is now attached to a different widget */
-	((xtext_buffer *)sess->res->buffer)->xtext = (GtkXText *)sess->gui->xtext;
+	/* Buffer backlink not needed in new system */
 	if (win)
 		gtk_widget_destroy (win);
 }
@@ -2281,7 +2297,17 @@ mg_word_clicked (GtkWidget *xtext, char *word, GdkEventButton *even)
 			return;
 		}
 
-		if ((even->state & 13) == prefs.pchat_gui_url_mod)
+		/* Open URLs on left click, respecting modifier preference */
+		gboolean should_open_url = FALSE;
+		if (prefs.pchat_gui_url_mod == 0) {
+			/* No modifier required - open on plain left-click */
+			should_open_url = ((even->state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK)) == 0);
+		} else {
+			/* Specific modifier required */
+			should_open_url = ((even->state & 13) == prefs.pchat_gui_url_mod);
+		}
+		
+		if (should_open_url)
 		{
 			switch (word_type)
 			{
@@ -2290,6 +2316,7 @@ mg_word_clicked (GtkWidget *xtext, char *word, GdkEventButton *even)
 			case WORD_HOST:
 				word[end] = 0;
 				fe_open_url (word + start);
+				break;
 			}
 		}
 		return;
@@ -2345,29 +2372,22 @@ mg_word_clicked (GtkWidget *xtext, char *word, GdkEventButton *even)
 void
 mg_update_xtext (GtkWidget *wid)
 {
-	GtkXText *xtext = GTK_XTEXT (wid);
+	PchatTextViewChat *chat = PCHAT_TEXTVIEW_CHAT (wid);
 
-	gtk_xtext_set_palette (xtext, colors);
-	gtk_xtext_set_max_lines (xtext, prefs.pchat_text_max_lines);
-	gtk_xtext_set_background (xtext, channelwin_pix);
-	gtk_xtext_set_wordwrap (xtext, prefs.pchat_text_wordwrap);
-	gtk_xtext_set_show_marker (xtext, prefs.pchat_text_show_marker);
-	gtk_xtext_set_show_separator (xtext, prefs.pchat_text_indent ? prefs.pchat_text_show_sep : 0);
-	gtk_xtext_set_indent (xtext, prefs.pchat_text_indent);
-	if (!gtk_xtext_set_font (xtext, prefs.pchat_text_font))
-	{
-		fe_message ("Failed to open any font. I'm out of here!", FE_MSG_WAIT | FE_MSG_ERROR);
-		exit (1);
-	}
-
-	gtk_xtext_refresh (xtext);
+	pchat_textview_chat_set_palette (chat, colors, 37);
+	pchat_textview_chat_set_max_lines (chat, prefs.pchat_text_max_lines);
+	/* Background image not yet supported */
+	pchat_textview_chat_set_wordwrap (chat, prefs.pchat_text_wordwrap);
+	pchat_textview_chat_set_show_separator (chat, prefs.pchat_text_indent ? prefs.pchat_text_show_sep : 0);
+	pchat_textview_chat_set_indent (chat, prefs.pchat_text_indent);
+	pchat_textview_chat_set_font (chat, prefs.pchat_text_font);
 }
 
 static void
 mg_create_textarea (session *sess, GtkWidget *box)
 {
 	GtkWidget *scrolledwindow;
-	GtkXText *xtext;
+	/* GtkTextView based widget - no local var needed */
 	session_gui *gui = sess->gui;
 	static const GtkTargetEntry dnd_targets[] =
 	{
@@ -2392,19 +2412,18 @@ mg_create_textarea (session *sess, GtkWidget *box)
 	gtk_widget_set_margin_bottom (scrolledwindow, 0);
 	gtk_box_pack_start (GTK_BOX (box), scrolledwindow, TRUE, TRUE, 0);
 
-	gui->xtext = gtk_xtext_new (colors, TRUE);
-	xtext = GTK_XTEXT (gui->xtext);
-	gtk_xtext_set_max_indent (xtext, prefs.pchat_text_max_indent);
-	gtk_xtext_set_thin_separator (xtext, prefs.pchat_text_thin_sep);
-	gtk_xtext_set_urlcheck_function (xtext, mg_word_check);
-	gtk_xtext_set_max_lines (xtext, prefs.pchat_text_max_lines);
-	gtk_widget_set_vexpand (GTK_WIDGET (xtext), TRUE);
-	gtk_widget_set_hexpand (GTK_WIDGET (xtext), TRUE);
-	gtk_container_add (GTK_CONTAINER (scrolledwindow), GTK_WIDGET (xtext));
+	gui->xtext = pchat_textview_chat_new ();
+	pchat_textview_chat_set_max_auto_indent (PCHAT_TEXTVIEW_CHAT (gui->xtext), prefs.pchat_text_max_indent);
+	pchat_textview_chat_set_thin_separator (PCHAT_TEXTVIEW_CHAT (gui->xtext), prefs.pchat_text_thin_sep);
+	pchat_textview_chat_set_urlcheck_function (PCHAT_TEXTVIEW_CHAT (gui->xtext), mg_word_check);
+	pchat_textview_chat_set_max_lines (PCHAT_TEXTVIEW_CHAT (gui->xtext), prefs.pchat_text_max_lines);
+	gtk_widget_set_vexpand (GTK_WIDGET (gui->xtext), TRUE);
+	gtk_widget_set_hexpand (GTK_WIDGET (gui->xtext), TRUE);
+	gtk_container_add (GTK_CONTAINER (scrolledwindow), GTK_WIDGET (gui->xtext));
 
-	mg_update_xtext (GTK_WIDGET (xtext));
+	mg_update_xtext (GTK_WIDGET (gui->xtext));
 
-	g_signal_connect (G_OBJECT (xtext), "word_click",
+	g_signal_connect (G_OBJECT (gui->xtext), "word-clicked",
 							G_CALLBACK (mg_word_clicked), NULL);
 #ifndef _WIN32	/* needs more work */
 	gtk_drag_dest_set (gui->vscrollbar, 5, dnd_dest_targets, 2,
@@ -2568,19 +2587,47 @@ static gboolean
 mg_set_hpane_right_position_idle (session_gui *gui)
 {
 	GtkAllocation allocation;
-	int handle_size;
+	int handle_size = 0;
+	int desired_position;
 	
-	gtk_widget_get_allocation (GTK_WIDGET (gui->hpane_right), &allocation);
-	gtk_widget_style_get (GTK_WIDGET (gui->hpane_right), "handle-size", &handle_size, NULL);
+	/* Get the actual allocated width of the right pane */
+	gtk_widget_get_allocation (GTK_WIDGET(gui->hpane_right), &allocation);
+	gtk_widget_style_get (GTK_WIDGET(gui->hpane_right), "handle-size", &handle_size, NULL);
 	
-	/* Set position from the right edge */
-	if (allocation.width > prefs.pchat_gui_pane_right_size)
-	{
-		gtk_paned_set_position (GTK_PANED (gui->hpane_right), 
-			allocation.width - prefs.pchat_gui_pane_right_size - handle_size);
+	/* Calculate position to give right side exactly pchat_gui_pane_right_size pixels */
+	desired_position = allocation.width - prefs.pchat_gui_pane_right_size - handle_size;
+	
+	/* Ensure we don't make the main area too small */
+	if (desired_position >= 200) {
+		gtk_paned_set_position (GTK_PANED(gui->hpane_right), desired_position);
 	}
 	
-	return FALSE;
+	return FALSE; /* Don't repeat */
+}
+
+static void
+mg_hpane_right_size_allocate_cb (GtkWidget *widget, GtkAllocation *allocation, session_gui *gui)
+{
+	int handle_size;
+	int actual_position;
+	
+	gtk_widget_style_get (widget, "handle-size", &handle_size, NULL);
+	
+	/* Debug output */
+	printf("DEBUG: Right pane allocation width=%d, pref_size=%d, handle_size=%d\n", 
+		   allocation->width, prefs.pchat_gui_pane_right_size, handle_size);
+	
+	/* Set position from the right edge, respecting user preference strictly */
+	if (allocation->width > prefs.pchat_gui_pane_right_size + handle_size + 100) /* +100 for minimum main area */
+	{
+		actual_position = allocation->width - prefs.pchat_gui_pane_right_size - handle_size;
+		printf("DEBUG: Setting paned position to %d\n", actual_position);
+		gtk_paned_set_position (GTK_PANED (gui->hpane_right), actual_position);
+	}
+	else
+	{
+		printf("DEBUG: Window too small, not setting position\n");
+	}
 }
 
 static gboolean
@@ -2615,6 +2662,7 @@ mg_create_center (session *sess, session_gui *gui, GtkWidget *box)
 	gui->vpane_right = gtk_paned_new (GTK_ORIENTATION_VERTICAL);
 	gtk_widget_set_vexpand (gui->vpane_right, TRUE);
 	gtk_widget_set_hexpand (gui->vpane_right, FALSE);
+	/* Force maximum width to respect preference */
 	gtk_widget_set_size_request (gui->vpane_right, prefs.pchat_gui_pane_right_size, -1);
 	g_object_set (gui->vpane_right, "wide-handle", FALSE, NULL);
 	gtk_paned_set_wide_handle (GTK_PANED (gui->vpane_right), FALSE);
@@ -2641,7 +2689,7 @@ mg_create_center (session *sess, session_gui *gui, GtkWidget *box)
 		gtk_paned_pack1 (GTK_PANED (gui->hpane_left), gui->vpane_left, FALSE, TRUE);
 		gtk_paned_pack2 (GTK_PANED (gui->hpane_left), gui->hpane_right, TRUE, TRUE);
 	}
-	gtk_paned_pack2 (GTK_PANED (gui->hpane_right), gui->vpane_right, FALSE, TRUE);
+	gtk_paned_pack2 (GTK_PANED (gui->hpane_right), gui->vpane_right, FALSE, FALSE);
 
 	gtk_box_pack_start (GTK_BOX (box), gui->hpane_left, TRUE, TRUE, 0);
 
@@ -2662,10 +2710,11 @@ mg_create_center (session *sess, session_gui *gui, GtkWidget *box)
 	gtk_paned_pack2 (GTK_PANED (gui->vpane_right), hbox, FALSE, TRUE);
 	mg_create_userlist (gui, hbox);
 
-	/* Set paned positions - right pane will be set after size-allocate */
+	/* Set paned positions */
 	gtk_paned_set_position (GTK_PANED (gui->hpane_left), prefs.pchat_gui_pane_left_size);
 	gtk_paned_set_position (GTK_PANED (gui->vpane_left), prefs.pchat_gui_pane_left_size);
 	gtk_paned_set_position (GTK_PANED (gui->vpane_right), prefs.pchat_gui_pane_right_size);
+	/* Right pane position will be set in idle callback after window is fully laid out */
 
 	gui->user_box = hbox;
 
@@ -2899,9 +2948,9 @@ mg_inputbox_rightclick (GtkEntry *entry, GtkWidget *menu)
 static void
 search_handle_event(int search_type, session *sess)
 {
-	textentry *last;
+	gboolean found;
 	const gchar *text = NULL;
-	gtk_xtext_search_flags flags;
+	PchatSearchFlags flags;
 	GError *err = NULL;
 	gboolean backwards = FALSE;
 
@@ -2917,7 +2966,7 @@ search_handle_event(int search_type, session *sess)
 
 	if (search_type != SEARCH_REFRESH)
 		text = gtk_entry_get_text (GTK_ENTRY(sess->gui->shentry));
-	last = gtk_xtext_search (GTK_XTEXT (sess->gui->xtext), text, flags, &err);
+	found = pchat_textview_chat_search (PCHAT_TEXTVIEW_CHAT (sess->gui->xtext), text, flags, &err);
 
 	if (err)
 	{
@@ -2925,7 +2974,7 @@ search_handle_event(int search_type, session *sess)
 		gtk_entry_set_icon_tooltip_text (GTK_ENTRY (sess->gui->shentry), GTK_ENTRY_ICON_SECONDARY, _(err->message));
 		g_error_free (err);
 	}
-	else if (!last)
+	else if (!found)
 	{
 		if (text && text[0] == 0) /* empty string, no error */
 		{
@@ -2934,8 +2983,8 @@ search_handle_event(int search_type, session *sess)
 		else
 		{
 			/* Either end of search or not found, try again to wrap if only end */
-			last = gtk_xtext_search (GTK_XTEXT (sess->gui->xtext), text, flags, &err);
-			if (!last) /* Not found error */
+			found = pchat_textview_chat_search (PCHAT_TEXTVIEW_CHAT (sess->gui->xtext), text, flags, &err);
+			if (!found) /* Not found error */
 			{
 				gtk_entry_set_icon_from_icon_name (GTK_ENTRY (sess->gui->shentry), GTK_ENTRY_ICON_SECONDARY, "dialog-error");
 				gtk_entry_set_icon_tooltip_text (GTK_ENTRY (sess->gui->shentry), GTK_ENTRY_ICON_SECONDARY, _("No results found."));
@@ -3187,7 +3236,7 @@ mg_tabwin_focus_cb (GtkWindow * win, GdkEventFocus *event, gpointer userdata)
 	current_sess = current_tab;
 	if (current_sess)
 	{
-		gtk_xtext_check_marker_visibility (GTK_XTEXT (current_sess->gui->xtext));
+		/* Marker visibility not needed in new system */;
 		plugin_emit_dummy_print (current_sess, "Focus Window");
 	}
 	unflash_window (GTK_WIDGET (win));
@@ -3200,7 +3249,7 @@ mg_topwin_focus_cb (GtkWindow * win, GdkEventFocus *event, session *sess)
 	current_sess = sess;
 	if (!sess->server->server_session)
 		sess->server->server_session = sess;
-	gtk_xtext_check_marker_visibility(GTK_XTEXT (current_sess->gui->xtext));
+	/* Marker visibility handled by buffer system */
 	unflash_window (GTK_WIDGET (win));
 	plugin_emit_dummy_print (sess, "Focus Window");
 	return FALSE;
@@ -3322,9 +3371,9 @@ mg_create_topwindow (session *sess)
 
 	if (sess->res->buffer == NULL)
 	{
-		sess->res->buffer = gtk_xtext_buffer_new (GTK_XTEXT (sess->gui->xtext));
-		gtk_xtext_buffer_show (GTK_XTEXT (sess->gui->xtext), sess->res->buffer, TRUE);
-		gtk_xtext_set_time_stamp (sess->res->buffer, prefs.pchat_stamp_text);
+		sess->res->buffer = pchat_chat_buffer_new (PCHAT_TEXTVIEW_CHAT (sess->gui->xtext));
+		pchat_chat_buffer_show (PCHAT_TEXTVIEW_CHAT (sess->gui->xtext), sess->res->buffer);
+		pchat_textview_chat_set_show_timestamps (PCHAT_TEXTVIEW_CHAT (sess->gui->xtext), prefs.pchat_stamp_text);
 		sess->res->user_model = userlist_create_model ();
 	}
 
@@ -3476,8 +3525,8 @@ mg_apply_setup (void)
 	while (list)
 	{
 		sess = list->data;
-		gtk_xtext_set_time_stamp (sess->res->buffer, prefs.pchat_stamp_text);
-		((xtext_buffer *)sess->res->buffer)->needs_recalc = TRUE;
+		pchat_textview_chat_set_show_timestamps (PCHAT_TEXTVIEW_CHAT (sess->gui->xtext), prefs.pchat_stamp_text);
+		/* Recalc handled automatically by TextView */
 		if (!sess->gui->is_tab || !done_main)
 			mg_place_userlist_and_chanview (sess->gui);
 		if (sess->gui->is_tab)

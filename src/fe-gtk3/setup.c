@@ -2042,7 +2042,7 @@ setup_apply_entry_style (GtkWidget *entry)
 static void
 setup_apply_to_sess (session_gui *gui)
 {
-	mg_update_xtext (gui->xtext);
+	mg_update_xtext (GTK_WIDGET (gui->xtext));
 
 	if (prefs.pchat_gui_ulist_style)
 	{

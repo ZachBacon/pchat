@@ -36,10 +36,12 @@
 #include "../common/fe.h"
 #include "../common/text.h"
 #include "gtkutil.h"
-#include "xtext.h"
+#include "textview-chat.h"
 #include "maingui.h"
 #include "palette.h"
 #include "textgui.h"
+
+#define ATTR_BEEP			'\007'
 
 extern struct text_event te[];
 extern char *pntevts_text[];
@@ -48,6 +50,7 @@ extern char *pntevts[];
 static GtkWidget *pevent_dialog = NULL, *pevent_dialog_twid,
 	*pevent_dialog_entry,
 	*pevent_dialog_list, *pevent_dialog_hlist;
+static PchatChatBuffer *pevent_dialog_buffer = NULL;
 
 enum
 {
@@ -66,9 +69,9 @@ xtext_get_stamp_str (time_t tim, char **ret)
 }
 
 static void
-PrintTextLine (xtext_buffer *xtbuf, unsigned char *text, int len, int indent, time_t timet)
+PrintTextLine (PchatChatBuffer *buf, PchatTextViewChat *chat, unsigned char *text, int len, int indent, time_t timet)
 {
-	unsigned char *tab, *new_text;
+	unsigned char *tab;
 	int leftlen;
 
 	if (len == 0)
@@ -76,42 +79,45 @@ PrintTextLine (xtext_buffer *xtbuf, unsigned char *text, int len, int indent, ti
 
 	if (!indent)
 	{
-		if (prefs.pchat_stamp_text)
-		{
-			int stamp_size;
-			char *stamp;
-
-			if (timet == 0)
-				timet = time (0);
-
-			stamp_size = get_stamp_str (prefs.pchat_stamp_text_format, timet, &stamp);
-			new_text = malloc (len + stamp_size + 1);
-			memcpy (new_text, stamp, stamp_size);
-			g_free (stamp);
-			memcpy (new_text + stamp_size, text, len);
-			gtk_xtext_append (xtbuf, new_text, len + stamp_size);
-			free (new_text);
-		} else
-			gtk_xtext_append (xtbuf, text, len);
+		/* Simple append without indent - timestamps handled by widget */
+		pchat_textview_chat_append_with_stamp (chat, buf, 
+		                                        (const gchar *)text, len,
+		                                        timet);
 		return;
 	}
 
+	/* Handle indented text (left part + right part separated by tab) */
 	tab = strchr (text, '\t');
 	if (tab && tab < (text + len))
 	{
 		leftlen = tab - text;
-		gtk_xtext_append_indent (xtbuf,
-										 text, leftlen, tab + 1, len - (leftlen + 1), timet);
+		pchat_textview_chat_append_indent (chat, buf,
+		                                    (const gchar *)text, leftlen,
+		                                    (const gchar *)(tab + 1), len - (leftlen + 1),
+		                                    timet);
 	} else
-		gtk_xtext_append_indent (xtbuf, 0, 0, text, len, timet);
+	{
+		pchat_textview_chat_append_indent (chat, buf,
+		                                    NULL, 0,
+		                                    (const gchar *)text, len,
+		                                    timet);
+	}
 }
 
 void
-PrintTextRaw (void *xtbuf, unsigned char *text, int indent, time_t stamp)
+PrintTextRaw (void *buf_ptr, unsigned char *text, int indent, time_t stamp)
 {
+	PchatChatBuffer *buf = (PchatChatBuffer *)buf_ptr;
+	PchatTextViewChat *chat;
 	char *last_text = text;
 	int len = 0;
 	int beep_done = FALSE;
+	
+	/* Get the chat widget from the current session - this is a bit hacky but maintains compatibility */
+	if (current_sess && current_sess->gui && current_sess->gui->xtext)
+		chat = PCHAT_TEXTVIEW_CHAT (current_sess->gui->xtext);
+	else
+		return;  /* No widget available */
 
 	/* split the text into separate lines */
 	while (1)
@@ -119,10 +125,10 @@ PrintTextRaw (void *xtbuf, unsigned char *text, int indent, time_t stamp)
 		switch (*text)
 		{
 		case 0:
-			PrintTextLine (xtbuf, last_text, len, indent, stamp);
+			PrintTextLine (buf, chat, last_text, len, indent, stamp);
 			return;
 		case '\n':
-			PrintTextLine (xtbuf, last_text, len, indent, stamp);
+			PrintTextLine (buf, chat, last_text, len, indent, stamp);
 			text++;
 			if (*text == 0)
 				return;
@@ -147,6 +153,11 @@ PrintTextRaw (void *xtbuf, unsigned char *text, int indent, time_t stamp)
 static void
 pevent_dialog_close (GtkWidget *wid, gpointer arg)
 {
+	if (pevent_dialog_buffer)
+	{
+		pchat_chat_buffer_free (pevent_dialog_buffer);
+		pevent_dialog_buffer = NULL;
+	}
 	pevent_dialog = NULL;
 	pevent_save (NULL);
 }
@@ -203,7 +214,10 @@ pevent_dialog_update (GtkWidget * wid, GtkWidget * twid)
 	out[len + 1] = 0;
 	check_special_chars (out, TRUE);
 
-	PrintTextRaw (GTK_XTEXT (twid)->buffer, out, 0, 0);
+	if (!pevent_dialog_buffer)
+		pevent_dialog_buffer = pchat_chat_buffer_new (PCHAT_TEXTVIEW_CHAT (twid));
+	
+	PrintTextRaw (pevent_dialog_buffer, out, 0, 0);
 	free (out);
 
 	/* save this when we exit */
@@ -343,7 +357,10 @@ pevent_test_cb (GtkWidget * wid, GtkWidget * twid)
 		out[len + 1] = 0;
 		check_special_chars (out, TRUE);
 
-		PrintTextRaw (GTK_XTEXT (twid)->buffer, out, 0, 0);
+		if (!pevent_dialog_buffer)
+			pevent_dialog_buffer = pchat_chat_buffer_new (PCHAT_TEXTVIEW_CHAT (twid));
+
+		PrintTextRaw (pevent_dialog_buffer, out, 0, 0);
 		free (out);
 	}
 }
@@ -384,7 +401,7 @@ pevent_dialog_show ()
 	g_signal_connect (G_OBJECT (sel), "changed",
 							G_CALLBACK (pevent_dialog_select), store);
 
-	pevent_dialog_twid = gtk_xtext_new (colors, 0);
+	pevent_dialog_twid = pchat_textview_chat_new ();
 
 	pevent_dialog_entry = gtk_entry_new ();
 	gtk_entry_set_max_length (GTK_ENTRY (pevent_dialog_entry), 255);
@@ -400,7 +417,7 @@ pevent_dialog_show ()
 	gtk_container_add (GTK_CONTAINER (tbox), wid);
 
 	gtk_container_add (GTK_CONTAINER (wid), pevent_dialog_twid);
-	gtk_xtext_set_font (GTK_XTEXT (pevent_dialog_twid), prefs.pchat_text_font);
+	pchat_textview_chat_set_font (PCHAT_TEXTVIEW_CHAT (pevent_dialog_twid), prefs.pchat_text_font);
 
 	hstore = gtk_list_store_new (2, G_TYPE_INT, G_TYPE_STRING);
 	pevent_dialog_hlist = gtkutil_treeview_new (bh, GTK_TREE_MODEL (hstore),

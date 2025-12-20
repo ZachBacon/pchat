@@ -2008,16 +2008,12 @@ gtk_xtext_button_press (GtkWidget * widget, GdkEventButton * event)
 	/* Clear previous selection before starting a new one */
 	if (xtext->buffer->last_ent_start)
 	{
-		textentry *clear_start = xtext->buffer->last_ent_start;
-		textentry *clear_end = xtext->buffer->last_ent_end;
-		
 		gtk_xtext_selection_clear (xtext->buffer);
 		xtext->buffer->last_ent_start = NULL;
 		xtext->buffer->last_ent_end = NULL;
 		
-		/* Redraw the previously selected area to remove highlighting */
-		if (clear_start && clear_end)
-			gtk_xtext_render_ents (xtext, clear_start, clear_end);
+		/* Force a full redraw to clear old selection */
+		gtk_widget_queue_draw (widget);
 	}
 
 	xtext->button_down = TRUE;
