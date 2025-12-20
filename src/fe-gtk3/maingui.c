@@ -26,6 +26,7 @@
 
 #include <gdk/gdkkeysyms.h>
 
+#include "fe-gtk.h"
 #include "../common/xchat.h"
 #include "../common/fe.h"
 #include "../common/server.h"
@@ -40,7 +41,6 @@
 #include "../common/chanopt.h"
 #include "../common/cfgfiles.h"
 
-#include "fe-gtk.h"
 #include "banlist.h"
 #include "gtkutil.h"
 #include "joind.h"
@@ -91,7 +91,7 @@ static const char chan_flags[] = { 'c', 'n', 'r', 't', 'i', 'm', 'l', 'k' };
 static chan *active_tab = NULL;	/* active tab */
 GtkWidget *parent_window = NULL;			/* the master window */
 
-GtkStyle *input_style;
+PangoFontDescription *input_font_desc;
 
 static PangoAttrList *away_list;
 static PangoAttrList *newdata_list;
@@ -1256,7 +1256,6 @@ mg_open_quit_dialog (gboolean minimize_button)
 	GtkWidget *image;
 	GtkWidget *checkbutton1;
 	GtkWidget *label;
-	GtkWidget *dialog_action_area1;
 	GtkWidget *button;
 	char *text, *connecttext;
 	int cons;
@@ -1320,11 +1319,6 @@ mg_open_quit_dialog (gboolean minimize_button)
 	gtk_widget_set_halign (label, GTK_ALIGN_FILL);
 	gtk_label_set_use_markup (GTK_LABEL (label), TRUE);
 	gtk_widget_set_halign (GTK_WIDGET (label), 0 == 0.0 ? GTK_ALIGN_START : (0 == 1.0 ? GTK_ALIGN_END : GTK_ALIGN_CENTER));
-
-	dialog_action_area1 = gtk_dialog_get_action_area (GTK_DIALOG (dialog));
-	gtk_widget_show (dialog_action_area1);
-	gtk_button_box_set_layout (GTK_BUTTON_BOX (dialog_action_area1),
-										GTK_BUTTONBOX_END);
 
 	if (minimize_button && !unity_mode ())
 	{
@@ -2119,7 +2113,21 @@ mg_apply_entry_style (GtkWidget *entry)
 {
 	/* gtk_widget_modify_base (entry, GTK_STATE_NORMAL, &colors[COL_BG]); */
 	/* gtk_widget_modify_text (entry, GTK_STATE_NORMAL, &colors[COL_FG]); */
-	gtk_widget_modify_font (entry, input_style->font_desc);
+	if (input_font_desc)
+	{
+		char *font_str = pango_font_description_to_string(input_font_desc);
+		char css[512];
+		GtkStyleContext *context = gtk_widget_get_style_context(entry);
+		GtkCssProvider *provider = gtk_css_provider_new();
+		
+		snprintf(css, sizeof(css), "entry { font: %s; }", font_str);
+		gtk_css_provider_load_from_data(provider, css, -1, NULL);
+		gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(provider),
+			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		
+		g_free(font_str);
+		g_object_unref(provider);
+	}
 }
 
 static void
@@ -2535,8 +2543,8 @@ mg_create_userlist (session_gui *gui, GtkWidget *box)
 
 	vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
 	gtk_widget_set_vexpand (vbox, TRUE);
-	gtk_widget_set_hexpand (vbox, TRUE);
-	gtk_box_pack_start (GTK_BOX (box), vbox, TRUE, TRUE, 0);
+	gtk_widget_set_hexpand (vbox, TRUE);  /* Expand to fill allocated space */
+	gtk_box_pack_start (GTK_BOX (box), vbox, TRUE, TRUE, 0);  /* Expand in packing */
 
 	frame = gtk_frame_new (NULL);
 	if (prefs.pchat_gui_ulist_count)
@@ -2547,11 +2555,7 @@ mg_create_userlist (session_gui *gui, GtkWidget *box)
 
 	gui->user_tree = ulist = userlist_create (vbox);
 
-	if (prefs.pchat_gui_ulist_style)
-	{
-		gtk_widget_set_style (ulist, input_style);
-		/* gtk_widget_modify_base (ulist, GTK_STATE_NORMAL, &colors[COL_BG]); */
-	}
+	/* Note: Font styling is now handled via CSS provider in setup_apply_to_sess */
 
 	mg_create_meters (gui, vbox);
 
@@ -2613,20 +2617,11 @@ mg_hpane_right_size_allocate_cb (GtkWidget *widget, GtkAllocation *allocation, s
 	
 	gtk_widget_style_get (widget, "handle-size", &handle_size, NULL);
 	
-	/* Debug output */
-	printf("DEBUG: Right pane allocation width=%d, pref_size=%d, handle_size=%d\n", 
-		   allocation->width, prefs.pchat_gui_pane_right_size, handle_size);
-	
 	/* Set position from the right edge, respecting user preference strictly */
 	if (allocation->width > prefs.pchat_gui_pane_right_size + handle_size + 100) /* +100 for minimum main area */
 	{
 		actual_position = allocation->width - prefs.pchat_gui_pane_right_size - handle_size;
-		printf("DEBUG: Setting paned position to %d\n", actual_position);
 		gtk_paned_set_position (GTK_PANED (gui->hpane_right), actual_position);
-	}
-	else
-	{
-		printf("DEBUG: Window too small, not setting position\n");
 	}
 }
 
@@ -2641,6 +2636,9 @@ mg_add_pane_signals (session_gui *gui)
 							G_CALLBACK (mg_vpane_cb), gui);
 	g_signal_connect (G_OBJECT (gui->vpane_right), "notify::position",
 							G_CALLBACK (mg_vpane_cb), gui);
+	/* Connect size-allocate to enforce right pane size on every allocation */
+	g_signal_connect (G_OBJECT (gui->hpane_right), "size-allocate",
+							G_CALLBACK (mg_hpane_right_size_allocate_cb), gui);
 	/* Set right pane position in idle callback after full layout */
 	g_idle_add ((GSourceFunc) mg_set_hpane_right_position_idle, gui);
 	return FALSE;
@@ -2661,9 +2659,7 @@ mg_create_center (session *sess, session_gui *gui, GtkWidget *box)
 	/* container for right side (userlist area) */
 	gui->vpane_right = gtk_paned_new (GTK_ORIENTATION_VERTICAL);
 	gtk_widget_set_vexpand (gui->vpane_right, TRUE);
-	gtk_widget_set_hexpand (gui->vpane_right, FALSE);
-	/* Force maximum width to respect preference */
-	gtk_widget_set_size_request (gui->vpane_right, prefs.pchat_gui_pane_right_size, -1);
+	gtk_widget_set_hexpand (gui->vpane_right, TRUE);  /* Expand to fill allocated space */
 	g_object_set (gui->vpane_right, "wide-handle", FALSE, NULL);
 	gtk_paned_set_wide_handle (GTK_PANED (gui->vpane_right), FALSE);
 
@@ -2689,7 +2685,8 @@ mg_create_center (session *sess, session_gui *gui, GtkWidget *box)
 		gtk_paned_pack1 (GTK_PANED (gui->hpane_left), gui->vpane_left, FALSE, TRUE);
 		gtk_paned_pack2 (GTK_PANED (gui->hpane_left), gui->hpane_right, TRUE, TRUE);
 	}
-	gtk_paned_pack2 (GTK_PANED (gui->hpane_right), gui->vpane_right, FALSE, FALSE);
+	/* Pack vpane_right with resize=TRUE so it expands to fill allocated space, but shrink=FALSE */
+	gtk_paned_pack2 (GTK_PANED (gui->hpane_right), gui->vpane_right, TRUE, FALSE);
 
 	gtk_box_pack_start (GTK_BOX (box), gui->hpane_left, TRUE, TRUE, 0);
 
@@ -2704,19 +2701,24 @@ mg_create_center (session *sess, session_gui *gui, GtkWidget *box)
 	gtk_widget_set_margin_bottom (book, 0);
 	gtk_paned_pack1 (GTK_PANED (gui->hpane_right), book, TRUE, TRUE);
 
+	/* Create a container for the userlist that will be positioned later */
 	hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
 	gtk_widget_set_vexpand (hbox, TRUE);
-	gtk_widget_set_hexpand (hbox, TRUE);
-	gtk_paned_pack2 (GTK_PANED (gui->vpane_right), hbox, FALSE, TRUE);
+	gtk_widget_set_hexpand (hbox, TRUE);  /* Expand to fill the allocated space */
+	gui->user_box = hbox;
 	mg_create_userlist (gui, hbox);
+
+	/* The userlist container will be added to vpane_right or vpane_left 
+	   by mg_place_userlist_and_chanview() based on prefs.pchat_gui_ulist_pos */
 
 	/* Set paned positions */
 	gtk_paned_set_position (GTK_PANED (gui->hpane_left), prefs.pchat_gui_pane_left_size);
 	gtk_paned_set_position (GTK_PANED (gui->vpane_left), prefs.pchat_gui_pane_left_size);
 	gtk_paned_set_position (GTK_PANED (gui->vpane_right), prefs.pchat_gui_pane_right_size);
+	/* Set hpane_right position to a high value initially - will be adjusted in idle callback 
+	   to position from the right edge after window size is known */
+	gtk_paned_set_position (GTK_PANED (gui->hpane_right), 9999);
 	/* Right pane position will be set in idle callback after window is fully laid out */
-
-	gui->user_box = hbox;
 
 	vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
 	gtk_widget_set_vexpand (vbox, TRUE);
@@ -2869,18 +2871,18 @@ mg_place_userlist_and_chanview_real (session_gui *gui, GtkWidget *userlist, GtkW
 		switch (prefs.pchat_gui_ulist_pos)
 		{
 		case POS_TOPLEFT:
-			gtk_paned_pack2 (GTK_PANED (gui->vpane_left), userlist, TRUE, TRUE);
+			gtk_paned_pack2 (GTK_PANED (gui->vpane_left), userlist, FALSE, TRUE);
 			break;
 		case POS_BOTTOMLEFT:
-			gtk_paned_pack1 (GTK_PANED (gui->vpane_left), userlist, TRUE, TRUE);
+			gtk_paned_pack1 (GTK_PANED (gui->vpane_left), userlist, FALSE, TRUE);
 			break;
 		case POS_BOTTOMRIGHT:
-			gtk_paned_pack1 (GTK_PANED (gui->vpane_right), userlist, TRUE, TRUE);
+			gtk_paned_pack1 (GTK_PANED (gui->vpane_right), userlist, FALSE, TRUE);
 			break;
 		/*case POS_HIDDEN:
 			break;*/	/* Hide using the VIEW menu instead */
 		default:/* POS_TOPRIGHT */
-			gtk_paned_pack2 (GTK_PANED (gui->vpane_right), userlist, TRUE, TRUE);
+			gtk_paned_pack2 (GTK_PANED (gui->vpane_right), userlist, FALSE, TRUE);
 		}
 	}
 
@@ -3224,7 +3226,7 @@ mg_create_tabs (session_gui *gui)
 
 	gui->chanview = chanview_new (prefs.pchat_gui_tab_layout, prefs.pchat_gui_tab_trunc,
 											prefs.pchat_gui_tab_sort, use_icons,
-											prefs.pchat_gui_ulist_style ? input_style : NULL);
+											NULL);
 	chanview_set_callbacks (gui->chanview, mg_switch_tab_cb, mg_xbutton_cb,
 									mg_tab_contextmenu_cb, (void *)mg_tabs_compare);
 	mg_place_userlist_and_chanview (gui);
@@ -4087,7 +4089,10 @@ mg_drag_motion_cb (GtkWidget *widget, GdkDragContext *context, int x, int y, gui
 		height = gdk_window_get_height (gtk_widget_get_window (widget));
 	}
 
-	cr = gdk_cairo_create (gtk_widget_get_window (widget));
+	cr = cairo_create(cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height));
+	if (!cr)
+		return FALSE;
+	
 	cairo_set_source_rgb (cr, 0, 0, 1.0);
 	cairo_set_line_width (cr, 0.1);
 

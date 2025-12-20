@@ -23,6 +23,7 @@
 
 #include <gdk/gdkkeysyms.h>
 
+#include "fe-gtk.h"
 #include "../common/xchat.h"
 #include "../common/xchatc.h"
 #include "../common/servlist.h"
@@ -30,7 +31,7 @@
 #include "../common/fe.h"
 #include "../common/util.h"
 
-#include "fe-gtk.h"
+
 #include "gtkutil.h"
 #include "menu.h"
 #include "pixmaps.h"

@@ -192,9 +192,11 @@ dcc_prepare_row_send (struct DCC *dcc, GtkListStore *store, GtkTreeIter *iter,
 	float per;
 
 	if (!pix_up)
-		pix_up = gtk_widget_render_icon (dccfwin.window, "gtk-go-up",
-													GTK_ICON_SIZE_MENU, NULL);
-
+	{
+		GtkIconTheme *icon_theme = gtk_icon_theme_get_default();
+		pix_up = gtk_icon_theme_load_icon(icon_theme, "go-up",
+														16, GTK_ICON_LOOKUP_USE_BUILTIN, NULL);
+	}
 	/* percentage ack'ed */
 	per = (float) ((dcc->ack * 100.00) / dcc->size);
 	proper_unit (dcc->size, size, sizeof (size));
@@ -250,9 +252,11 @@ dcc_prepare_row_recv (struct DCC *dcc, GtkListStore *store, GtkTreeIter *iter,
 	int to_go;
 
 	if (!pix_dn)
-		pix_dn = gtk_widget_render_icon (dccfwin.window, "gtk-go-down",
-													GTK_ICON_SIZE_MENU, NULL);
-
+	{
+		GtkIconTheme *icon_theme = gtk_icon_theme_get_default();
+		pix_dn = gtk_icon_theme_load_icon(icon_theme, "go-down",
+														16, GTK_ICON_LOOKUP_USE_BUILTIN, NULL);
+	}
 	proper_unit (dcc->size, size, sizeof (size));
 	if (dcc->dccstat == STAT_QUEUED)
 		proper_unit (dcc->resumable, pos, sizeof (pos));
@@ -813,7 +817,7 @@ fe_dcc_open_recv_win (int passive)
 	store = gtk_list_store_new (N_COLUMNS, GDK_TYPE_PIXBUF, G_TYPE_STRING,
 										 G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING,
 										 G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING,
-										 G_TYPE_STRING, G_TYPE_POINTER, GDK_TYPE_COLOR);
+										 G_TYPE_STRING, G_TYPE_POINTER, GDK_TYPE_RGBA);
 	view = gtkutil_treeview_new (vbox, GTK_TREE_MODEL (store), NULL, -1);
 	/* gtk_tree_view_set_rules_hint deprecated - no replacement needed */;
 	/* Up/Down Icon column */
@@ -1060,7 +1064,7 @@ fe_dcc_open_chat_win (int passive)
 
 	store = gtk_list_store_new (CN_COLUMNS, G_TYPE_STRING, G_TYPE_STRING,
 										 G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING,
-										 G_TYPE_POINTER, GDK_TYPE_COLOR);
+										 G_TYPE_POINTER, GDK_TYPE_RGBA);
 	view = gtkutil_treeview_new (vbox, GTK_TREE_MODEL (store), NULL, -1);
 
 	dcc_add_column (view, CCOL_STATUS, CCOL_COLOR, _("Status"), FALSE);

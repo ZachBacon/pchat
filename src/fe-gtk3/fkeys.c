@@ -701,7 +701,10 @@ key_dialog_treeview_new (GtkWidget *box)
 	gtk_tree_view_column_set_resizable (col, TRUE);
 
 	gtk_container_add (GTK_CONTAINER (scroll), view);
-	gtk_container_add (GTK_CONTAINER (box), scroll);
+	gtk_widget_set_vexpand (scroll, TRUE);
+	gtk_widget_set_hexpand (scroll, TRUE);
+	gtk_box_pack_start (GTK_BOX (box), scroll, TRUE, TRUE, 0);
+	gtk_widget_show_all (scroll);
 
 	return view;
 }
@@ -750,11 +753,22 @@ key_dialog_show ()
 	gtk_text_view_set_wrap_mode (GTK_TEXT_VIEW (xtext), GTK_WRAP_WORD);
 	gtk_widget_set_size_request (xtext, -1, 100);
 	gtk_box_pack_start (GTK_BOX (vbox), xtext, FALSE, TRUE, 2);
-	/* Set font using CSS if needed */
+	/* Set font using CSS */
 	if (prefs.pchat_text_font && strlen(prefs.pchat_text_font) > 0) {
 		PangoFontDescription *font_desc = pango_font_description_from_string(prefs.pchat_text_font);
-		gtk_widget_override_font(xtext, font_desc);
+		char *font_str = pango_font_description_to_string(font_desc);
+		char css[512];
+		GtkStyleContext *context = gtk_widget_get_style_context(xtext);
+		GtkCssProvider *provider = gtk_css_provider_new();
+		
+		snprintf(css, sizeof(css), "textview { font: %s; }", font_str);
+		gtk_css_provider_load_from_data(provider, css, -1, NULL);
+		gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(provider),
+			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		
+		g_free(font_str);
 		pango_font_description_free(font_desc);
+		g_object_unref(provider);
 	}
 
 	g_object_set_data (G_OBJECT (key_dialog), "view", view);
@@ -777,7 +791,7 @@ key_dialog_show ()
 	store = GTK_LIST_STORE (gtk_tree_view_get_model (GTK_TREE_VIEW (view)));
 	key_dialog_load (store);
 
-	gtk_widget_show (key_dialog);
+	gtk_widget_show_all (key_dialog);
 }
 
 static int

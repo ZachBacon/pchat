@@ -78,11 +78,11 @@ cv_tabs_sizealloc (GtkWidget *widget, GtkAllocation *allocation, chanview *cv)
 
 	if (cv->vertical)
 	{
-		adj = gtk_viewport_get_vadjustment (GTK_VIEWPORT (gtk_widget_get_parent (inner)));
+		adj = gtk_scrollable_get_vadjustment (GTK_SCROLLABLE (gtk_widget_get_parent (inner)));
 		compat_gdk_window_get_geometry (parent_win, 0, 0, 0, &viewport_size, 0);
 	} else
 	{
-		adj = gtk_viewport_get_hadjustment (GTK_VIEWPORT (gtk_widget_get_parent (inner)));
+		adj = gtk_scrollable_get_hadjustment (GTK_SCROLLABLE (gtk_widget_get_parent (inner)));
 		compat_gdk_window_get_geometry (parent_win, 0, 0, &viewport_size, 0, 0);
 	}
 
@@ -155,11 +155,11 @@ tab_scroll_left_up_clicked (GtkWidget *widget, chanview *cv)
 
 	if (cv->vertical)
 	{
-		adj = gtk_viewport_get_vadjustment (GTK_VIEWPORT (gtk_widget_get_parent(inner)));
+		adj = gtk_scrollable_get_vadjustment (GTK_SCROLLABLE (gtk_widget_get_parent(inner)));
 		compat_gdk_window_get_geometry (parent_win, 0, 0, 0, &viewport_size, 0);
 	} else
 	{
-		adj = gtk_viewport_get_hadjustment (GTK_VIEWPORT (gtk_widget_get_parent(inner)));
+		adj = gtk_scrollable_get_hadjustment (GTK_SCROLLABLE (gtk_widget_get_parent(inner)));
 		compat_gdk_window_get_geometry (parent_win, 0, 0, &viewport_size, 0, 0);
 	}
 
@@ -204,11 +204,11 @@ tab_scroll_right_down_clicked (GtkWidget *widget, chanview *cv)
 
 	if (cv->vertical)
 	{
-		adj = gtk_viewport_get_vadjustment (GTK_VIEWPORT (gtk_widget_get_parent(inner)));
+		adj = gtk_scrollable_get_vadjustment (GTK_SCROLLABLE (gtk_widget_get_parent(inner)));
 		compat_gdk_window_get_geometry (parent_win, 0, 0, 0, &viewport_size, 0);
 	} else
 	{
-		adj = gtk_viewport_get_hadjustment (GTK_VIEWPORT (gtk_widget_get_parent(inner)));
+		adj = gtk_scrollable_get_hadjustment (GTK_SCROLLABLE (gtk_widget_get_parent(inner)));
 		compat_gdk_window_get_geometry (parent_win, 0, 0, &viewport_size, 0, 0);
 	}
 

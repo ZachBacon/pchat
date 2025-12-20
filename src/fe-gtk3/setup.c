@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include "fe-gtk.h"
 #include "../common/xchat.h"
 #include "../common/cfgfiles.h"
 #include "../common/fe.h"
@@ -29,7 +30,6 @@
 #include "../common/userlist.h"
 #include "../common/util.h"
 #include "../common/xchatc.h"
-#include "fe-gtk.h"
 #include "gtkutil.h"
 #include "maingui.h"
 #include "palette.h"
@@ -42,7 +42,7 @@
 #endif
 #include "sexy-spell-entry.h"
 
-GtkStyle *create_input_style (GtkStyle *);
+
 
 #define LABEL_INDENT 12
 
@@ -2050,10 +2050,9 @@ setup_apply_to_sess (session_gui *gui)
 		GtkStyleContext *context = gtk_widget_get_style_context (gui->user_tree);
 		GtkCssProvider *provider = gtk_css_provider_new ();
 		char css[256];
-		const PangoFontDescription *font_desc = input_style->font_desc;
-		if (font_desc)
+		if (input_font_desc)
 		{
-			char *font_str = pango_font_description_to_string (font_desc);
+			char *font_str = pango_font_description_to_string (input_font_desc);
 			snprintf (css, sizeof(css), "treeview { font: %s; }", font_str);
 			g_free (font_str);
 			gtk_css_provider_load_from_data (provider, css, -1, NULL);
@@ -2065,12 +2064,7 @@ setup_apply_to_sess (session_gui *gui)
 
 	if (prefs.pchat_gui_input_style)
 	{
-		extern char cursor_color_rc[];
-		char buf[256];
-		sprintf (buf, cursor_color_rc,
-			(int)(colors[COL_FG].red * 255),
-			(int)(colors[COL_FG].green * 255),
-			(int)(colors[COL_FG].blue * 255));
+		create_input_style_css ();
 		setup_apply_entry_style (gui->limit_entry);
 		setup_apply_entry_style (gui->key_entry);
 		setup_apply_entry_style (gui->topic_entry);
@@ -2125,7 +2119,10 @@ setup_apply_real (int new_pix, int do_ulist, int do_layout)
 		channelwin_pix = gdk_pixbuf_new_from_file (prefs.pchat_text_background, NULL);
 	}
 
-	input_style = create_input_style (input_style);
+	if (input_font_desc)
+		pango_font_description_free (input_font_desc);
+	input_font_desc = create_input_style_font ();
+	create_input_style_css ();
 
 	list = sess_list;
 	while (list)

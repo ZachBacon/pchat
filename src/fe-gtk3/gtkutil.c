@@ -427,7 +427,6 @@ fe_get_int (char *msg, int def, void *callback, void *userdata)
 	gtk_adjustment_set_lower (adj, 0);
 	gtk_adjustment_set_upper (adj, 1024);
 	gtk_adjustment_set_step_increment (adj, 1);
-	gtk_adjustment_changed (adj);
 	gtk_spin_button_set_value ((GtkSpinButton*)spin, def);
 	gtk_box_pack_end (GTK_BOX (hbox), spin, 0, 0, 0);
 

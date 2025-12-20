@@ -726,11 +726,13 @@ custom_list_resort (CustomList * custom_list)
 		return;
 
 	/* resort */
+	G_GNUC_BEGIN_IGNORE_DEPRECATIONS
 	g_qsort_with_data (custom_list->rows,
 							 custom_list->num_rows,
 							 sizeof (chanlistrow *),
 							 (GCompareDataFunc) custom_list_qsort_compare_func,
 							 custom_list);
+	G_GNUC_END_IGNORE_DEPRECATIONS
 
 	/* let other objects know about the new order */
 	neworder = malloc (sizeof (gint) * custom_list->num_rows);

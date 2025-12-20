@@ -410,11 +410,13 @@ pevent_dialog_show ()
 	gtk_box_pack_start (GTK_BOX (bh), pevent_dialog_entry, 0, 0, 0);
 
 	tbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
-	gtk_container_add (GTK_CONTAINER (bh), tbox);
+	gtk_box_pack_start (GTK_BOX (bh), tbox, TRUE, TRUE, 0);
 
 	wid = gtk_scrolled_window_new (NULL, NULL);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (wid), GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
-	gtk_container_add (GTK_CONTAINER (tbox), wid);
+	gtk_widget_set_vexpand (wid, TRUE);
+	gtk_widget_set_hexpand (wid, TRUE);
+	gtk_box_pack_start (GTK_BOX (tbox), wid, TRUE, TRUE, 0);
 
 	gtk_container_add (GTK_CONTAINER (wid), pevent_dialog_twid);
 	pchat_textview_chat_set_font (PCHAT_TEXTVIEW_CHAT (pevent_dialog_twid), prefs.pchat_text_font);
@@ -448,5 +450,5 @@ pevent_dialog_show ()
 	g_signal_connect (G_OBJECT (wid), "clicked",
 							G_CALLBACK (pevent_ok_cb), NULL);
 
-	gtk_widget_show (pevent_dialog);
+	gtk_widget_show_all (pevent_dialog);
 }

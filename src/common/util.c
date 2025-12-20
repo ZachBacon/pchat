@@ -2414,11 +2414,14 @@ str_sha256hash (char *string)
 	int i;
 	unsigned char hash[SHA256_DIGEST_LENGTH];
 	char buf[SHA256_DIGEST_LENGTH * 2 + 1];		/* 64 digit hash + '\0' */
-	SHA256_CTX sha256;
+	EVP_MD_CTX *mdctx;
+	unsigned int hash_len;
 
-	SHA256_Init (&sha256);
-	SHA256_Update (&sha256, string, strlen (string));
-	SHA256_Final (hash, &sha256);
+	mdctx = EVP_MD_CTX_new();
+	EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL);
+	EVP_DigestUpdate(mdctx, string, strlen(string));
+	EVP_DigestFinal_ex(mdctx, hash, &hash_len);
+	EVP_MD_CTX_free(mdctx);
 
 	for (i = 0; i < SHA256_DIGEST_LENGTH; i++)
 	{

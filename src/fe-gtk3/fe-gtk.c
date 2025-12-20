@@ -249,47 +249,55 @@ fe_args (int argc, char *argv[])
 	return -1;
 }
 
-const char cursor_color_rc[] =
-	"style \"xc-ib-st\""
-	"{"
-		"GtkEntry::cursor-color=\"#%02x%02x%02x\""
-	"}"
-	"widget \"*.xchat-inputbox\" style : application \"xc-ib-st\"";
+static GtkCssProvider *input_css_provider = NULL;
 
-GtkStyle *
-create_input_style (GtkStyle *style)
+void
+create_input_style_css (void)
+{
+	char css[512];
+	static gboolean done_css = FALSE;
+
+	if (prefs.pchat_gui_input_style && !done_css)
+	{
+		done_css = TRUE;
+		
+		if (!input_css_provider)
+		{
+			input_css_provider = gtk_css_provider_new();
+			gtk_style_context_add_provider_for_screen(
+				gdk_screen_get_default(),
+				GTK_STYLE_PROVIDER(input_css_provider),
+				GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		}
+
+		snprintf(css, sizeof(css),
+			".xchat-inputbox { caret-color: rgb(%d,%d,%d); }",
+			(int)(colors[COL_FG].red * 255),
+			(int)(colors[COL_FG].green * 255),
+			(int)(colors[COL_FG].blue * 255));
+
+		gtk_css_provider_load_from_data(input_css_provider, css, -1, NULL);
+	}
+}
+
+PangoFontDescription *
+create_input_style_font (void)
 {
 	char buf[256];
-	static int done_rc = FALSE;
+	PangoFontDescription *font_desc;
 
-	pango_font_description_free (style->font_desc);
-	style->font_desc = pango_font_description_from_string (prefs.pchat_text_font);
+	font_desc = pango_font_description_from_string (prefs.pchat_text_font);
 
 	/* fall back */
-	if (pango_font_description_get_size (style->font_desc) == 0)
+	if (pango_font_description_get_size (font_desc) == 0)
 	{
 		snprintf (buf, sizeof (buf), _("Failed to open font:\n\n%s"), prefs.pchat_text_font);
 		fe_message (buf, FE_MSG_ERROR);
-		pango_font_description_free (style->font_desc);
-		style->font_desc = pango_font_description_from_string ("sans 11");
+		pango_font_description_free (font_desc);
+		font_desc = pango_font_description_from_string ("sans 11");
 	}
 
-	if (prefs.pchat_gui_input_style && !done_rc)
-	{
-		done_rc = TRUE;
-		sprintf (buf, cursor_color_rc, (int)(colors[COL_FG].red * 255),
-			(int)(colors[COL_FG].green * 255), (int)(colors[COL_FG].blue * 255));
-		gtk_rc_parse_string (buf);
-	}
-
-	/* Note: GtkStyle color fields are GdkColor, but we now use GdkRGBA.
-	 * Since GtkStyle is deprecated in GTK3, we skip setting these colors.
-	 * The widget styling should be handled via CSS or GtkStyleContext. */
-	/* style->bg[GTK_STATE_NORMAL] = colors[COL_FG]; */
-	/* style->base[GTK_STATE_NORMAL] = colors[COL_BG]; */
-	/* style->text[GTK_STATE_NORMAL] = colors[COL_FG]; */
-
-	return style;
+	return font_desc;
 }
 
 void
@@ -303,7 +311,8 @@ fe_init (void)
 	gtkosx_application_set_dock_icon_pixbuf (osx_app, pix_xchat);
 #endif
 	channelwin_pix = gdk_pixbuf_new_from_file (prefs.pchat_text_background, NULL);
-	input_style = create_input_style (gtk_style_new ());
+	input_font_desc = create_input_style_font ();
+	create_input_style_css ();
 }
 
 void
@@ -986,7 +995,7 @@ fe_open_url_inner (const char *url)
 	g_snprintf (open, sizeof(open), "%s %s", g_find_program_in_path ("open"), url, NULL);
 	xchat_exec (open);
 #else
-	gtk_show_uri (NULL, url, GDK_CURRENT_TIME, NULL);
+	gtk_show_uri_on_window (NULL, url, GDK_CURRENT_TIME, NULL);
 #endif
 }
 

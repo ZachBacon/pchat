@@ -28,6 +28,7 @@
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 #include <string.h>
+#include "fe-gtk.h"
 #include "../common/xchat-plugin.h"
 #include "../common/xchat.h"
 #include "../common/xchatc.h"
@@ -36,7 +37,6 @@
 #include "../common/fe.h"
 #include "../common/util.h"
 #include "../common/outbound.h"
-#include "fe-gtk.h"
 #include "pixmaps.h"
 #include "maingui.h"
 #include "menu.h"

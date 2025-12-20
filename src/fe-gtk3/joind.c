@@ -34,12 +34,12 @@
 #include <unistd.h>
 #endif
 
+#include "fe-gtk.h"
 #include "../common/xchat.h"
 #include "../common/xchatc.h"
 #include "../common/server.h"
 #include "../common/servlist.h"
 #include "../common/fe.h"
-#include "fe-gtk.h"
 #include "chanlist.h"
 
 
@@ -127,7 +127,6 @@ joind_show_dialog (server *serv)
 	GtkWidget *hbox2;
 	GtkWidget *entry1;
 	GtkWidget *checkbutton1;
-	GtkWidget *dialog_action_area1;
 	GtkWidget *okbutton1;
 	char buf[256];
 	char buf2[256];
@@ -228,14 +227,8 @@ joind_show_dialog (server *serv)
 	gtk_widget_show (checkbutton1);
 	gtk_box_pack_start (GTK_BOX (vbox1), checkbutton1, FALSE, FALSE, 0);
 
-	dialog_action_area1 = gtk_dialog_get_action_area (GTK_DIALOG (dialog1));
-	gtk_widget_show (dialog_action_area1);
-	gtk_button_box_set_layout (GTK_BUTTON_BOX (dialog_action_area1), GTK_BUTTONBOX_END);
-
-	okbutton1 = gtk_button_new_with_mnemonic (_("_OK"));
+	okbutton1 = gtk_dialog_add_button (GTK_DIALOG (dialog1), _("_OK"), GTK_RESPONSE_OK);
 	gtk_button_set_image (GTK_BUTTON (okbutton1), gtk_image_new_from_icon_name ("gtk-ok", GTK_ICON_SIZE_BUTTON));
-	gtk_widget_show (okbutton1);
-	gtk_box_pack_end (GTK_BOX (gtk_dialog_get_action_area (GTK_DIALOG (dialog1))), okbutton1, FALSE, TRUE, 0);
 	gtk_widget_set_can_default (okbutton1, TRUE);
 
 	g_signal_connect (G_OBJECT (dialog1), "destroy",

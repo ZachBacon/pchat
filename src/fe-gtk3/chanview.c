@@ -25,9 +25,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "fe-gtk.h"
 #include "../common/xchat.h"
 #include "../common/xchatc.h"
-#include "fe-gtk.h"
 #include "maingui.h"
 #include "gtkutil.h"
 #include "chanview.h"

@@ -726,7 +726,8 @@ get_default_spell_languages (void)
 void
 load_default_config(void)
 {
-	const char *username, *realname, *font;
+	char *username, *realname;
+	const char *font;
 	char *sp;
 #ifdef _WIN32
 	char out[256];

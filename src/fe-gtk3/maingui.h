@@ -23,7 +23,9 @@
 #ifndef PCHAT_MAINGUI_H
 #define PCHAT_MAINGUI_H
 
-extern GtkStyle *input_style;
+extern PangoFontDescription *input_font_desc;
+void create_input_style_css (void);
+PangoFontDescription *create_input_style_font (void);
 extern GtkWidget *parent_window;
 
 void mg_changui_new (session *sess, restore_gui *res, int tab, int focus);
