@@ -42,7 +42,7 @@
 #define XCHAT_DIR "pchat"
 #endif
 
-#define DEF_FONT "Monospace 9"
+#define DEF_FONT "Monospace 12"
 #define DEF_FONT_ALTER "Arial Unicode MS,Lucida Sans Unicode,MS Gothic,Unifont"
 
 const char * const languages[LANGUAGES_LENGTH] = {

@@ -1021,7 +1021,7 @@ pchat_textview_chat_search (PchatTextViewChat *chat, const gchar *text,
 		return FALSE;
 	
 	/* Set search flags */
-	if (!(flags & PCHAT_SEARCH_MATCH_CASE))
+	if (!(flags & PCHAT_SEARCH_CASE_MATCH))
 		search_flags |= GTK_TEXT_SEARCH_CASE_INSENSITIVE;
 	if (flags & PCHAT_SEARCH_VISIBLE_ONLY)
 		search_flags |= GTK_TEXT_SEARCH_VISIBLE_ONLY;

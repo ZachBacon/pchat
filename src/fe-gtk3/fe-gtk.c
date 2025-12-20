@@ -46,7 +46,7 @@
 #include "pixmaps.h"
 #include "chanlist.h"
 #include "joind.h"
-#include "xtext.h"
+#include "textview-chat.h"
 #include "palette.h"
 #include "menu.h"
 #include "notifygui.h"
@@ -587,7 +587,8 @@ fe_notify_update (char *name)
 void
 fe_text_clear (struct session *sess, int lines)
 {
-	gtk_xtext_clear (sess->res->buffer, lines);
+	PchatTextViewChat *chat = PCHAT_TEXTVIEW_CHAT (sess->gui->xtext);
+	pchat_textview_chat_clear (chat, lines);
 }
 
 void
@@ -677,25 +678,28 @@ fe_beep (session *sess)
 }
 
 void
-fe_lastlog (session *sess, session *lastlog_sess, char *sstr, gtk_xtext_search_flags flags)
+fe_lastlog (session *sess, session *lastlog_sess, char *sstr, int flags)
 {
 	GError *err = NULL;
-	xtext_buffer *buf, *lbuf;
-
-	buf = sess->res->buffer;
-
-	if (gtk_xtext_is_empty (buf))
+	PchatChatBuffer *buf, *lbuf;
+	PchatTextViewChat *chat, *lastlog_chat;
+	
+	chat = PCHAT_TEXTVIEW_CHAT (sess->gui->xtext);
+	lastlog_chat = PCHAT_TEXTVIEW_CHAT (lastlog_sess->gui->xtext);
+	
+	buf = pchat_textview_chat_get_buffer (chat);
+	lbuf = pchat_textview_chat_get_buffer (lastlog_chat);
+	
+	if (!buf || pchat_chat_buffer_is_empty (buf))
 	{
 		PrintText (lastlog_sess, _("Search buffer is empty.\n"));
 		return;
 	}
-
-	lbuf = lastlog_sess->res->buffer;
-	if (flags & regexp)
+	
+	/* Set up search criteria */
+	if (flags & 16) /* regexp flag */
 	{
-		GRegexCompileFlags gcf = (flags & case_match)? 0: G_REGEX_CASELESS;
-
-		lbuf->search_re = g_regex_new (sstr, gcf, 0, &err);
+		pchat_chat_buffer_set_search_regex (lbuf, sstr, (flags & 1) != 0, &err); /* case_match flag */
 		if (err)
 		{
 			PrintText (lastlog_sess, _(err->message));
@@ -705,19 +709,11 @@ fe_lastlog (session *sess, session *lastlog_sess, char *sstr, gtk_xtext_search_f
 	}
 	else
 	{
-		if (flags & case_match)
-		{
-			lbuf->search_nee = g_strdup (sstr);
-		}
-		else
-		{
-			lbuf->search_nee = g_utf8_casefold (sstr, strlen (sstr));
-		}
-		lbuf->search_lnee = strlen (lbuf->search_nee);
+		pchat_chat_buffer_set_search_text (lbuf, sstr, (flags & 1) != 0); /* case_match flag */
 	}
-	lbuf->search_flags = flags;
-	lbuf->search_text = g_strdup (sstr);
-	gtk_xtext_lastlog (lbuf, buf);
+	
+	/* Perform the lastlog search */
+	pchat_chat_buffer_lastlog (lbuf, buf, lastlog_chat);
 }
 
 void

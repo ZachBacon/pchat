@@ -2958,11 +2958,11 @@ search_handle_event(int search_type, session *sess)
 	if (search_type == SEARCH_PREVIOUS || search_type == SEARCH_CHANGE)
 		backwards = TRUE;
 
-	flags = ((prefs.pchat_text_search_case_match == 1? case_match: 0) |
-				(backwards? backward: 0) |
-				(prefs.pchat_text_search_highlight_all == 1? highlight: 0) |
-				(prefs.pchat_text_search_follow == 1? follow: 0) |
-				(prefs.pchat_text_search_regexp == 1? regexp: 0));
+	flags = ((prefs.pchat_text_search_case_match == 1? PCHAT_SEARCH_CASE_MATCH: 0) |
+				(backwards? PCHAT_SEARCH_BACKWARD: 0) |
+				(prefs.pchat_text_search_highlight_all == 1? PCHAT_SEARCH_HIGHLIGHT: 0) |
+				(prefs.pchat_text_search_follow == 1? PCHAT_SEARCH_FOLLOW: 0) |
+				(prefs.pchat_text_search_regexp == 1? PCHAT_SEARCH_REGEXP: 0));
 
 	if (search_type != SEARCH_REFRESH)
 		text = gtk_entry_get_text (GTK_ENTRY(sess->gui->shentry));

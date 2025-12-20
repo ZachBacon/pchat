@@ -15,6 +15,16 @@
 
 G_BEGIN_DECLS
 
+/* Search flags for lastlog functionality */
+typedef enum {
+	PCHAT_SEARCH_CASE_MATCH = 1,
+	PCHAT_SEARCH_BACKWARD = 2,
+	PCHAT_SEARCH_HIGHLIGHT = 4,
+	PCHAT_SEARCH_FOLLOW = 8,
+	PCHAT_SEARCH_REGEXP = 16,
+	PCHAT_SEARCH_VISIBLE_ONLY = 32
+} PchatSearchFlags;
+
 #define PCHAT_TYPE_TEXTVIEW_CHAT            (pchat_textview_chat_get_type())
 #define PCHAT_TEXTVIEW_CHAT(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), PCHAT_TYPE_TEXTVIEW_CHAT, PchatTextViewChat))
 #define PCHAT_TEXTVIEW_CHAT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), PCHAT_TYPE_TEXTVIEW_CHAT, PchatTextViewChatClass))
@@ -111,15 +121,6 @@ typedef gint (*PchatUrlCheckFunc) (GtkWidget *widget, gchar *url);
 void pchat_textview_chat_set_urlcheck_function (PchatTextViewChat *chat, PchatUrlCheckFunc func);
 
 /* Search */
-typedef enum {
-	PCHAT_SEARCH_NONE = 0,
-	PCHAT_SEARCH_MATCH_CASE = 1 << 0,
-	PCHAT_SEARCH_BACKWARD = 1 << 1,
-	PCHAT_SEARCH_HIGHLIGHT = 1 << 2,
-	PCHAT_SEARCH_REGEXP = 1 << 3,
-	PCHAT_SEARCH_VISIBLE_ONLY = 1 << 4
-} PchatSearchFlags;
-
 gboolean pchat_textview_chat_search (PchatTextViewChat *chat, const gchar *text, 
                                       PchatSearchFlags flags, GError **error);
 
