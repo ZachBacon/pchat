@@ -27,6 +27,10 @@
 struct _PchatTextViewChatPrivate
 {
 	PchatChatBuffer *current_buffer;  /* Active buffer being displayed */
+	
+	/* Shared tag table for all buffers */
+	GtkTextTagTable *tag_table;
+	
 	GtkTextTag *url_tag;
 	GtkTextTag *marker_tag;           /* Tag for marker line */
 	
@@ -88,53 +92,64 @@ static const GdkRGBA mirc_colors[16] = {
 };
 
 static void
-pchat_textview_chat_create_tags (PchatTextViewChat *chat, GtkTextBuffer *buffer)
+pchat_textview_chat_create_tags (PchatTextViewChat *chat)
 {
 	PchatTextViewChatPrivate *priv = chat->priv;
 	gchar tag_name[32];
 	gint i;
 	
+	/* Create shared tag table if not already created */
+	if (priv->tag_table)
+		return;
+	
+	priv->tag_table = gtk_text_tag_table_new ();
+	
 	/* Create formatting tags */
-	priv->bold_tag = gtk_text_buffer_create_tag (buffer, "bold",
-	                                              "weight", PANGO_WEIGHT_BOLD,
-	                                              NULL);
+	priv->bold_tag = gtk_text_tag_new ("bold");
+	g_object_set (priv->bold_tag, "weight", PANGO_WEIGHT_BOLD, NULL);
+	gtk_text_tag_table_add (priv->tag_table, priv->bold_tag);
 	
-	priv->italic_tag = gtk_text_buffer_create_tag (buffer, "italic",
-	                                                "style", PANGO_STYLE_ITALIC,
-	                                                NULL);
+	priv->italic_tag = gtk_text_tag_new ("italic");
+	g_object_set (priv->italic_tag, "style", PANGO_STYLE_ITALIC, NULL);
+	gtk_text_tag_table_add (priv->tag_table, priv->italic_tag);
 	
-	priv->underline_tag = gtk_text_buffer_create_tag (buffer, "underline",
-	                                                   "underline", PANGO_UNDERLINE_SINGLE,
-	                                                   NULL);
+	priv->underline_tag = gtk_text_tag_new ("underline");
+	g_object_set (priv->underline_tag, "underline", PANGO_UNDERLINE_SINGLE, NULL);
+	gtk_text_tag_table_add (priv->tag_table, priv->underline_tag);
 	
 	/* Create URL tag */
-	priv->url_tag = gtk_text_buffer_create_tag (buffer, "url",
-	                                             "foreground", "blue",
-	                                             "underline", PANGO_UNDERLINE_SINGLE,
-	                                             NULL);
+	priv->url_tag = gtk_text_tag_new ("url");
+	g_object_set (priv->url_tag, 
+	              "foreground", "#0066cc",
+	              "underline", PANGO_UNDERLINE_SINGLE,
+	              "weight", PANGO_WEIGHT_NORMAL,
+	              NULL);
+	gtk_text_tag_table_add (priv->tag_table, priv->url_tag);
 	
 	/* Create marker line tag */
-	priv->marker_tag = gtk_text_buffer_create_tag (buffer, "marker",
-	                                                "foreground", "#FF0000",
-	                                                "weight", PANGO_WEIGHT_BOLD,
-	                                                NULL);
+	priv->marker_tag = gtk_text_tag_new ("marker");
+	g_object_set (priv->marker_tag,
+	              "foreground", "#FF0000",
+	              "weight", PANGO_WEIGHT_BOLD,
+	              NULL);
+	gtk_text_tag_table_add (priv->tag_table, priv->marker_tag);
 	
 	/* Create foreground color tags */
 	for (i = 0; i < 16; i++)
 	{
 		g_snprintf (tag_name, sizeof(tag_name), "fg-color-%d", i);
-		priv->fg_color_tags[i] = gtk_text_buffer_create_tag (buffer, tag_name,
-		                                                      "foreground-rgba", &mirc_colors[i],
-		                                                      NULL);
+		priv->fg_color_tags[i] = gtk_text_tag_new (tag_name);
+		g_object_set (priv->fg_color_tags[i], "foreground-rgba", &mirc_colors[i], NULL);
+		gtk_text_tag_table_add (priv->tag_table, priv->fg_color_tags[i]);
 	}
 	
 	/* Create background color tags */
 	for (i = 0; i < 16; i++)
 	{
 		g_snprintf (tag_name, sizeof(tag_name), "bg-color-%d", i);
-		priv->bg_color_tags[i] = gtk_text_buffer_create_tag (buffer, tag_name,
-		                                                      "background-rgba", &mirc_colors[i],
-		                                                      NULL);
+		priv->bg_color_tags[i] = gtk_text_tag_new (tag_name);
+		g_object_set (priv->bg_color_tags[i], "background-rgba", &mirc_colors[i], NULL);
+		gtk_text_tag_table_add (priv->tag_table, priv->bg_color_tags[i]);
 	}
 }
 
@@ -201,6 +216,73 @@ pchat_textview_chat_event_after (GtkWidget *widget, GdkEvent *event, gpointer us
 	return FALSE;
 }
 
+static gboolean
+pchat_textview_chat_motion_notify (GtkWidget *widget, GdkEventMotion *event, gpointer user_data)
+{
+	PchatTextViewChat *chat = PCHAT_TEXTVIEW_CHAT (widget);
+	GtkTextBuffer *buffer;
+	GtkTextIter iter;
+	GSList *tags = NULL, *tagp = NULL;
+	gint x, y;
+	gboolean over_url = FALSE;
+	GdkWindow *window;
+	GdkCursor *cursor = NULL;
+
+	buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (widget));
+	gtk_text_view_window_to_buffer_coords (GTK_TEXT_VIEW (widget),
+	                                        GTK_TEXT_WINDOW_WIDGET,
+	                                        event->x, event->y,
+	                                        &x, &y);
+	gtk_text_view_get_iter_at_location (GTK_TEXT_VIEW (widget), &iter, x, y);
+	
+	/* Check if URL tag is present */
+	tags = gtk_text_iter_get_tags (&iter);
+	for (tagp = tags; tagp != NULL; tagp = tagp->next)
+	{
+		GtkTextTag *tag = tagp->data;
+		
+		if (tag == chat->priv->url_tag)
+		{
+			over_url = TRUE;
+			break;
+		}
+	}
+	
+	if (tags)
+		g_slist_free (tags);
+	
+	/* Set cursor based on whether we're over a URL */
+	window = gtk_text_view_get_window (GTK_TEXT_VIEW (widget), GTK_TEXT_WINDOW_TEXT);
+	if (over_url)
+	{
+		cursor = gdk_cursor_new_for_display (gdk_window_get_display (window), GDK_HAND2);
+	}
+	else
+	{
+		cursor = gdk_cursor_new_for_display (gdk_window_get_display (window), GDK_XTERM);
+	}
+	
+	gdk_window_set_cursor (window, cursor);
+	g_object_unref (cursor);
+	
+	return FALSE;
+}
+
+static gboolean
+pchat_textview_chat_leave_notify (GtkWidget *widget, GdkEventCrossing *event, gpointer user_data)
+{
+	GdkWindow *window;
+	GdkCursor *cursor;
+	
+	/* Reset cursor to default when leaving the widget */
+	window = gtk_text_view_get_window (GTK_TEXT_VIEW (widget), GTK_TEXT_WINDOW_TEXT);
+	cursor = gdk_cursor_new_for_display (gdk_window_get_display (window), GDK_XTERM);
+	gdk_window_set_cursor (window, cursor);
+	g_object_unref (cursor);
+	
+	return FALSE;
+}
+
 static void
 pchat_textview_chat_finalize (GObject *object)
 {
@@ -240,6 +322,10 @@ pchat_textview_chat_init (PchatTextViewChat *chat)
 	
 	/* No buffer initially - will be set via pchat_chat_buffer_show */
 	priv->current_buffer = NULL;
+	priv->tag_table = NULL;
+	
+	/* Create shared tag table for all buffers */
+	pchat_textview_chat_create_tags (chat);
 	
 	/* Default settings */
 	priv->max_lines = 0;
@@ -262,6 +348,13 @@ pchat_textview_chat_init (PchatTextViewChat *chat)
 	/* Connect click handler for URLs */
 	g_signal_connect (chat, "event-after",
 	                  G_CALLBACK (pchat_textview_chat_event_after), NULL);
+	g_signal_connect (chat, "motion-notify-event",
+	                  G_CALLBACK (pchat_textview_chat_motion_notify), NULL);
+	g_signal_connect (chat, "leave-notify-event",
+	                  G_CALLBACK (pchat_textview_chat_leave_notify), NULL);
+	
+	/* Enable motion events */
+	gtk_widget_add_events (GTK_WIDGET (chat), GDK_POINTER_MOTION_MASK | GDK_LEAVE_NOTIFY_MASK);
 }
 
 GtkWidget *
@@ -277,9 +370,12 @@ pchat_chat_buffer_new (PchatTextViewChat *chat)
 {
 	PchatChatBuffer *buf;
 	GtkTextIter iter;
+	PchatTextViewChatPrivate *priv = chat->priv;
 	
 	buf = g_new0 (PchatChatBuffer, 1);
-	buf->buffer = gtk_text_buffer_new (NULL);
+	
+	/* Use shared tag table for all buffers */
+	buf->buffer = gtk_text_buffer_new (priv->tag_table);
 	buf->line_count = 0;
 	buf->indent = 0;
 	buf->marker_seen = FALSE;
@@ -295,9 +391,6 @@ pchat_chat_buffer_new (PchatTextViewChat *chat)
 	gtk_text_buffer_get_end_iter (buf->buffer, &iter);
 	buf->end_mark = gtk_text_buffer_create_mark (buf->buffer, "end", &iter, FALSE);
 	
-	/* Create tags for this buffer */
-	pchat_textview_chat_create_tags (chat, buf->buffer);
-	
 	return buf;
 }
 
@@ -311,7 +404,12 @@ pchat_chat_buffer_free (PchatChatBuffer *buf)
 		g_regex_unref (buf->search_re);
 	g_free (buf->search_text);
 	g_free (buf->search_nee);
-	g_object_unref (buf->buffer);
+	
+	/* The buffer should already be detached from any widget before freeing.
+	 * We just need to release our reference. */
+	if (buf->buffer)
+		g_object_unref (buf->buffer);
+	
 	g_free (buf);
 }
 
@@ -382,6 +480,91 @@ pchat_chat_buffer_marker_seen (PchatChatBuffer *buf)
 	return buf ? buf->marker_seen : TRUE;
 }
 
+/* Helper to flush accumulated text with current formatting */
+static void
+flush_text_with_formatting (GtkTextBuffer *buffer, GtkTextIter *iter, GString *text,
+                             PchatTextViewChatPrivate *priv, GtkWidget *widget,
+                             gboolean bold, gboolean italic, gboolean underline,
+                             gint fg_color, gint bg_color)
+{
+	GtkTextMark *start_mark;
+	GtkTextIter start_iter;
+	gchar *p, *word_start;
+	
+	if (text->len == 0)
+		return;
+	
+	/* Mark position before insert */
+	start_mark = gtk_text_buffer_create_mark (buffer, NULL, iter, TRUE);
+	
+	/* Insert text */
+	gtk_text_buffer_insert (buffer, iter, text->str, text->len);
+	
+	/* Get start position */
+	gtk_text_buffer_get_iter_at_mark (buffer, &start_iter, start_mark);
+	
+	/* Apply formatting tags */
+	if (bold)
+		gtk_text_buffer_apply_tag (buffer, priv->bold_tag, &start_iter, iter);
+	if (italic)
+		gtk_text_buffer_apply_tag (buffer, priv->italic_tag, &start_iter, iter);
+	if (underline)
+		gtk_text_buffer_apply_tag (buffer, priv->underline_tag, &start_iter, iter);
+	if (fg_color >= 0 && fg_color < 16)
+		gtk_text_buffer_apply_tag (buffer, priv->fg_color_tags[fg_color], &start_iter, iter);
+	if (bg_color >= 0 && bg_color < 16)
+		gtk_text_buffer_apply_tag (buffer, priv->bg_color_tags[bg_color], &start_iter, iter);
+	
+	/* Check for URLs on word boundaries */
+	if (priv->urlcheck_func)
+	{
+		GtkTextIter word_start_iter, word_end_iter;
+		p = text->str;
+		word_start = p;
+		
+		while (*p)
+		{
+			if (isspace (*p))
+			{
+				if (p > word_start)
+				{
+					gchar *word = g_strndup (word_start, p - word_start);
+					if (priv->urlcheck_func (widget, word))
+					{
+						/* Apply URL tag to this word */
+						word_start_iter = start_iter;
+						gtk_text_iter_forward_chars (&word_start_iter, word_start - text->str);
+						word_end_iter = word_start_iter;
+						gtk_text_iter_forward_chars (&word_end_iter, p - word_start);
+						gtk_text_buffer_apply_tag (buffer, priv->url_tag, &word_start_iter, &word_end_iter);
+					}
+					g_free (word);
+				}
+				word_start = p + 1;
+			}
+			p++;
+		}
+		
+		/* Check last word */
+		if (p > word_start)
+		{
+			gchar *word = g_strndup (word_start, p - word_start);
+			if (priv->urlcheck_func (widget, word))
+			{
+				word_start_iter = start_iter;
+				gtk_text_iter_forward_chars (&word_start_iter, word_start - text->str);
+				word_end_iter = word_start_iter;
+				gtk_text_iter_forward_chars (&word_end_iter, p - word_start);
+				gtk_text_buffer_apply_tag (buffer, priv->url_tag, &word_start_iter, &word_end_iter);
+			}
+			g_free (word);
+		}
+	}
+	
+	gtk_text_buffer_delete_mark (buffer, start_mark);
+	g_string_truncate (text, 0);
+}
+
 /* Parse IRC color codes and apply formatting */
 static void
 pchat_textview_chat_append_with_formatting (PchatTextViewChat *chat, GtkTextBuffer *buffer, const gchar *text, gsize len)
@@ -391,7 +574,6 @@ pchat_textview_chat_append_with_formatting (PchatTextViewChat *chat, GtkTextBuff
 	const gchar *p = text;
 	const gchar *end = text + len;
 	GString *current_text = g_string_new (NULL);
-	GSList *active_tags = NULL;
 	gint fg_color = -1, bg_color = -1;
 	gboolean bold = FALSE, italic = FALSE, underline = FALSE;
 	
@@ -401,42 +583,26 @@ pchat_textview_chat_append_with_formatting (PchatTextViewChat *chat, GtkTextBuff
 	{
 		if (*p == IRC_BOLD)
 		{
-			/* Insert accumulated text first */
-			if (current_text->len > 0)
-			{
-				gtk_text_buffer_insert (buffer, &iter, current_text->str, current_text->len);
-				g_string_truncate (current_text, 0);
-			}
+			/* Flush accumulated text with current formatting before toggling */
+			flush_text_with_formatting (buffer, &iter, current_text, priv, GTK_WIDGET (chat), bold, italic, underline, fg_color, bg_color);
 			bold = !bold;
 			p++;
 		}
 		else if (*p == IRC_ITALIC)
 		{
-			if (current_text->len > 0)
-			{
-				gtk_text_buffer_insert (buffer, &iter, current_text->str, current_text->len);
-				g_string_truncate (current_text, 0);
-			}
+			flush_text_with_formatting (buffer, &iter, current_text, priv, GTK_WIDGET (chat), bold, italic, underline, fg_color, bg_color);
 			italic = !italic;
 			p++;
 		}
 		else if (*p == IRC_UNDERLINE)
 		{
-			if (current_text->len > 0)
-			{
-				gtk_text_buffer_insert (buffer, &iter, current_text->str, current_text->len);
-				g_string_truncate (current_text, 0);
-			}
+			flush_text_with_formatting (buffer, &iter, current_text, priv, GTK_WIDGET (chat), bold, italic, underline, fg_color, bg_color);
 			underline = !underline;
 			p++;
 		}
 		else if (*p == IRC_COLOR)
 		{
-			if (current_text->len > 0)
-			{
-				gtk_text_buffer_insert (buffer, &iter, current_text->str, current_text->len);
-				g_string_truncate (current_text, 0);
-			}
+			flush_text_with_formatting (buffer, &iter, current_text, priv, GTK_WIDGET (chat), bold, italic, underline, fg_color, bg_color);
 			p++;
 			
 			/* Parse color code */
@@ -462,73 +628,37 @@ pchat_textview_chat_append_with_formatting (PchatTextViewChat *chat, GtkTextBuff
 			}
 			else
 			{
-				/* Reset colors */
+				/* IRC_COLOR without digits = reset colors, don't display the character */
 				fg_color = -1;
 				bg_color = -1;
 			}
 		}
 		else if (*p == IRC_RESET)
 		{
-			if (current_text->len > 0)
-			{
-				gtk_text_buffer_insert (buffer, &iter, current_text->str, current_text->len);
-				g_string_truncate (current_text, 0);
-			}
+			flush_text_with_formatting (buffer, &iter, current_text, priv, GTK_WIDGET (chat), bold, italic, underline, fg_color, bg_color);
 			bold = italic = underline = FALSE;
 			fg_color = bg_color = -1;
 			p++;
 		}
 		else
 		{
-			/* Regular character - accumulate it */
-			g_string_append_c (current_text, *p);
-			p++;
-			
-			/* When we have accumulated text and hit whitespace/end, insert with tags */
-			if ((p >= end || isspace(*p)) && current_text->len > 0)
+			/* Filter out non-printable characters except newlines */
+			if (*p < 32 && *p != '\n' && *p != '\t')
 			{
-				GtkTextMark *start_mark;
-				GtkTextIter start_iter;
-				
-				/* Mark position before insert */
-				start_mark = gtk_text_buffer_create_mark (buffer, NULL, &iter, TRUE);
-				
-				/* Insert text */
-				gtk_text_buffer_insert (buffer, &iter, current_text->str, current_text->len);
-				
-				/* Get start position */
-				gtk_text_buffer_get_iter_at_mark (buffer, &start_iter, start_mark);
-				
-				/* Apply tags */
-				if (bold)
-					gtk_text_buffer_apply_tag (buffer, priv->bold_tag, &start_iter, &iter);
-				if (italic)
-					gtk_text_buffer_apply_tag (buffer, priv->italic_tag, &start_iter, &iter);
-				if (underline)
-					gtk_text_buffer_apply_tag (buffer, priv->underline_tag, &start_iter, &iter);
-				if (fg_color >= 0 && fg_color < 16)
-					gtk_text_buffer_apply_tag (buffer, priv->fg_color_tags[fg_color], &start_iter, &iter);
-				if (bg_color >= 0 && bg_color < 16)
-					gtk_text_buffer_apply_tag (buffer, priv->bg_color_tags[bg_color], &start_iter, &iter);
-				
-				/* Check if this is a URL */
-				if (priv->urlcheck_func && priv->urlcheck_func (GTK_WIDGET (chat), current_text->str))
-				{
-					gtk_text_buffer_apply_tag (buffer, priv->url_tag, &start_iter, &iter);
-				}
-				
-				gtk_text_buffer_delete_mark (buffer, start_mark);
-				g_string_truncate (current_text, 0);
+				/* Skip non-printable control characters */
+				p++;
+			}
+			else
+			{
+				/* Regular character - accumulate it */
+				g_string_append_c (current_text, *p);
+				p++;
 			}
 		}
 	}
 	
-	/* Insert any remaining text */
-	if (current_text->len > 0)
-	{
-		gtk_text_buffer_insert (buffer, &iter, current_text->str, current_text->len);
-	}
-	
+	/* Flush any remaining text */
+	flush_text_with_formatting (buffer, &iter, current_text, priv, GTK_WIDGET (chat), bold, italic, underline, fg_color, bg_color);
 	g_string_free (current_text, TRUE);
 }
 
@@ -570,7 +700,39 @@ pchat_chat_buffer_append (PchatChatBuffer *buf, PchatTextViewChat *chat,
 }
 
 void
-pchat_textview_chat_append_indent (PchatTextViewChat *chat,
+pchat_textview_chat_append_with_stamp (PchatTextViewChat *chat, PchatChatBuffer *buf,
+                                        const gchar *text, gsize len, time_t stamp)
+{
+	GString *full_text;
+	
+	g_return_if_fail (PCHAT_IS_TEXTVIEW_CHAT (chat));
+	
+	if (!buf)
+		return;
+	
+	full_text = g_string_new (NULL);
+	
+	/* Add timestamp if enabled */
+	if (chat->priv->show_timestamps && stamp != 0)
+	{
+		struct tm *tm_ptr = localtime (&stamp);
+		gchar time_str[64];
+		strftime (time_str, sizeof (time_str), "%H:%M:%S ", tm_ptr);
+		g_string_append (full_text, time_str);
+	}
+	
+	/* Add text */
+	if (text && len > 0)
+		g_string_append_len (full_text, text, len);
+	
+	g_string_append_c (full_text, '\n');
+	
+	pchat_chat_buffer_append (buf, chat, full_text->str, full_text->len);
+	g_string_free (full_text, TRUE);
+}
+
+void
+pchat_textview_chat_append_indent (PchatTextViewChat *chat, PchatChatBuffer *buf,
                                     const gchar *left_text, gsize left_len,
                                     const gchar *right_text, gsize right_len,
                                     time_t stamp)
@@ -578,6 +740,9 @@ pchat_textview_chat_append_indent (PchatTextViewChat *chat,
 	GString *full_text;
 	
 	g_return_if_fail (PCHAT_IS_TEXTVIEW_CHAT (chat));
+	
+	if (!buf)
+		return;
 	
 	full_text = g_string_new (NULL);
 	
@@ -604,7 +769,7 @@ pchat_textview_chat_append_indent (PchatTextViewChat *chat,
 	
 	g_string_append_c (full_text, '\n');
 	
-	pchat_textview_chat_append (chat, full_text->str, full_text->len);
+	pchat_chat_buffer_append (buf, chat, full_text->str, full_text->len);
 	g_string_free (full_text, TRUE);
 }
 
@@ -746,6 +911,43 @@ pchat_textview_chat_set_palette (PchatTextViewChat *chat, GdkRGBA palette[], gin
 		palette_size = 37;
 	
 	memcpy (chat->priv->palette, palette, sizeof (GdkRGBA) * palette_size);
+	
+	/* Apply default background and foreground colors using CSS (indices 34 and 35) */
+	if (palette_size > 35)
+	{
+		GtkCssProvider *provider;
+		GtkStyleContext *context;
+		gchar *css;
+		gchar *fg_hex, *bg_hex;
+		
+		provider = gtk_css_provider_new ();
+		
+		/* Convert palette colors to hex strings */
+		fg_hex = g_strdup_printf ("#%02x%02x%02x", 
+		                          (int)(palette[34].red * 255),
+		                          (int)(palette[34].green * 255),
+		                          (int)(palette[34].blue * 255));
+		bg_hex = g_strdup_printf ("#%02x%02x%02x", 
+		                          (int)(palette[35].red * 255),
+		                          (int)(palette[35].green * 255),
+		                          (int)(palette[35].blue * 255));
+		
+		css = g_strdup_printf ("textview text { color: %s; background-color: %s; }", fg_hex, bg_hex);
+		
+		g_print ("Applying CSS: %s\n", css);
+		
+		gtk_css_provider_load_from_data (provider, css, -1, NULL);
+		
+		context = gtk_widget_get_style_context (GTK_WIDGET (chat));
+		gtk_style_context_add_provider (context,
+		                                 GTK_STYLE_PROVIDER (provider),
+		                                 GTK_STYLE_PROVIDER_PRIORITY_USER);
+		
+		g_free (css);
+		g_free (fg_hex);
+		g_free (bg_hex);
+		g_object_unref (provider);
+	}
 }
 
 void

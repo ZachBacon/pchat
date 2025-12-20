@@ -830,7 +830,7 @@ load_default_config(void)
 	prefs.pchat_gui_lagometer = 1;
 	prefs.pchat_gui_lang = get_default_language();
 	prefs.pchat_gui_pane_left_size = 150;		/* with treeview icons we need a bit bigger space */
-	prefs.pchat_gui_pane_right_size = 50;
+	prefs.pchat_gui_pane_right_size = 80;
 	prefs.pchat_gui_pane_right_size_min = 80;
 	prefs.pchat_gui_tab_layout = 2;			/* 0=Tabs 1=Reserved 2=Tree */
 	prefs.pchat_gui_tab_newtofront = 2;
@@ -1103,19 +1103,19 @@ set_showval (session *sess, const struct prefs *var, char *tbuf)
 	switch (var->type)
 	{
 		case TYPE_STR:
-			sprintf (tbuf + len, "\0033:\017 %s\n", (char *) &prefs + var->offset);
+			sprintf (tbuf + len, "\00303:\017 %s\n", (char *) &prefs + var->offset);
 			break;
 		case TYPE_INT:
-			sprintf (tbuf + len, "\0033:\017 %d\n", *((int *) &prefs + var->offset));
+			sprintf (tbuf + len, "\00303:\017 %d\n", *((int *) &prefs + var->offset));
 			break;
 		case TYPE_BOOL:
 			if (*((int *) &prefs + var->offset))
 			{
-				sprintf (tbuf + len, "\0033:\017 %s\n", "ON");
+				sprintf (tbuf + len, "\00303:\017 %s\n", "ON");
 			}
 			else
 			{
-				sprintf (tbuf + len, "\0033:\017 %s\n", "OFF");
+				sprintf (tbuf + len, "\00303:\017 %s\n", "OFF");
 			}
 			break;
 	}

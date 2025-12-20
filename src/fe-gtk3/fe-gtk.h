@@ -112,7 +112,7 @@ typedef struct restore_gui
 
 	/* information stored when this tab isn't front-most */
 	void *user_model;	/* for filling the GtkTreeView */
-	void *buffer;		/* xtext_Buffer */
+	void *buffer;		/* PchatChatBuffer */
 	char *input_text;	/* input text buffer (while not-front tab) */
 	char *topic_text;	/* topic GtkEntry buffer */
 	char *key_text;

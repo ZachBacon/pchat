@@ -86,7 +86,9 @@ void pchat_chat_buffer_set_marker (PchatChatBuffer *buf, PchatTextViewChat *chat
 void pchat_chat_buffer_reset_marker (PchatChatBuffer *buf);
 gboolean pchat_chat_buffer_marker_seen (PchatChatBuffer *buf);
 void pchat_textview_chat_append (PchatTextViewChat *chat, const gchar *text, gsize len);
-void pchat_textview_chat_append_indent (PchatTextViewChat *chat,
+void pchat_textview_chat_append_with_stamp (PchatTextViewChat *chat, PchatChatBuffer *buf,
+                                             const gchar *text, gsize len, time_t stamp);
+void pchat_textview_chat_append_indent (PchatTextViewChat *chat, PchatChatBuffer *buf,
                                          const gchar *left_text, gsize left_len,
                                          const gchar *right_text, gsize right_len,
                                          time_t stamp);

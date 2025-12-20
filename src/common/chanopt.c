@@ -149,7 +149,7 @@ chanopt_command (session *sess, char *tbuf, char *word[], char *word_eol[])
 				tbuf[p++] = 0;
 
 				val = G_STRUCT_MEMBER (guint8, sess, chanopt[i].offset);
-				PrintTextf (sess, "%s\0033:\017 %s", tbuf, chanopt_value (val));
+				PrintTextf (sess, "%s\00303:\017 %s", tbuf, chanopt_value (val));
 			}
 		}
 		i++;

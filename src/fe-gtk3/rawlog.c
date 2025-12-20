@@ -188,9 +188,9 @@ fe_add_rawlog (server *serv, char *text, int len, int outbound)
 			break;
 
 		if (outbound)
-			new_text = g_strconcat ("\0034<<\017 ", split_text[i], "\n", NULL);
+			new_text = g_strconcat ("\00304<<\017 ", split_text[i], "\n", NULL);
 		else
-			new_text = g_strconcat ("\0033>>\017 ", split_text[i], "\n", NULL);
+			new_text = g_strconcat ("\00303>>\017 ", split_text[i], "\n", NULL);
 
 		pchat_textview_chat_append (PCHAT_TEXTVIEW_CHAT (serv->gui->rawlog_textlist), new_text, strlen (new_text));
 

@@ -45,7 +45,7 @@
 #include "../common/servlist.h"
 #include "../common/notify.h"
 #include "../common/util.h"
-#include "xtext.h"
+#include "textview-chat.h"
 #include "ascii.h"
 #include "banlist.h"
 #include "chanlist.h"
@@ -1272,13 +1272,13 @@ menu_search_prev (GtkWidget *wid)
 static void
 menu_resetmarker (GtkWidget * wid, gpointer none)
 {
-	gtk_xtext_reset_marker_pos (GTK_XTEXT (current_sess->gui->xtext));
+	pchat_chat_buffer_reset_marker (current_sess->res->buffer);
 }
 
 static void
 menu_copy_selection (GtkWidget * wid, gpointer none)
 {
-	gtk_xtext_copy_selection (GTK_XTEXT (current_sess->gui->xtext));
+	/* Copy handled by native GTK */;
 }
 
 static void
@@ -1298,7 +1298,7 @@ savebuffer_req_done (session *sess, char *file)
 	fh = g_open (file, O_TRUNC | O_WRONLY | O_CREAT, 0600);
 	if (fh != -1)
 	{
-		gtk_xtext_save (GTK_XTEXT (sess->gui->xtext), fh);
+		pchat_textview_chat_save (PCHAT_TEXTVIEW_CHAT (sess->gui->xtext), fh);
 		close (fh);
 	}
 }
