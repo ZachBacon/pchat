@@ -35,6 +35,7 @@
 
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
 #include "fe-gtk.h"
+#include "css-helpers.h"
 
 #include "../common/xchat.h"
 #include "../common/xchatc.h"
@@ -756,17 +757,17 @@ key_dialog_show ()
 	/* Set font using CSS */
 	if (prefs.pchat_text_font && strlen(prefs.pchat_text_font) > 0) {
 		PangoFontDescription *font_desc = pango_font_description_from_string(prefs.pchat_text_font);
-		char *font_str = pango_font_description_to_string(font_desc);
+		char *css_font = pango_font_description_to_css(font_desc);
 		char css[512];
 		GtkStyleContext *context = gtk_widget_get_style_context(xtext);
 		GtkCssProvider *provider = gtk_css_provider_new();
 		
-		snprintf(css, sizeof(css), "textview { font: %s; }", font_str);
+		snprintf(css, sizeof(css), "textview { %s }", css_font);
 		gtk_css_provider_load_from_data(provider, css, -1, NULL);
 		gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(provider),
 			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 		
-		g_free(font_str);
+		g_free(css_font);
 		pango_font_description_free(font_desc);
 		g_object_unref(provider);
 	}

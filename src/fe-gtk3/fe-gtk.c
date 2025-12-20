@@ -48,6 +48,21 @@
 #include "joind.h"
 #include "textview-chat.h"
 #include "palette.h"
+
+/* Custom log handler to suppress harmless GTK scale factor warnings */
+static void
+gtk_log_handler_suppress_scale_factor (const gchar *log_domain,
+                                       GLogLevelFlags log_level,
+                                       const gchar *message,
+                                       gpointer user_data)
+{
+	/* Suppress specific scale factor warnings that don't affect functionality */
+	if (message && strstr (message, "gtk_widget_get_scale_factor: assertion 'GTK_IS_WIDGET (widget)' failed"))
+		return; /* Don't print this warning */
+	
+	/* For all other GTK critical messages, use default handler */
+	g_log_default_handler (log_domain, log_level, message, user_data);
+}
 #include "menu.h"
 #include "notifygui.h"
 #include "textgui.h"
@@ -241,6 +256,10 @@ fe_args (int argc, char *argv[])
 #endif
 
 	gtk_init (&argc, &argv);
+
+	/* Suppress GTK scale factor warnings that don't affect functionality */
+	g_log_set_handler ("Gtk", G_LOG_LEVEL_CRITICAL, 
+		(GLogFunc) gtk_log_handler_suppress_scale_factor, NULL);
 
 #ifdef HAVE_GTK_MAC
 	osx_app = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);

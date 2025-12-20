@@ -194,8 +194,15 @@ dcc_prepare_row_send (struct DCC *dcc, GtkListStore *store, GtkTreeIter *iter,
 	if (!pix_up)
 	{
 		GtkIconTheme *icon_theme = gtk_icon_theme_get_default();
+		/* Add error handling to avoid GTK warnings about scale factor */
+		GError *error = NULL;
 		pix_up = gtk_icon_theme_load_icon(icon_theme, "go-up",
-														16, GTK_ICON_LOOKUP_USE_BUILTIN, NULL);
+														16, GTK_ICON_LOOKUP_USE_BUILTIN, &error);
+		if (error)
+		{
+			g_error_free(error);
+			pix_up = NULL;
+		}
 	}
 	/* percentage ack'ed */
 	per = (float) ((dcc->ack * 100.00) / dcc->size);
@@ -254,8 +261,15 @@ dcc_prepare_row_recv (struct DCC *dcc, GtkListStore *store, GtkTreeIter *iter,
 	if (!pix_dn)
 	{
 		GtkIconTheme *icon_theme = gtk_icon_theme_get_default();
+		/* Add error handling to avoid GTK warnings about scale factor */
+		GError *error = NULL;
 		pix_dn = gtk_icon_theme_load_icon(icon_theme, "go-down",
-														16, GTK_ICON_LOOKUP_USE_BUILTIN, NULL);
+														16, GTK_ICON_LOOKUP_USE_BUILTIN, &error);
+		if (error)
+		{
+			g_error_free(error);
+			pix_dn = NULL;
+		}
 	}
 	proper_unit (dcc->size, size, sizeof (size));
 	if (dcc->dccstat == STAT_QUEUED)

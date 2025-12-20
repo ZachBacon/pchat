@@ -12,6 +12,7 @@
 #include <ctype.h>
 #include <unistd.h>
 #include "textview-chat.h"
+#include "css-helpers.h"
 #include "../common/xchat.h"
 #include "../common/util.h"
 
@@ -54,6 +55,10 @@ struct _PchatTextViewChatPrivate
 	gboolean thin_separator;
 	gboolean wordwrap;
 	gchar *font_name;
+	
+	/* CSS providers for styling */
+	GtkCssProvider *font_provider;
+	GtkCssProvider *palette_provider;
 	
 	/* URL checking */
 	PchatUrlCheckFunc urlcheck_func;
@@ -288,6 +293,22 @@ pchat_textview_chat_finalize (GObject *object)
 {
 	PchatTextViewChat *chat = PCHAT_TEXTVIEW_CHAT (object);
 	PchatTextViewChatPrivate *priv = chat->priv;
+	GtkStyleContext *context;
+	
+	/* Remove CSS providers before finalizing */
+	context = gtk_widget_get_style_context (GTK_WIDGET (chat));
+	if (priv->font_provider)
+	{
+		gtk_style_context_remove_provider (context, GTK_STYLE_PROVIDER (priv->font_provider));
+		g_object_unref (priv->font_provider);
+		priv->font_provider = NULL;
+	}
+	if (priv->palette_provider)
+	{
+		gtk_style_context_remove_provider (context, GTK_STYLE_PROVIDER (priv->palette_provider));
+		g_object_unref (priv->palette_provider);
+		priv->palette_provider = NULL;
+	}
 	
 	g_free (priv->font_name);
 	
@@ -337,6 +358,10 @@ pchat_textview_chat_init (PchatTextViewChat *chat)
 	priv->thin_separator = FALSE;
 	priv->wordwrap = TRUE;
 	priv->urlcheck_func = NULL;
+	
+	/* Initialize CSS providers */
+	priv->font_provider = NULL;
+	priv->palette_provider = NULL;
 	
 	/* Setup text view properties */
 	gtk_text_view_set_editable (GTK_TEXT_VIEW (chat), FALSE);
@@ -859,31 +884,45 @@ void
 pchat_textview_chat_set_font (PchatTextViewChat *chat, const gchar *font_name)
 {
 	PangoFontDescription *font_desc;
+	GtkStyleContext *context;
+	gchar *css_font, *css;
 	
 	g_return_if_fail (PCHAT_IS_TEXTVIEW_CHAT (chat));
+	g_return_if_fail (GTK_IS_WIDGET (chat));
 	
 	g_free (chat->priv->font_name);
 	chat->priv->font_name = g_strdup (font_name);
 	
 	font_desc = pango_font_description_from_string (font_name);
 	
-	/* Use CSS provider for font settings (GTK3.16+) */
+	/* Only apply styling if widget is realized */
+	if (!gtk_widget_get_realized (GTK_WIDGET (chat)))
 	{
-		GtkCssProvider *provider;
-		GtkStyleContext *context;
-		gchar *css;
-		
-		provider = gtk_css_provider_new ();
-		css = g_strdup_printf ("textview { font: %s; }", font_name);
-		gtk_css_provider_load_from_data (provider, css, -1, NULL);
-		g_free (css);
-		
-		context = gtk_widget_get_style_context (GTK_WIDGET (chat));
-		gtk_style_context_add_provider (context,
-		                                 GTK_STYLE_PROVIDER (provider),
-		                                 GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-		g_object_unref (provider);
+		pango_font_description_free (font_desc);
+		return;
 	}
+	
+	context = gtk_widget_get_style_context (GTK_WIDGET (chat));
+	
+	/* Remove old font provider if it exists */
+	if (chat->priv->font_provider)
+	{
+		gtk_style_context_remove_provider (context, GTK_STYLE_PROVIDER (chat->priv->font_provider));
+		g_object_unref (chat->priv->font_provider);
+		chat->priv->font_provider = NULL;
+	}
+	
+	/* Create and add new font provider with proper CSS syntax */
+	chat->priv->font_provider = gtk_css_provider_new ();
+	css_font = pango_font_description_to_css (font_desc);
+	css = g_strdup_printf ("textview { %s }", css_font);
+	gtk_css_provider_load_from_data (chat->priv->font_provider, css, -1, NULL);
+	g_free (css);
+	g_free (css_font);
+	
+	gtk_style_context_add_provider (context,
+	                                 GTK_STYLE_PROVIDER (chat->priv->font_provider),
+	                                 GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 	
 	pango_font_description_free (font_desc);
 }
@@ -905,6 +944,10 @@ pchat_textview_chat_set_show_timestamps (PchatTextViewChat *chat, gboolean show)
 void
 pchat_textview_chat_set_palette (PchatTextViewChat *chat, GdkRGBA palette[], gint palette_size)
 {
+	GtkStyleContext *context;
+	gchar *css;
+	gchar *fg_hex, *bg_hex;
+	
 	g_return_if_fail (PCHAT_IS_TEXTVIEW_CHAT (chat));
 	
 	if (palette_size > 37)
@@ -915,12 +958,18 @@ pchat_textview_chat_set_palette (PchatTextViewChat *chat, GdkRGBA palette[], gin
 	/* Apply default background and foreground colors using CSS (indices 34 and 35) */
 	if (palette_size > 35)
 	{
-		GtkCssProvider *provider;
-		GtkStyleContext *context;
-		gchar *css;
-		gchar *fg_hex, *bg_hex;
+		context = gtk_widget_get_style_context (GTK_WIDGET (chat));
 		
-		provider = gtk_css_provider_new ();
+		/* Remove old palette provider if it exists */
+		if (chat->priv->palette_provider)
+		{
+			gtk_style_context_remove_provider (context, GTK_STYLE_PROVIDER (chat->priv->palette_provider));
+			g_object_unref (chat->priv->palette_provider);
+			chat->priv->palette_provider = NULL;
+		}
+		
+		/* Create new palette provider */
+		chat->priv->palette_provider = gtk_css_provider_new ();
 		
 		/* Convert palette colors to hex strings */
 		fg_hex = g_strdup_printf ("#%02x%02x%02x", 
@@ -934,19 +983,16 @@ pchat_textview_chat_set_palette (PchatTextViewChat *chat, GdkRGBA palette[], gin
 		
 		css = g_strdup_printf ("textview text { color: %s; background-color: %s; }", fg_hex, bg_hex);
 		
-		g_print ("Applying CSS: %s\n", css);
+		/* Load the CSS into the provider */
+		gtk_css_provider_load_from_data (chat->priv->palette_provider, css, -1, NULL);
 		
-		gtk_css_provider_load_from_data (provider, css, -1, NULL);
-		
-		context = gtk_widget_get_style_context (GTK_WIDGET (chat));
 		gtk_style_context_add_provider (context,
-		                                 GTK_STYLE_PROVIDER (provider),
+		                                 GTK_STYLE_PROVIDER (chat->priv->palette_provider),
 		                                 GTK_STYLE_PROVIDER_PRIORITY_USER);
 		
 		g_free (css);
 		g_free (fg_hex);
 		g_free (bg_hex);
-		g_object_unref (provider);
 	}
 }
 

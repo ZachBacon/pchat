@@ -23,6 +23,7 @@
 #include <sys/types.h>
 
 #include "fe-gtk.h"
+#include "css-helpers.h"
 #include "../common/xchat.h"
 #include "../common/cfgfiles.h"
 #include "../common/fe.h"
@@ -2012,9 +2013,23 @@ setup_create_tree (GtkWidget *box, GtkWidget *book)
 static void
 setup_apply_entry_style (GtkWidget *entry)
 {
-	GtkCssProvider *provider;
+	GtkCssProvider *provider, *old_provider;
 	GtkStyleContext *context;
 	gchar *css;
+
+	/* Only apply styling if widget is valid and realized */
+	if (!GTK_IS_WIDGET (entry) || !gtk_widget_get_realized (entry))
+		return;
+
+	context = gtk_widget_get_style_context (entry);
+	
+	/* Remove old CSS provider if it exists */
+	old_provider = g_object_get_data (G_OBJECT (entry), "entry-style-provider");
+	if (old_provider)
+	{
+		gtk_style_context_remove_provider (context, GTK_STYLE_PROVIDER (old_provider));
+		g_object_set_data (G_OBJECT (entry), "entry-style-provider", NULL);
+	}
 
 	/* Use CSS for colors in GTK3 */
 	css = g_strdup_printf ("* { background-color: rgba(%d,%d,%d,%.2f); color: rgba(%d,%d,%d,%.2f); }",
@@ -2031,10 +2046,11 @@ setup_apply_entry_style (GtkWidget *entry)
 	gtk_css_provider_load_from_data (provider, css, -1, NULL);
 	g_free (css);
 
-	context = gtk_widget_get_style_context (entry);
 	gtk_style_context_add_provider (context, GTK_STYLE_PROVIDER (provider),
 		GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-	g_object_unref (provider);
+	
+	/* Store provider reference on the widget for later removal */
+	g_object_set_data_full (G_OBJECT (entry), "entry-style-provider", provider, g_object_unref);
 
 	/* Font is set via CSS provider above, no need for deprecated override_font */
 }
@@ -2044,22 +2060,37 @@ setup_apply_to_sess (session_gui *gui)
 {
 	mg_update_xtext (GTK_WIDGET (gui->xtext));
 
-	if (prefs.pchat_gui_ulist_style)
+	if (prefs.pchat_gui_ulist_style && GTK_IS_WIDGET (gui->user_tree) && gtk_widget_get_realized (gui->user_tree))
 	{
-		/* Style is applied via CSS provider in setup_apply_entry_style */
 		GtkStyleContext *context = gtk_widget_get_style_context (gui->user_tree);
-		GtkCssProvider *provider = gtk_css_provider_new ();
+		GtkCssProvider *provider, *old_provider;
 		char css[256];
+		
+		/* Remove old CSS provider if it exists */
+		old_provider = g_object_get_data (G_OBJECT (gui->user_tree), "treeview-style-provider");
+		if (old_provider)
+		{
+			gtk_style_context_remove_provider (context, GTK_STYLE_PROVIDER (old_provider));
+			g_object_set_data (G_OBJECT (gui->user_tree), "treeview-style-provider", NULL);
+		}
+		
+		provider = gtk_css_provider_new ();
 		if (input_font_desc)
 		{
-			char *font_str = pango_font_description_to_string (input_font_desc);
-			snprintf (css, sizeof(css), "treeview { font: %s; }", font_str);
-			g_free (font_str);
+			gchar *css_font = pango_font_description_to_css (input_font_desc);
+			snprintf (css, sizeof(css), "treeview { %s }", css_font);
+			g_free (css_font);
 			gtk_css_provider_load_from_data (provider, css, -1, NULL);
 			gtk_style_context_add_provider (context, GTK_STYLE_PROVIDER (provider),
 				GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+			
+			/* Store provider reference on the widget for later removal */
+			g_object_set_data_full (G_OBJECT (gui->user_tree), "treeview-style-provider", provider, g_object_unref);
 		}
-		g_object_unref (provider);
+		else
+		{
+			g_object_unref (provider);
+		}
 	}
 
 	if (prefs.pchat_gui_input_style)

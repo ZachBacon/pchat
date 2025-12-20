@@ -27,6 +27,7 @@
 #include <gdk/gdkkeysyms.h>
 
 #include "fe-gtk.h"
+#include "css-helpers.h"
 #include "../common/xchat.h"
 #include "../common/fe.h"
 #include "../common/server.h"
@@ -2113,20 +2114,32 @@ mg_apply_entry_style (GtkWidget *entry)
 {
 	/* gtk_widget_modify_base (entry, GTK_STATE_NORMAL, &colors[COL_BG]); */
 	/* gtk_widget_modify_text (entry, GTK_STATE_NORMAL, &colors[COL_FG]); */
-	if (input_font_desc)
+	if (input_font_desc && GTK_IS_WIDGET (entry) && gtk_widget_get_realized (entry))
 	{
-		char *font_str = pango_font_description_to_string(input_font_desc);
 		char css[512];
 		GtkStyleContext *context = gtk_widget_get_style_context(entry);
-		GtkCssProvider *provider = gtk_css_provider_new();
+		GtkCssProvider *provider, *old_provider;
+		gchar *css_font;
 		
-		snprintf(css, sizeof(css), "entry { font: %s; }", font_str);
+		/* Remove old CSS provider if it exists */
+		old_provider = g_object_get_data (G_OBJECT (entry), "entry-font-provider");
+		if (old_provider)
+		{
+			gtk_style_context_remove_provider (context, GTK_STYLE_PROVIDER (old_provider));
+			g_object_set_data (G_OBJECT (entry), "entry-font-provider", NULL);
+		}
+		
+		provider = gtk_css_provider_new();
+		css_font = pango_font_description_to_css (input_font_desc);
+		snprintf(css, sizeof(css), "entry { %s }", css_font);
 		gtk_css_provider_load_from_data(provider, css, -1, NULL);
 		gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(provider),
 			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 		
-		g_free(font_str);
-		g_object_unref(provider);
+		/* Store provider reference on the widget for later removal */
+		g_object_set_data_full (G_OBJECT (entry), "entry-font-provider", provider, g_object_unref);
+		
+		g_free(css_font);
 	}
 }
 
