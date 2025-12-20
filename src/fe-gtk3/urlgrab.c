@@ -218,7 +218,7 @@ url_opengui ()
 	gtkutil_button (hbox, "_Save",
 						 _("Save list to a file"), url_button_save, 0, _("Save As..."));
 
-	gtk_widget_show (urlgrabberwindow);
+	gtk_widget_show_all (urlgrabberwindow);
 
 	if (prefs.pchat_url_grabber)
 		tree_foreach (url_tree, (tree_traverse_func *)populate_cb, NULL);

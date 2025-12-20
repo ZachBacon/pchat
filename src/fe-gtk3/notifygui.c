@@ -441,5 +441,5 @@ notify_opengui (void)
 
 	notify_gui_update ();
 
-	gtk_widget_show (notify_window);
+	gtk_widget_show_all (notify_window);
 }

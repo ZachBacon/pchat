@@ -416,7 +416,7 @@ ignore_gui_open ()
 		
 		temp = temp->next;
 	}
-	gtk_widget_show (ignorewin);
+	gtk_widget_show_all (ignorewin);
 }
 
 void

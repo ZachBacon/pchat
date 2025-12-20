@@ -1,9 +1,6 @@
 /* X-Chat
  * Copyright (C) 2004-2007 Peter Zelezny.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -1113,7 +1110,7 @@ setup_browsefont_cb (GtkWidget *button, GtkWidget *entry)
 	g_signal_connect (G_OBJECT (dialog), "response",
 							G_CALLBACK (setup_fontsel_cb), entry);
 
-	gtk_widget_show_all (dialog);
+	gtk_widget_show (dialog);
 }
 
 static void
@@ -1449,42 +1446,27 @@ setup_update_color_button (GtkWidget *button, GdkRGBA *color)
 	}
 }
 
-typedef struct {
-	GtkWidget *button;
-	GdkRGBA *color;
-} ColorDialogData;
-
-static void
-setup_color_response_cb (GtkDialog *dialog, gint response, gpointer user_data)
-{
-	ColorDialogData *data = (ColorDialogData *) user_data;
-	
-	if (response == GTK_RESPONSE_OK)
-	{
-		gtk_color_chooser_get_rgba (GTK_COLOR_CHOOSER (dialog), data->color);
-		color_change = TRUE;
-		setup_update_color_button (data->button, data->color);
-	}
-	
-	gtk_widget_destroy (GTK_WIDGET (dialog));
-	g_free (data);
-}
-
 static void
 setup_color_cb (GtkWidget *button, gpointer userdata)
 {
 	GtkWidget *dialog;
-	ColorDialogData *data;
+	GdkRGBA *color;
+	int response;
 
-	data = g_new (ColorDialogData, 1);
-	data->button = button;
-	data->color = &colors[GPOINTER_TO_INT (userdata)];
+	color = &colors[GPOINTER_TO_INT (userdata)];
 
 	dialog = gtk_color_chooser_dialog_new (_("Select color"), GTK_WINDOW (current_sess->gui->window));
-	gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog), data->color);
+	gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (dialog), color);
 
-	g_signal_connect (dialog, "response", G_CALLBACK (setup_color_response_cb), data);
-	gtk_widget_show_all (dialog);
+	response = gtk_dialog_run (GTK_DIALOG (dialog));
+	if (response == GTK_RESPONSE_OK)
+	{
+		gtk_color_chooser_get_rgba (GTK_COLOR_CHOOSER (dialog), color);
+		color_change = TRUE;
+		setup_update_color_button (button, color);
+	}
+
+	gtk_widget_destroy (dialog);
 }
 
 static void
@@ -2312,7 +2294,7 @@ setup_window_open (void)
 {
 	GtkWidget *wid, *win, *vbox, *hbox, *hbbox;
 
-	win = gtkutil_window_new (_(DISPLAY_NAME": Preferences"), "prefs", 0, 0, 2);
+	win = gtkutil_window_new (_(DISPLAY_NAME": Preferences"), "prefs", 700, 500, 2);
 
 	vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
 	gtk_container_set_border_width (GTK_CONTAINER (vbox), 6);
@@ -2353,7 +2335,7 @@ setup_window_open (void)
 	wid = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);
 	gtk_box_pack_end (GTK_BOX (vbox), wid, FALSE, FALSE, 0);
 
-	gtk_widget_show (win);
+	gtk_widget_show_all (win);
 
 	return win;
 }

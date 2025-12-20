@@ -115,13 +115,13 @@ open_rawlog (struct server *serv)
 	snprintf (tbuf, sizeof tbuf, _(DISPLAY_NAME": Raw Log (%s)"), serv->servername);
 	serv->gui->rawlog_window =
 		mg_create_generic_tab ("RawLog", tbuf, FALSE, TRUE, close_rawlog, serv,
-							 640, 320, &vbox, serv);
+							 750, 500, &vbox, serv);
 	gtkutil_destroy_on_esc (serv->gui->rawlog_window);
 
 	scrolledwindow = gtk_scrolled_window_new (NULL, NULL);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledwindow), GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
 	gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (scrolledwindow), GTK_SHADOW_IN);
-	gtk_container_add (GTK_CONTAINER (vbox), scrolledwindow);
+	gtk_box_pack_start (GTK_BOX (vbox), scrolledwindow, TRUE, TRUE, 0);
 
 	serv->gui->rawlog_textlist = gtk_xtext_new (colors, 0);
 	gtk_container_add (GTK_CONTAINER (scrolledwindow), serv->gui->rawlog_textlist);
@@ -141,7 +141,7 @@ open_rawlog (struct server *serv)
 	/* Copy selection to clipboard when Ctrl+Shift+C is pressed AND text auto-copy is disabled */
 	g_signal_connect (G_OBJECT (serv->gui->rawlog_window), "key_press_event", G_CALLBACK (rawlog_key_cb), serv->gui->rawlog_textlist);
 
-	gtk_widget_show (serv->gui->rawlog_window);
+	gtk_widget_show_all (serv->gui->rawlog_window);
 }
 
 void

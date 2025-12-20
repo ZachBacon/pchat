@@ -35,14 +35,8 @@ add_library(audioplayer MODULE ${PLUGIN_SOURCES})
 set_target_properties(audioplayer PROPERTIES
     PREFIX ""
     OUTPUT_NAME "audioplayer"
+    SUFFIX ".so"
 )
-
-# Set platform-specific suffix
-if(WIN32)
-    set_target_properties(audioplayer PROPERTIES SUFFIX ".dll")
-else()
-    set_target_properties(audioplayer PROPERTIES SUFFIX ".so")
-endif()
 
 # Allow undefined symbols - they'll be resolved when PChat loads the plugin
 if(UNIX AND NOT APPLE)
@@ -50,7 +44,6 @@ if(UNIX AND NOT APPLE)
         "-Wl,--unresolved-symbols=ignore-all"
     )
 endif()
-# On Windows, DLLs naturally support undefined symbols resolved at runtime, no flag needed
 
 # Include directories
 target_include_directories(audioplayer PRIVATE

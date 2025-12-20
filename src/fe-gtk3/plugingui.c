@@ -1,9 +1,6 @@
 /* X-Chat
  * Copyright (C) 1998 Peter Zelezny.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -254,7 +251,7 @@ plugingui_open (void)
 
 	plugin_window = mg_create_generic_tab ("Addons", _(DISPLAY_NAME": Plugins and Scripts"),
 														 FALSE, TRUE, plugingui_close, NULL,
-														 500, 250, &vbox, 0);
+															 600, 400, &vbox, 0);
 	gtkutil_destroy_on_esc (plugin_window);
 
 	view = plugingui_treeview_new (vbox);
@@ -277,5 +274,5 @@ plugingui_open (void)
 
 	fe_pluginlist_update ();
 
-	gtk_widget_show (plugin_window);
+	gtk_widget_show_all (plugin_window);
 }
