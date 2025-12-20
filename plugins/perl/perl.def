@@ -1,4 +1,4 @@
 EXPORTS
-  hexchat_plugin_init
-  hexchat_plugin_deinit
-  hexchat_plugin_get_info
+  pchat_plugin_init
+  pchat_plugin_deinit
+  pchat_plugin_get_info

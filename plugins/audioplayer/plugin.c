@@ -9,22 +9,22 @@
 #include <string.h>
 #include <stdarg.h>
 #include <strings.h>
-#include "../../src/common/xchat-plugin.h"
+#include "../../src/common/pchat-plugin.h"
 #include "audioplayer.h"
 #include "gui.h"
 
-/* Undefine xchat macros to allow direct struct member access */
-#undef xchat_hook_command
-#undef xchat_print
-#undef xchat_printf
-#undef xchat_command
-#undef xchat_commandf
+/* Undefine pchat macros to allow direct struct member access */
+#undef pchat_hook_command
+#undef pchat_print
+#undef pchat_printf
+#undef pchat_command
+#undef pchat_commandf
 
 #define PNAME "AudioPlayer"
 #define PDESC "Audio player with FFmpeg decoding and FAudio output"
 #define PVERSION "1.0"
 
-static xchat_plugin *ph;   /* plugin handle */
+static pchat_plugin *ph;   /* plugin handle */
 static AudioPlayer *player = NULL;
 
 /* Command callbacks */
@@ -44,7 +44,7 @@ static void print_msg(const char *format, ...) {
     va_start(args, format);
     vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
-    ph->xchat_printf(ph, "[AudioPlayer] %s\n", buffer);
+    ph->pchat_printf(ph, "[AudioPlayer] %s\n", buffer);
 }
 
 /* Unescape shell escape sequences in paths */
@@ -105,7 +105,7 @@ static int play_cb(char *word[], char *word_eol[], void *userdata) {
             print_msg("Usage: /PLAY <filepath> - Play an audio file");
             print_msg("       /PLAY - Resume playback if paused");
         }
-        return XCHAT_EAT_ALL;
+        return PCHAT_EAT_ALL;
     }
     
     /* Use word_eol[2] to get the full path including spaces */
@@ -142,7 +142,7 @@ static int play_cb(char *word[], char *word_eol[], void *userdata) {
     
     free(unescaped);
     free(filepath_copy);
-    return XCHAT_EAT_ALL;
+    return PCHAT_EAT_ALL;
 }
 
 /* /PAUSE command - pause playback */
@@ -169,7 +169,7 @@ static int pause_cb(char *word[], char *word_eol[], void *userdata) {
         print_msg("Nothing is playing");
     }
     
-    return XCHAT_EAT_ALL;
+    return PCHAT_EAT_ALL;
 }
 
 /* /STOP command - stop playback */
@@ -184,7 +184,7 @@ static int stop_cb(char *word[], char *word_eol[], void *userdata) {
         print_msg("Failed to stop playback");
     }
     
-    return XCHAT_EAT_ALL;
+    return PCHAT_EAT_ALL;
 }
 
 /* /NEXT command - play next track */
@@ -202,7 +202,7 @@ static int next_cb(char *word[], char *word_eol[], void *userdata) {
         print_msg("No next track available");
     }
     
-    return XCHAT_EAT_ALL;
+    return PCHAT_EAT_ALL;
 }
 
 /* /PREV command - play previous track */
@@ -220,7 +220,7 @@ static int prev_cb(char *word[], char *word_eol[], void *userdata) {
         print_msg("No previous track available");
     }
     
-    return XCHAT_EAT_ALL;
+    return PCHAT_EAT_ALL;
 }
 
 /* /PLAYLIST command - manage playlist */
@@ -246,7 +246,7 @@ static int playlist_cb(char *word[], char *word_eol[], void *userdata) {
                 index++;
             }
         }
-        return XCHAT_EAT_ALL;
+        return PCHAT_EAT_ALL;
     }
     
     const char *subcmd = word[2];
@@ -254,7 +254,7 @@ static int playlist_cb(char *word[], char *word_eol[], void *userdata) {
     if (strcasecmp(subcmd, "add") == 0) {
         if (!word[3] || !*word[3]) {
             print_msg("Usage: /PLAYLIST ADD <filepath>");
-            return XCHAT_EAT_ALL;
+            return PCHAT_EAT_ALL;
         }
         
         /* Use word_eol[3] to get the full path including spaces */
@@ -295,7 +295,7 @@ static int playlist_cb(char *word[], char *word_eol[], void *userdata) {
     else if (strcasecmp(subcmd, "load") == 0) {
         if (!word[3] || !*word[3]) {
             print_msg("Usage: /PLAYLIST LOAD <playlist_file.m3u|.pls>");
-            return XCHAT_EAT_ALL;
+            return PCHAT_EAT_ALL;
         }
         
         /* Use word_eol[3] to get the full path including spaces */
@@ -378,7 +378,7 @@ static int playlist_cb(char *word[], char *word_eol[], void *userdata) {
         print_msg("Unknown playlist command. Available: ADD, LOAD, CLEAR, PLAY, LOOP, SHUFFLE");
     }
     
-    return XCHAT_EAT_ALL;
+    return PCHAT_EAT_ALL;
 }
 
 /* /NP or /NOWPLAYING command - show current track */
@@ -390,13 +390,13 @@ static int nowplaying_cb(char *word[], char *word_eol[], void *userdata) {
     
     if (state == STATE_STOPPED) {
         print_msg("Not playing anything");
-        return XCHAT_EAT_ALL;
+        return PCHAT_EAT_ALL;
     }
     
     PlaylistItem *track = audioplayer_get_current_track(player);
     if (!track) {
         print_msg("No track information available");
-        return XCHAT_EAT_ALL;
+        return PCHAT_EAT_ALL;
     }
     
     /* Build formatted track info with metadata */
@@ -423,10 +423,10 @@ static int nowplaying_cb(char *word[], char *word_eol[], void *userdata) {
     
     /* Optionally print to channel if specified */
     if (word[2] && strcasecmp(word[2], "say") == 0) {
-        ph->xchat_commandf(ph, "SAY ♪ Now Playing: %s", track_info);
+        ph->pchat_commandf(ph, "SAY ♪ Now Playing: %s", track_info);
     }
     
-    return XCHAT_EAT_ALL;
+    return PCHAT_EAT_ALL;
 }
 
 /* /GUI command - show GUI window */
@@ -436,11 +436,11 @@ static int gui_cb(char *word[], char *word_eol[], void *userdata) {
     (void)userdata;
     
     audioplayer_gui_init(ph, player);
-    return XCHAT_EAT_ALL;
+    return PCHAT_EAT_ALL;
 }
 
 /* Plugin initialization */
-int xchat_plugin_init(xchat_plugin *plugin_handle,
+int pchat_plugin_init(pchat_plugin *plugin_handle,
                       char **plugin_name,
                       char **plugin_desc,
                       char **plugin_version,
@@ -457,45 +457,45 @@ int xchat_plugin_init(xchat_plugin *plugin_handle,
     /* Create audio player instance */
     player = audioplayer_create();
     if (!player) {
-        ph->xchat_print(ph, "AudioPlayer: Failed to initialize audio player\n");
+        ph->pchat_print(ph, "AudioPlayer: Failed to initialize audio player\n");
         return 0;
     }
     
     /* Register commands */
-    ph->xchat_hook_command(ph, "PLAY", XCHAT_PRI_NORM, play_cb, 
+    ph->pchat_hook_command(ph, "PLAY", PCHAT_PRI_NORM, play_cb, 
                       "PLAY <filepath> - Play an audio file", NULL);
-    ph->xchat_hook_command(ph, "PAUSE", XCHAT_PRI_NORM, pause_cb,
+    ph->pchat_hook_command(ph, "PAUSE", PCHAT_PRI_NORM, pause_cb,
                       "PAUSE - Pause or resume playback", NULL);
-    ph->xchat_hook_command(ph, "STOP", XCHAT_PRI_NORM, stop_cb,
+    ph->pchat_hook_command(ph, "STOP", PCHAT_PRI_NORM, stop_cb,
                       "STOP - Stop playback", NULL);
-    ph->xchat_hook_command(ph, "NEXT", XCHAT_PRI_NORM, next_cb,
+    ph->pchat_hook_command(ph, "NEXT", PCHAT_PRI_NORM, next_cb,
                       "NEXT - Play next track in playlist", NULL);
-    ph->xchat_hook_command(ph, "PREV", XCHAT_PRI_NORM, prev_cb,
+    ph->pchat_hook_command(ph, "PREV", PCHAT_PRI_NORM, prev_cb,
                       "PREV - Play previous track in playlist", NULL);
-    ph->xchat_hook_command(ph, "PLAYLIST", XCHAT_PRI_NORM, playlist_cb,
+    ph->pchat_hook_command(ph, "PLAYLIST", PCHAT_PRI_NORM, playlist_cb,
                       "PLAYLIST [ADD|LOAD|CLEAR|PLAY|LOOP|SHUFFLE] - Manage playlist", NULL);
-    ph->xchat_hook_command(ph, "NP", XCHAT_PRI_NORM, nowplaying_cb,
+    ph->pchat_hook_command(ph, "NP", PCHAT_PRI_NORM, nowplaying_cb,
                       "NP [say] - Show now playing (optionally say to channel)", NULL);
-    ph->xchat_hook_command(ph, "NOWPLAYING", XCHAT_PRI_NORM, nowplaying_cb,
+    ph->pchat_hook_command(ph, "NOWPLAYING", PCHAT_PRI_NORM, nowplaying_cb,
                       "NOWPLAYING [say] - Show now playing (optionally say to channel)", NULL);
-    ph->xchat_hook_command(ph, "APLAYER", XCHAT_PRI_NORM, gui_cb,
+    ph->pchat_hook_command(ph, "APLAYER", PCHAT_PRI_NORM, gui_cb,
                       "APLAYER - Show audio player GUI", NULL);
     
     /* Add to user menu automatically */
-    ph->xchat_command(ph, "MENU -p5 ADD \"Audio Player\" \"APLAYER\" \"\"");
+    ph->pchat_command(ph, "MENU -p5 ADD \"Audio Player\" \"APLAYER\" \"\"");
     
-    ph->xchat_print(ph, "AudioPlayer plugin loaded successfully!\n");
-    ph->xchat_print(ph, "Commands: /PLAY, /PAUSE, /STOP, /NEXT, /PREV, /PLAYLIST, /NP, /APLAYER\n");
-    ph->xchat_print(ph, "GUI: Use /APLAYER or check Window > Audio Player menu\n");
+    ph->pchat_print(ph, "AudioPlayer plugin loaded successfully!\n");
+    ph->pchat_print(ph, "Commands: /PLAY, /PAUSE, /STOP, /NEXT, /PREV, /PLAYLIST, /NP, /APLAYER\n");
+    ph->pchat_print(ph, "GUI: Use /APLAYER or check Window > Audio Player menu\n");
     
     return 1;
 }
 
 /* Plugin cleanup */
-int xchat_plugin_deinit(void)
+int pchat_plugin_deinit(void)
 {
     /* Remove from user menu */
-    ph->xchat_command(ph, "MENU DEL \"Audio Player\"");
+    ph->pchat_command(ph, "MENU DEL \"Audio Player\"");
     
     audioplayer_gui_cleanup();
     
@@ -504,6 +504,6 @@ int xchat_plugin_deinit(void)
         player = NULL;
     }
     
-    ph->xchat_print(ph, "AudioPlayer plugin unloaded\n");
+    ph->pchat_print(ph, "AudioPlayer plugin unloaded\n");
     return 1;
 }

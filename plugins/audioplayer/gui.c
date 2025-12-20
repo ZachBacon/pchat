@@ -8,7 +8,7 @@
 #include "audioplayer.h"
 
 /* Undefine xchat macros to allow direct struct member access */
-#undef xchat_printf
+#undef pchat_printf
 
 /* GUI state */
 static GtkWidget *main_window = NULL;
@@ -22,7 +22,7 @@ static GtkWidget *now_playing_label = NULL;
 static GtkWidget *volume_scale = NULL;
 static GtkListStore *playlist_store = NULL;
 
-static xchat_plugin *ph_gui = NULL;
+static pchat_plugin *ph_gui = NULL;
 static AudioPlayer *player_gui = NULL;
 static guint update_timer = 0;
 
@@ -157,11 +157,11 @@ static void on_load_playlist_clicked(GtkButton *button, gpointer user_data) {
         int count = audioplayer_load_playlist_file(player_gui, filename);
         
         if (count > 0) {
-            ph_gui->xchat_printf(ph_gui, "[AudioPlayer] Loaded %d tracks from playlist\n", count);
+            ph_gui->pchat_printf(ph_gui, "[AudioPlayer] Loaded %d tracks from playlist\n", count);
         } else if (count == 0) {
-            ph_gui->xchat_printf(ph_gui, "[AudioPlayer] No valid tracks found in playlist\n");
+            ph_gui->pchat_printf(ph_gui, "[AudioPlayer] No valid tracks found in playlist\n");
         } else {
-            ph_gui->xchat_printf(ph_gui, "[AudioPlayer] Failed to load playlist\n");
+            ph_gui->pchat_printf(ph_gui, "[AudioPlayer] Failed to load playlist\n");
         }
         
         g_free(filename);
@@ -289,7 +289,7 @@ static gboolean update_timer_callback(gpointer data) {
     return TRUE;  /* Continue timer */
 }
 
-void audioplayer_gui_init(xchat_plugin *ph, AudioPlayer *player) {
+void audioplayer_gui_init(pchat_plugin *ph, AudioPlayer *player) {
     ph_gui = ph;
     player_gui = player;
     
