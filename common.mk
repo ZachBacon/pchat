@@ -1,1 +1,0 @@
-AM_CFLAGS = -flto -std=c99
