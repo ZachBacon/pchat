@@ -43,7 +43,18 @@
 #include "../common/cfgfiles.h"
 #include "../common/xchatc.h"
 #include "palette.h"
-#include "xtext.h"
+
+/* Text attribute constants - previously from xtext.h */
+#define ATTR_BOLD		'\002'
+#define ATTR_COLOR		'\003'
+#define ATTR_BLINK		'\006'
+#define ATTR_BEEP		'\007'
+#define ATTR_HIDDEN		'\010'
+#define ATTR_ITALICS2	'\011'
+#define ATTR_RESET		'\017'
+#define ATTR_REVERSE	'\026'
+#define ATTR_ITALICS	'\035'
+#define ATTR_UNDERLINE	'\037'
 
 /*
  * Bunch of poop to make enchant into a runtime dependency rather than a

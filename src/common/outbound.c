@@ -2443,7 +2443,7 @@ cmd_lagcheck (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 }
 
 static void
-lastlog (session *sess, char *search, gtk_xtext_search_flags flags)
+lastlog (session *sess, char *search, int flags)
 {
 	session *lastlog_sess;
 
@@ -2455,7 +2455,6 @@ lastlog (session *sess, char *search, gtk_xtext_search_flags flags)
 		lastlog_sess = new_ircwindow (sess->server, "(lastlog)", SESS_DIALOG, 0);
 
 	lastlog_sess->lastlog_sess = sess;
-	lastlog_sess->lastlog_flags = flags;
 
 	fe_text_clear (lastlog_sess, 0);
 	fe_lastlog (sess, lastlog_sess, search, flags);
@@ -2465,7 +2464,7 @@ static int
 cmd_lastlog (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
 	int j = 2;
-	gtk_xtext_search_flags flags = 0;
+	int flags = 0;
 	gboolean doublehyphen = FALSE;
 
 	while (word_eol[j] != NULL && word_eol [j][0] == '-' && !doublehyphen)
@@ -2473,13 +2472,13 @@ cmd_lastlog (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		switch (word_eol [j][1])
 		{
 			case 'r':
-				flags |= regexp;
+				flags |= 16; /* regexp */
 				break;
 			case 'm':
-				flags |= case_match;
+				flags |= 1; /* case_match */
 				break;
 			case 'h':
-				flags |= highlight;
+				flags |= 4; /* highlight */
 				break;
 			case '-':
 				doublehyphen = TRUE;
@@ -4532,7 +4531,7 @@ handle_say (session *sess, char *text, int check_spch)
 
 	if (strcmp (sess->channel, "(lastlog)") == 0)
 	{
-		lastlog (sess->lastlog_sess, text, sess->lastlog_flags);
+		lastlog (sess->lastlog_sess, text, 0);
 		return;
 	}
 

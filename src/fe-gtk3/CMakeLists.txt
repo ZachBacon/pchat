@@ -26,7 +26,6 @@ add_executable(pchat
     textview-chat.c
     urlgrab.c
     userlistgui.c
-    xtext.c
 )
 
 # Windows resource file

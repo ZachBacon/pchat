@@ -49,7 +49,7 @@
 #include <gdk/gdkkeysyms.h>
 #include "gtkutil.h"
 #include "menu.h"
-#include "xtext.h"
+#include "textview-chat.h"
 #include "palette.h"
 #include "maingui.h"
 #include "textgui.h"
@@ -394,13 +394,15 @@ get_store (void)
 }
 
 static void
-key_dialog_print_text (GtkXText *xtext, char *text)
+key_dialog_print_text (GtkWidget *textview, char *text)
 {
-	unsigned int old = prefs.pchat_stamp_text;
-	prefs.pchat_stamp_text = 0;	/* temporarily disable stamps */
-	gtk_xtext_clear (GTK_XTEXT (xtext)->buffer, 0);
-	PrintTextRaw (GTK_XTEXT (xtext)->buffer, text, 0, 0);
-	prefs.pchat_stamp_text = old;
+	GtkTextBuffer *buffer;
+	GtkTextIter iter;
+	
+	buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (textview));
+	gtk_text_buffer_set_text (buffer, "", -1);
+	gtk_text_buffer_get_end_iter (buffer, &iter);
+	gtk_text_buffer_insert (buffer, &iter, text, -1);
 }
 
 static void
@@ -482,24 +484,24 @@ key_dialog_row_activated (GtkTreeSelection *sel, gpointer userdata)
 {
 	GtkTreeModel *model;
 	GtkTreeIter iter;
-	GtkXText *xtext;
+	GtkWidget *textview;
 	char *actiontext;
 	int action;
 
 	if (!gtk_tree_selection_get_selected (sel, &model, &iter) || model == NULL)
 		return;
 
-	xtext = GTK_XTEXT (g_object_get_data (G_OBJECT (key_dialog), "xtext"));
+	textview = g_object_get_data (G_OBJECT (key_dialog), "xtext");
 	gtk_tree_model_get (model, &iter, ACTION_COLUMN, &actiontext, -1);
 
 	if (actiontext)
 	{
 		action = key_get_action_from_string (actiontext);
-		key_dialog_print_text (xtext, key_actions[action].help);
+		key_dialog_print_text (textview, key_actions[action].help);
 		g_free (actiontext);
 	}
 	else
-		key_dialog_print_text (xtext, _("Select a row to get help information on its Action."));
+		key_dialog_print_text (textview, _("Select a row to get help information on its Action."));
 }
 
 static void
@@ -743,9 +745,17 @@ key_dialog_show ()
 									TRUE, FALSE, key_dialog_close, NULL, 600, 360, &vbox, 0);
 
 	view = key_dialog_treeview_new (vbox);
-	xtext = gtk_xtext_new (colors, 0);
+	xtext = gtk_text_view_new ();
+	gtk_text_view_set_editable (GTK_TEXT_VIEW (xtext), FALSE);
+	gtk_text_view_set_wrap_mode (GTK_TEXT_VIEW (xtext), GTK_WRAP_WORD);
+	gtk_widget_set_size_request (xtext, -1, 100);
 	gtk_box_pack_start (GTK_BOX (vbox), xtext, FALSE, TRUE, 2);
-	gtk_xtext_set_font (GTK_XTEXT (xtext), prefs.pchat_text_font);
+	/* Set font using CSS if needed */
+	if (prefs.pchat_text_font && strlen(prefs.pchat_text_font) > 0) {
+		PangoFontDescription *font_desc = pango_font_description_from_string(prefs.pchat_text_font);
+		gtk_widget_override_font(xtext, font_desc);
+		pango_font_description_free(font_desc);
+	}
 
 	g_object_set_data (G_OBJECT (key_dialog), "view", view);
 	g_object_set_data (G_OBJECT (key_dialog), "xtext", xtext);
