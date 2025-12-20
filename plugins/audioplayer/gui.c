@@ -19,7 +19,6 @@ static GtkWidget *stop_button = NULL;
 static GtkWidget *prev_button = NULL;
 static GtkWidget *next_button = NULL;
 static GtkWidget *now_playing_label = NULL;
-static GtkWidget *time_label = NULL;
 static GtkWidget *volume_scale = NULL;
 static GtkListStore *playlist_store = NULL;
 
@@ -182,6 +181,7 @@ static void on_clear_playlist_clicked(GtkButton *button, gpointer user_data) {
 
 static void on_playlist_row_activated(GtkTreeView *tree_view, GtkTreePath *path,
                                      GtkTreeViewColumn *column, gpointer user_data) {
+    (void)tree_view;
     (void)column;
     (void)user_data;
     

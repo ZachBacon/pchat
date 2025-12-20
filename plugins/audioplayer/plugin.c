@@ -147,6 +147,10 @@ static int play_cb(char *word[], char *word_eol[], void *userdata) {
 
 /* /PAUSE command - pause playback */
 static int pause_cb(char *word[], char *word_eol[], void *userdata) {
+    (void)word;
+    (void)word_eol;
+    (void)userdata;
+    
     PlayerState state = audioplayer_get_state(player);
     
     if (state == STATE_PLAYING) {
@@ -170,6 +174,10 @@ static int pause_cb(char *word[], char *word_eol[], void *userdata) {
 
 /* /STOP command - stop playback */
 static int stop_cb(char *word[], char *word_eol[], void *userdata) {
+    (void)word;
+    (void)word_eol;
+    (void)userdata;
+    
     if (audioplayer_stop(player) == 0) {
         print_msg("Stopped playback");
     } else {
@@ -181,6 +189,10 @@ static int stop_cb(char *word[], char *word_eol[], void *userdata) {
 
 /* /NEXT command - play next track */
 static int next_cb(char *word[], char *word_eol[], void *userdata) {
+    (void)word;
+    (void)word_eol;
+    (void)userdata;
+    
     if (audioplayer_next(player) == 0) {
         PlaylistItem *track = audioplayer_get_current_track(player);
         if (track) {
@@ -195,6 +207,10 @@ static int next_cb(char *word[], char *word_eol[], void *userdata) {
 
 /* /PREV command - play previous track */
 static int prev_cb(char *word[], char *word_eol[], void *userdata) {
+    (void)word;
+    (void)word_eol;
+    (void)userdata;
+    
     if (audioplayer_prev(player) == 0) {
         PlaylistItem *track = audioplayer_get_current_track(player);
         if (track) {
@@ -209,6 +225,8 @@ static int prev_cb(char *word[], char *word_eol[], void *userdata) {
 
 /* /PLAYLIST command - manage playlist */
 static int playlist_cb(char *word[], char *word_eol[], void *userdata) {
+    (void)userdata;
+    
     if (!word[2] || !*word[2]) {
         /* List playlist */
         int count = audioplayer_get_playlist_count(player);
@@ -365,6 +383,9 @@ static int playlist_cb(char *word[], char *word_eol[], void *userdata) {
 
 /* /NP or /NOWPLAYING command - show current track */
 static int nowplaying_cb(char *word[], char *word_eol[], void *userdata) {
+    (void)word_eol;
+    (void)userdata;
+    
     PlayerState state = audioplayer_get_state(player);
     
     if (state == STATE_STOPPED) {
@@ -385,7 +406,7 @@ static int nowplaying_cb(char *word[], char *word_eol[], void *userdata) {
         snprintf(track_info, sizeof(track_info), "%s - %s", track->artist, track->title);
         if (track->album) {
             /* Add album if available */
-            char temp[512];
+            char temp[1024];
             snprintf(temp, sizeof(temp), "%s [%s]", track_info, track->album);
             strncpy(track_info, temp, sizeof(track_info) - 1);
         }
@@ -425,6 +446,8 @@ int xchat_plugin_init(xchat_plugin *plugin_handle,
                       char **plugin_version,
                       char *arg)
 {
+    (void)arg;
+    
     ph = plugin_handle;
     
     *plugin_name = PNAME;
