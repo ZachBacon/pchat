@@ -42,14 +42,21 @@
 #include "palette.h"
 #include "maingui.h"
 #include "rawlog.h"
-#include "xtext.h"
+#include "textview-chat.h"
 #include "fkeys.h"
 
 static void
 close_rawlog (GtkWidget *wid, server *serv)
 {
 	if (is_server (serv))
+	{
+		if (serv->gui->rawlog_buffer)
+		{
+			pchat_chat_buffer_free (serv->gui->rawlog_buffer);
+			serv->gui->rawlog_buffer = NULL;
+		}
 		serv->gui->rawlog_window = 0;
+	}
 }
 
 static void
@@ -64,7 +71,16 @@ rawlog_save (server *serv, char *file)
 										 0600, XOF_DOMODE | XOF_FULLPATH);
 		if (fh != -1)
 		{
-			gtk_xtext_save (GTK_XTEXT (serv->gui->rawlog_textlist), fh);
+			GtkTextBuffer *buffer;
+			GtkTextIter start, end;
+			gchar *text;
+			
+			buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (serv->gui->rawlog_textlist));
+			gtk_text_buffer_get_bounds (buffer, &start, &end);
+			text = gtk_text_buffer_get_text (buffer, &start, &end, FALSE);
+			
+			write (fh, text, strlen (text));
+			g_free (text);
 			close (fh);
 		}
 	}
@@ -73,7 +89,7 @@ rawlog_save (server *serv, char *file)
 static int
 rawlog_clearbutton (GtkWidget * wid, server *serv)
 {
-	gtk_xtext_clear (GTK_XTEXT (serv->gui->rawlog_textlist)->buffer, 0);
+	pchat_textview_chat_clear (PCHAT_TEXTVIEW_CHAT (serv->gui->rawlog_textlist), 0);
 	return FALSE;
 }
 
@@ -95,7 +111,12 @@ rawlog_key_cb (GtkWidget * wid, GdkEventKey * key, gpointer userdata)
 		key->state & STATE_SHIFT &&
 		key->state & STATE_CTRL)
 	{
-		gtk_xtext_copy_selection (userdata);
+		GtkTextBuffer *buffer;
+		GtkClipboard *clipboard;
+		
+		buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (userdata));
+		clipboard = gtk_clipboard_get (GDK_SELECTION_CLIPBOARD);
+		gtk_text_buffer_copy_clipboard (buffer, clipboard);
 	}
 	return FALSE;
 }
@@ -123,10 +144,15 @@ open_rawlog (struct server *serv)
 	gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (scrolledwindow), GTK_SHADOW_IN);
 	gtk_box_pack_start (GTK_BOX (vbox), scrolledwindow, TRUE, TRUE, 0);
 
-	serv->gui->rawlog_textlist = gtk_xtext_new (colors, 0);
+	serv->gui->rawlog_textlist = pchat_textview_chat_new ();
 	gtk_container_add (GTK_CONTAINER (scrolledwindow), serv->gui->rawlog_textlist);
-	gtk_xtext_set_font (GTK_XTEXT (serv->gui->rawlog_textlist), prefs.pchat_text_font);
-	GTK_XTEXT (serv->gui->rawlog_textlist)->ignore_hidden = 1;
+	pchat_textview_chat_set_font (PCHAT_TEXTVIEW_CHAT (serv->gui->rawlog_textlist), prefs.pchat_text_font);
+	pchat_textview_chat_set_palette (PCHAT_TEXTVIEW_CHAT (serv->gui->rawlog_textlist), colors, 37);
+	pchat_textview_chat_set_show_timestamps (PCHAT_TEXTVIEW_CHAT (serv->gui->rawlog_textlist), FALSE);
+	
+	/* Create and set buffer */
+	serv->gui->rawlog_buffer = pchat_chat_buffer_new (PCHAT_TEXTVIEW_CHAT (serv->gui->rawlog_textlist));
+	pchat_chat_buffer_show (PCHAT_TEXTVIEW_CHAT (serv->gui->rawlog_textlist), serv->gui->rawlog_buffer);
 
 	bbox = gtk_button_box_new (GTK_ORIENTATION_HORIZONTAL);
 	gtk_button_box_set_layout (GTK_BUTTON_BOX (bbox), GTK_BUTTONBOX_SPREAD);
@@ -162,11 +188,11 @@ fe_add_rawlog (server *serv, char *text, int len, int outbound)
 			break;
 
 		if (outbound)
-			new_text = g_strconcat ("\0034<<\017 ", split_text[i], NULL);
+			new_text = g_strconcat ("\0034<<\017 ", split_text[i], "\n", NULL);
 		else
-			new_text = g_strconcat ("\0033>>\017 ", split_text[i], NULL);
+			new_text = g_strconcat ("\0033>>\017 ", split_text[i], "\n", NULL);
 
-		gtk_xtext_append (GTK_XTEXT (serv->gui->rawlog_textlist)->buffer, new_text, strlen (new_text));
+		pchat_textview_chat_append (PCHAT_TEXTVIEW_CHAT (serv->gui->rawlog_textlist), new_text, strlen (new_text));
 
 		g_free (new_text);
 	}

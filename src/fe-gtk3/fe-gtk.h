@@ -58,6 +58,7 @@ struct server_gui
 {
 	GtkWidget *rawlog_window;
 	GtkWidget *rawlog_textlist;
+	void *rawlog_buffer;  /* PchatChatBuffer pointer */
 
 	/* join dialog */
 	GtkWidget *joind_win;
