@@ -131,7 +131,7 @@ typedef struct restore_gui
 typedef struct session_gui
 {
 	GtkWidget
-		*xtext,
+		*textview,		/* chat display widget */
 		*vscrollbar,
 		*window,	/* toplevel */
 		*topic_entry,

@@ -1,9 +1,5 @@
-/* HexChat
- * Copyright (C) 1998-2010 Peter Zelezny.
- * Copyright (C) 2009-2013 Berke Viktor.
- *
- * PChat
- * Copyright (C) 2025 Zach Bacon
+/* X-Chat
+ * Copyright (C) 1998 Peter Zelezny.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,23 +23,23 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "xchat.h"
+#include "pchat.h"
 #include "cfgfiles.h"
 #include "util.h"
 #include "fe.h"
 #include "text.h"
-#include "xchatc.h"
+#include "pchatc.h"
 #include "typedef.h"
 
-#ifdef _WIN32
+#ifdef WIN32
 #include <io.h>
 #else
 #include <unistd.h>
-#define XCHAT_DIR "pchat"
+#define PCHAT_DIR "pchat"
 #endif
 
 #define DEF_FONT "Monospace 12"
-#define DEF_FONT_ALTER "Arial Unicode MS,Lucida Sans Unicode,MS Gothic,Unifont"
+#define DEF_FONT_ALTER "Arial Unicode MS,Segoe UI Emoji,Lucida Sans Unicode,Meiryo,Symbola,Unifont"
 
 const char * const languages[LANGUAGES_LENGTH] = {
 	"af", "sq", "am", "ast", "az", "eu", "be", "bg", "ca", "zh_CN",      /*  0 ..  9 */
@@ -149,9 +145,9 @@ list_loadconf (char *file, GSList ** list, char *defaultconf)
 void
 list_free (GSList ** list)
 {
+	void *data;
 	while (*list)
 	{
-		void *data;
 		data = (void *) (*list)->data;
 		g_free (data);
 		*list = g_slist_remove (*list, data);
@@ -161,11 +157,11 @@ list_free (GSList ** list)
 int
 list_delentry (GSList ** list, char *name)
 {
+	struct popup *pop;
 	GSList *alist = *list;
 
 	while (alist)
 	{
-		struct popup *pop;
 		pop = (struct popup *) alist->data;
 		if (!g_ascii_strcasecmp (name, pop->name))
 		{
@@ -183,7 +179,7 @@ cfg_get_str (char *cfg, const char *var, char *dest, int dest_len)
 {
 	char buffer[128];	/* should be plenty for a variable name */
 
-	g_snprintf (buffer, sizeof (buffer), "%s ", var);	/* add one space, this way it works against var - var2 checks too */
+	sprintf (buffer, "%s ", var);	/* add one space, this way it works against var - var2 checks too */
 
 	while (1)
 	{
@@ -235,7 +231,7 @@ cfg_put_color (int fh, guint16 r, guint16 g, guint16 b, char *var)
 	char buf[400];
 	int len;
 
-	g_snprintf (buf, sizeof buf, "%s = %04"G_GUINT16_FORMAT" %04"G_GUINT16_FORMAT" %04"G_GUINT16_FORMAT"\n", var, r, g, b);
+	g_snprintf (buf, sizeof buf, "%s = %04hx %04hx %04hx\n", var, r, g, b);
 	len = strlen (buf);
 	return (write (fh, buf, len) == len);
 }
@@ -262,7 +258,7 @@ cfg_get_color (char *cfg, char *var, guint16 *r, guint16 *g, guint16 *b)
 	if (!cfg_get_str (cfg, var, str, sizeof (str)))
 		return 0;
 
-	sscanf (str, "%04"G_GUINT16_FORMAT" %04"G_GUINT16_FORMAT" %04"G_GUINT16_FORMAT, r, g, b);
+	sscanf (str, "%04hx %04hx %04hx", r, g, b);
 	return 1;
 }
 
@@ -294,32 +290,9 @@ cfg_get_int (char *cfg, char *var)
 
 char *xdir = NULL;	/* utf-8 encoding */
 
-#ifdef _WIN32
-
+#ifdef WIN32
 #include <windows.h>
-
-static gboolean
-get_reg_str (const char *sub, const char *name, char *out, DWORD len)
-{
-	HKEY hKey;
-	DWORD t;
-
-	if (RegOpenKeyEx (HKEY_CURRENT_USER, sub, 0, KEY_READ, &hKey) ==
-			ERROR_SUCCESS)
-	{
-		if (RegQueryValueEx (hKey, name, NULL, &t, out, &len) != ERROR_SUCCESS ||
-			 t != REG_SZ)
-		{
-			RegCloseKey (hKey);
-			return FALSE;
-		}
-		out[len-1] = 0;
-		RegCloseKey (hKey);
-		return TRUE;
-	}
-
-	return FALSE;
-}
+#include <shlobj.h>
 #endif
 
 char *
@@ -327,13 +300,15 @@ get_xdir (void)
 {
 	if (!xdir)
 	{
-#ifdef _WIN32
-		char out[256];
+#ifndef WIN32
+		xdir = g_build_filename (g_get_user_config_dir (), PCHAT_DIR, NULL);
+#else
+		wchar_t* roaming_path_wide;
+		gchar* roaming_path;
 
-		if (portable_mode () || !get_reg_str ("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "AppData", out, sizeof (out)))
+		if (portable_mode () || SHGetKnownFolderPath (&FOLDERID_RoamingAppData, 0, NULL, &roaming_path_wide) != S_OK)
 		{
-			char *path;
-			path = g_win32_get_package_installation_directory_of_module (NULL);
+			char *path = g_win32_get_package_installation_directory_of_module (NULL);
 			if (path)
 			{
 				xdir = g_build_filename (path, "config", NULL);
@@ -344,10 +319,13 @@ get_xdir (void)
 		}
 		else
 		{
-			xdir = g_build_filename (out, "PChat", NULL);
+			roaming_path = g_utf16_to_utf8 (roaming_path_wide, -1, NULL, NULL, NULL);
+			CoTaskMemFree (roaming_path_wide);
+
+			xdir = g_build_filename (roaming_path, "PChat", NULL);
+
+			g_free (roaming_path);
 		}
-#else
-		xdir = g_build_filename (g_get_user_config_dir (), XCHAT_DIR, NULL);
 #endif
 	}
 
@@ -395,7 +373,7 @@ const struct prefs vars[] =
 	{"dcc_blocksize", P_OFFINT (pchat_dcc_blocksize), TYPE_INT},
 	{"dcc_completed_dir", P_OFFSET (pchat_dcc_completed_dir), TYPE_STR},
 	{"dcc_dir", P_OFFSET (pchat_dcc_dir), TYPE_STR},
-#ifndef _WIN32
+#ifndef WIN32
 	{"dcc_fast_send", P_OFFINT (pchat_dcc_fast_send), TYPE_BOOL},
 #endif
 	{"dcc_global_max_get_cps", P_OFFINT (pchat_dcc_global_max_get_cps), TYPE_INT},
@@ -429,6 +407,7 @@ const struct prefs vars[] =
 	{"gui_dialog_left", P_OFFINT (pchat_gui_dialog_left), TYPE_INT},
 	{"gui_dialog_top", P_OFFINT (pchat_gui_dialog_top), TYPE_INT},
 	{"gui_dialog_width", P_OFFINT (pchat_gui_dialog_width), TYPE_INT},
+	{"gui_filesize_iec", P_OFFINT (pchat_gui_filesize_iec), TYPE_BOOL},
 	{"gui_focus_omitalerts", P_OFFINT (pchat_gui_focus_omitalerts), TYPE_BOOL},
 	{"gui_hide_menu", P_OFFINT (pchat_gui_hide_menu), TYPE_BOOL},
 	{"gui_input_attr", P_OFFINT (pchat_gui_input_attr), TYPE_BOOL},
@@ -455,6 +434,7 @@ const struct prefs vars[] =
 	{"gui_tab_dots", P_OFFINT (pchat_gui_tab_dots), TYPE_BOOL},
 	{"gui_tab_icons", P_OFFINT (pchat_gui_tab_icons), TYPE_BOOL},
 	{"gui_tab_layout", P_OFFINT (pchat_gui_tab_layout), TYPE_INT},
+	{"gui_tab_middleclose", P_OFFINT (pchat_gui_tab_middleclose), TYPE_BOOL},
 	{"gui_tab_newtofront", P_OFFINT (pchat_gui_tab_newtofront), TYPE_INT},
 	{"gui_tab_pos", P_OFFINT (pchat_gui_tab_pos), TYPE_INT},
 	{"gui_tab_scrollchans", P_OFFINT (pchat_gui_tab_scrollchans), TYPE_BOOL},
@@ -479,7 +459,6 @@ const struct prefs vars[] =
 	{"gui_ulist_hide", P_OFFINT (pchat_gui_ulist_hide), TYPE_BOOL},
 	{"gui_ulist_icons", P_OFFINT (pchat_gui_ulist_icons), TYPE_BOOL},
 	{"gui_ulist_pos", P_OFFINT (pchat_gui_ulist_pos), TYPE_INT},
-	{"gui_ulist_resizable", P_OFFINT (pchat_gui_ulist_resizable), TYPE_BOOL},
 	{"gui_ulist_show_hosts", P_OFFINT(pchat_gui_ulist_show_hosts), TYPE_BOOL},
 	{"gui_ulist_sort", P_OFFINT (pchat_gui_ulist_sort), TYPE_INT},
 	{"gui_ulist_style", P_OFFINT (pchat_gui_ulist_style), TYPE_BOOL},
@@ -489,6 +468,7 @@ const struct prefs vars[] =
 	{"gui_win_fullscreen", P_OFFINT (pchat_gui_win_fullscreen), TYPE_INT},
 	{"gui_win_left", P_OFFINT (pchat_gui_win_left), TYPE_INT},
 	{"gui_win_modes", P_OFFINT (pchat_gui_win_modes), TYPE_BOOL},
+	{"gui_win_nick", P_OFFINT (pchat_gui_win_nick), TYPE_BOOL},
 	{"gui_win_save", P_OFFINT (pchat_gui_win_save), TYPE_BOOL},
 	{"gui_win_state", P_OFFINT (pchat_gui_win_state), TYPE_INT},
 	{"gui_win_swap", P_OFFINT (pchat_gui_win_swap), TYPE_BOOL},
@@ -496,12 +476,12 @@ const struct prefs vars[] =
 	{"gui_win_ucount", P_OFFINT (pchat_gui_win_ucount), TYPE_BOOL},
 	{"gui_win_width", P_OFFINT (pchat_gui_win_width), TYPE_INT},
 
-	{"identd", P_OFFINT (pchat_identd), TYPE_BOOL},
+	{"identd_server", P_OFFINT (pchat_identd_server), TYPE_BOOL},
+	{"identd_port", P_OFFINT (pchat_identd_port), TYPE_INT},
 
 	{"input_balloon_chans", P_OFFINT (pchat_input_balloon_chans), TYPE_BOOL},
 	{"input_balloon_hilight", P_OFFINT (pchat_input_balloon_hilight), TYPE_BOOL},
 	{"input_balloon_priv", P_OFFINT (pchat_input_balloon_priv), TYPE_BOOL},
-	{"input_balloon_time", P_OFFINT (pchat_input_balloon_time), TYPE_INT},
 	{"input_beep_chans", P_OFFINT (pchat_input_beep_chans), TYPE_BOOL},
 	{"input_beep_hilight", P_OFFINT (pchat_input_beep_hilight), TYPE_BOOL},
 	{"input_beep_priv", P_OFFINT (pchat_input_beep_priv), TYPE_BOOL},
@@ -517,10 +497,12 @@ const struct prefs vars[] =
 	{"input_tray_priv", P_OFFINT (pchat_input_tray_priv), TYPE_BOOL},
 
 	{"irc_auto_rejoin", P_OFFINT (pchat_irc_auto_rejoin), TYPE_BOOL},
+	{"irc_reconnect_rejoin", P_OFFINT (pchat_irc_reconnect_rejoin), TYPE_BOOL},
 	{"irc_ban_type", P_OFFINT (pchat_irc_ban_type), TYPE_INT},
 	{"irc_cap_server_time", P_OFFINT (pchat_irc_cap_server_time), TYPE_BOOL},
 	{"irc_conf_mode", P_OFFINT (pchat_irc_conf_mode), TYPE_BOOL},
 	{"irc_extra_hilight", P_OFFSET (pchat_irc_extra_hilight), TYPE_STR},
+	{"irc_hide_nickchange", P_OFFINT (pchat_irc_hide_nickchange), TYPE_BOOL},
 	{"irc_hide_version", P_OFFINT (pchat_irc_hide_version), TYPE_BOOL},
 	{"irc_hidehost", P_OFFINT (pchat_irc_hidehost), TYPE_BOOL},
 	{"irc_id_ntext", P_OFFSET (pchat_irc_id_ntext), TYPE_STR},
@@ -547,11 +529,11 @@ const struct prefs vars[] =
 	{"irc_whois_front", P_OFFINT (pchat_irc_whois_front), TYPE_BOOL},
 
 	{"net_auto_reconnect", P_OFFINT (pchat_net_auto_reconnect), TYPE_BOOL},
-#ifndef _WIN32	/* FIXME fix reconnect crashes and remove this ifdef! */
+#ifndef WIN32	/* FIXME fix reconnect crashes and remove this ifdef! */
 	{"net_auto_reconnectonfail", P_OFFINT (pchat_net_auto_reconnectonfail), TYPE_BOOL},
 #endif
 	{"net_bind_host", P_OFFSET (pchat_net_bind_host), TYPE_STR},
-	{"net_ping_timeout", P_OFFINT (pchat_net_ping_timeout), TYPE_INT},
+	{"net_ping_timeout", P_OFFINT (pchat_net_ping_timeout), TYPE_INT, pchat_reinit_timers},
 	{"net_proxy_auth", P_OFFINT (pchat_net_proxy_auth), TYPE_BOOL},
 	{"net_proxy_host", P_OFFSET (pchat_net_proxy_host), TYPE_STR},
 	{"net_proxy_pass", P_OFFSET (pchat_net_proxy_pass), TYPE_STR},
@@ -604,21 +586,25 @@ const struct prefs vars[] =
 	{0, 0, 0},
 };
 
+
 static char *
-convert_with_fallback (const char *str, const char *fallback)
+convert_with_fallback (char *str, const char *fallback)
 {
 	char *utf;
 
-	utf = g_locale_to_utf8 (str, -1, 0, 0, 0);
+#ifndef WIN32
+	/* On non-Windows, g_get_user_name and g_get_real_name return a string in system locale, so convert it to utf-8. */
+	utf = g_locale_to_utf8 (str, -1, NULL, NULL, 0);
+
+	g_free (str);
+
+	/* The returned string is NULL if conversion from locale to utf-8 failed for any reason. Return the fallback. */
 	if (!utf)
-	{
-		/* this can happen if CHARSET envvar is set wrong */
-		/* maybe it's already utf8 (breakage!) */
-		if (!g_utf8_validate (str, -1, NULL))
-			utf = g_strdup (fallback);
-		else
-			utf = g_strdup (str);
-	}
+		utf = g_strdup (fallback);
+#else
+	/* On Windows, they return a string in utf-8, so don't do anything to it. The fallback isn't needed. */
+	utf = str;
+#endif
 
 	return utf;
 }
@@ -681,23 +667,23 @@ static char *
 get_default_spell_languages (void)
 {
 	const gchar* const *langs = g_get_language_names ();
+	char *last = NULL;
+	char *p;
 	char lang_list[64];
 	char *ret = lang_list;
-	
+	int i;
+
 	if (langs != NULL)
 	{
-		int i;
-		char *last = NULL;
 		memset (lang_list, 0, sizeof(lang_list));
 
 		for (i = 0; langs[i]; i++)
 		{
 			if (g_ascii_strncasecmp (langs[i], "C", 1) != 0 && strlen (langs[i]) >= 2)
-			{				
+			{
 				/* Avoid duplicates */
 				if (!last || !g_str_has_prefix (langs[i], last))
 				{
-					char *p;
 					if (last != NULL)
 					{
 						g_free(last);
@@ -714,6 +700,7 @@ get_default_spell_languages (void)
 				}
 			}
 		}
+
 		g_free (last);
 
 		if (lang_list[0])
@@ -726,11 +713,12 @@ get_default_spell_languages (void)
 void
 load_default_config(void)
 {
-	char *username, *realname;
+	char *username, *realname, *langs;
 	const char *font;
 	char *sp;
-#ifdef _WIN32
-	char out[256];
+#ifdef WIN32
+	wchar_t* roaming_path_wide;
+	gchar* roaming_path;
 #endif
 
 	username = g_strdup(g_get_user_name ());
@@ -746,7 +734,7 @@ load_default_config(void)
 	username = convert_with_fallback (username, "username");
 	realname = convert_with_fallback (realname, "realname");
 
-	memset (&prefs, 0, sizeof (struct xchatprefs));
+	memset (&prefs, 0, sizeof (struct pchatprefs));
 
 	/* put in default values, anything left out is automatically zero */
 
@@ -754,7 +742,7 @@ load_default_config(void)
 	prefs.pchat_away_show_once = 1;
 	prefs.pchat_away_track = 1;
 	prefs.pchat_dcc_auto_resume = 1;
-#ifndef _WIN32
+#ifndef WIN32
 	prefs.pchat_dcc_fast_send = 1;
 #endif
 	prefs.pchat_gui_autoopen_chat = 1;
@@ -774,8 +762,8 @@ load_default_config(void)
 	/* prefs.pchat_gui_slist_skip = 1; */
 	prefs.pchat_gui_tab_chans = 1;
 	prefs.pchat_gui_tab_dialogs = 1;
-	prefs.pchat_gui_tab_dots = 1;
 	prefs.pchat_gui_tab_icons = 1;
+	prefs.pchat_gui_tab_middleclose = 1;
 	prefs.pchat_gui_tab_server = 1;
 	prefs.pchat_gui_tab_sort = 1;
 	prefs.pchat_gui_topicbar = 1;
@@ -784,14 +772,17 @@ load_default_config(void)
 	prefs.pchat_gui_tray_blink = 1;
 	prefs.pchat_gui_ulist_count = 1;
 	prefs.pchat_gui_ulist_icons = 1;
-	prefs.pchat_gui_ulist_resizable = 1;
 	prefs.pchat_gui_ulist_style = 1;
+	prefs.pchat_gui_win_nick = 1;
 	prefs.pchat_gui_win_save = 1;
-	prefs.pchat_identd = 1;
+	prefs.pchat_input_filter_beep = 1;
 	prefs.pchat_input_flash_hilight = 1;
 	prefs.pchat_input_flash_priv = 1;
 	prefs.pchat_input_tray_hilight = 1;
 	prefs.pchat_input_tray_priv = 1;
+	prefs.pchat_irc_reconnect_rejoin = 1;
+	prefs.pchat_irc_cap_server_time = 1;
+	prefs.pchat_irc_logging = 1;
 	prefs.pchat_irc_who_join = 1; /* Can kick with inordinate amount of channels, required for some of our features though, TODO: add cap like away check? */
 	prefs.pchat_irc_whois_front = 1;
 	prefs.pchat_net_auto_reconnect = 1;
@@ -809,12 +800,12 @@ load_default_config(void)
 	prefs.pchat_text_thin_sep = 1;
 	prefs.pchat_text_wordwrap = 1;
 	prefs.pchat_url_grabber = 1;
-	prefs.pchat_irc_cap_server_time = 0;
 
 	/* NUMBERS */
 	prefs.pchat_away_size_max = 300;
 	prefs.pchat_away_timeout = 60;
 	prefs.pchat_completion_amount = 5;
+	prefs.pchat_completion_sort = 1;
 	prefs.pchat_dcc_auto_recv = 1;			/* browse mode */
 	prefs.pchat_dcc_blocksize = 1024;
 	prefs.pchat_dcc_permissions = 0600;
@@ -830,8 +821,8 @@ load_default_config(void)
 	prefs.pchat_gui_dialog_width = 500;
 	prefs.pchat_gui_lagometer = 1;
 	prefs.pchat_gui_lang = get_default_language();
-	prefs.pchat_gui_pane_left_size = 150;		/* with treeview icons we need a bit bigger space */
-	prefs.pchat_gui_pane_right_size = 80;
+	prefs.pchat_gui_pane_left_size = 128;		/* with treeview icons we need a bit bigger space */
+	prefs.pchat_gui_pane_right_size = 100;
 	prefs.pchat_gui_pane_right_size_min = 80;
 	prefs.pchat_gui_tab_layout = 2;			/* 0=Tabs 1=Reserved 2=Tree */
 	prefs.pchat_gui_tab_newtofront = 2;
@@ -841,62 +832,65 @@ load_default_config(void)
 	prefs.pchat_gui_ulist_pos = 3;
 	prefs.pchat_gui_win_height = 400;
 	prefs.pchat_gui_win_width = 640;
-	prefs.pchat_input_balloon_time = 20;
 	prefs.pchat_irc_ban_type = 1;
 	prefs.pchat_irc_join_delay = 5;
+	prefs.pchat_net_ping_timeout = 60;
 	prefs.pchat_net_reconnect_delay = 10;
 	prefs.pchat_notify_timeout = 15;
 	prefs.pchat_text_max_indent = 256;
-	prefs.pchat_text_max_lines = 500;
+	prefs.pchat_text_max_lines = 5000;
 	prefs.pchat_url_grabber_limit = 100; 		/* 0 means unlimited */
 
 	/* STRINGS */
-	g_strlcpy (prefs.pchat_away_reason, _("I'm busy"), sizeof (prefs.pchat_away_reason));
-	g_strlcpy (prefs.pchat_completion_suffix, ",", sizeof (prefs.pchat_completion_suffix));
-#ifdef _WIN32
-	if (portable_mode () || !get_reg_str ("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Personal", out, sizeof (out)))
+	strcpy (prefs.pchat_away_reason, _("I'm busy"));
+	strcpy (prefs.pchat_completion_suffix, ",");
+#ifdef WIN32
+	if (portable_mode () || SHGetKnownFolderPath (&FOLDERID_Downloads, 0, NULL, &roaming_path_wide) != S_OK)
 	{
 		g_snprintf (prefs.pchat_dcc_dir, sizeof (prefs.pchat_dcc_dir), "%s\\downloads", get_xdir ());
 	}
 	else
 	{
-		snprintf (prefs.pchat_dcc_dir, sizeof (prefs.pchat_dcc_dir), "%s\\Downloads", out);
+		roaming_path = g_utf16_to_utf8 (roaming_path_wide, -1, NULL, NULL, NULL);
+		CoTaskMemFree (roaming_path_wide);
+
+		g_strlcpy (prefs.pchat_dcc_dir, roaming_path, sizeof (prefs.pchat_dcc_dir));
+
+		g_free (roaming_path);
 	}
 #else
 	if (g_get_user_special_dir (G_USER_DIRECTORY_DOWNLOAD))
 	{
-		g_strlcpy (prefs.pchat_dcc_dir, g_get_user_special_dir (G_USER_DIRECTORY_DOWNLOAD), sizeof (prefs.pchat_dcc_dir));
+		safe_strcpy (prefs.pchat_dcc_dir, g_get_user_special_dir (G_USER_DIRECTORY_DOWNLOAD), sizeof(prefs.pchat_dcc_dir));
 	}
 	else
 	{
-		char *downloads_path = g_build_filename (g_get_home_dir (), "Downloads", NULL);
-		g_strlcpy (prefs.pchat_dcc_dir, downloads_path, sizeof (prefs.pchat_dcc_dir));
-		g_free (downloads_path);
+		char *download_dir = g_build_filename (g_get_home_dir (), "Downloads", NULL);
+		safe_strcpy (prefs.pchat_dcc_dir, download_dir, sizeof(prefs.pchat_dcc_dir));
+		g_free (download_dir);
 	}
 #endif
-	g_strlcpy (prefs.pchat_gui_ulist_doubleclick, "QUERY %s", sizeof (prefs.pchat_gui_ulist_doubleclick));
-	g_strlcpy (prefs.pchat_input_command_char, "/", sizeof (prefs.pchat_input_command_char));
-	char *logmask_path = g_build_filename ("%n", "%c.log", NULL);
-	g_strlcpy (prefs.pchat_irc_logmask, logmask_path, sizeof (prefs.pchat_irc_logmask));
-	g_free (logmask_path);
-	g_strlcpy (prefs.pchat_irc_nick1, username, sizeof (prefs.pchat_irc_nick1));
-	g_strlcpy (prefs.pchat_irc_nick2, username, sizeof (prefs.pchat_irc_nick2));
-	g_strlcat (prefs.pchat_irc_nick2, "_", sizeof (prefs.pchat_irc_nick2));
-	g_strlcpy (prefs.pchat_irc_nick3, username, sizeof (prefs.pchat_irc_nick3));
-	g_strlcat (prefs.pchat_irc_nick3, "__", sizeof (prefs.pchat_irc_nick3));
-	g_strlcpy (prefs.pchat_irc_no_hilight, "NickServ,ChanServ,InfoServ,N,Q", sizeof (prefs.pchat_irc_no_hilight));
-	g_strlcpy (prefs.pchat_irc_part_reason, _("Leaving"), sizeof (prefs.pchat_irc_part_reason));
-	g_strlcpy (prefs.pchat_irc_quit_reason, prefs.pchat_irc_part_reason, sizeof (prefs.pchat_irc_quit_reason));
-	g_strlcpy (prefs.pchat_irc_real_name, realname, sizeof (prefs.pchat_irc_real_name));
-	g_strlcpy (prefs.pchat_irc_user_name, username, sizeof (prefs.pchat_irc_user_name));
-	g_strlcpy (prefs.pchat_stamp_log_format, "%b %d %H:%M:%S ", sizeof (prefs.pchat_stamp_log_format));
-	g_strlcpy (prefs.pchat_stamp_text_format, "[%H:%M:%S] ", sizeof (prefs.pchat_stamp_text_format));
+	strcpy (prefs.pchat_gui_ulist_doubleclick, "QUERY %s");
+	strcpy (prefs.pchat_input_command_char, "/");
+	strcpy (prefs.pchat_irc_logmask, "%n"G_DIR_SEPARATOR_S"%c.log");
+	safe_strcpy (prefs.pchat_irc_nick1, username, sizeof(prefs.pchat_irc_nick1));
+	safe_strcpy (prefs.pchat_irc_nick2, username, sizeof(prefs.pchat_irc_nick2));
+	g_strlcat (prefs.pchat_irc_nick2, "_", sizeof(prefs.pchat_irc_nick2));
+	safe_strcpy (prefs.pchat_irc_nick3, username, sizeof(prefs.pchat_irc_nick3));
+	g_strlcat (prefs.pchat_irc_nick3, "__", sizeof(prefs.pchat_irc_nick3));
+	strcpy (prefs.pchat_irc_no_hilight, "NickServ,ChanServ,InfoServ,N,Q");
+	safe_strcpy (prefs.pchat_irc_part_reason, _("Leaving"), sizeof(prefs.pchat_irc_part_reason));
+	safe_strcpy (prefs.pchat_irc_quit_reason, prefs.pchat_irc_part_reason, sizeof(prefs.pchat_irc_quit_reason));
+	safe_strcpy (prefs.pchat_irc_real_name, realname, sizeof(prefs.pchat_irc_real_name));
+	safe_strcpy (prefs.pchat_irc_user_name, username, sizeof(prefs.pchat_irc_user_name));
+	strcpy (prefs.pchat_stamp_log_format, "%b %d %H:%M:%S ");
+	strcpy (prefs.pchat_stamp_text_format, "[%H:%M:%S] ");
 
 	font = fe_get_default_font ();
 	if (font)
 	{
-		g_strlcpy (prefs.pchat_text_font, font, sizeof (prefs.pchat_text_font));
-		g_strlcpy (prefs.pchat_text_font_main, font, sizeof (prefs.pchat_text_font_main));
+		safe_strcpy (prefs.pchat_text_font, font, sizeof(prefs.pchat_text_font));
+		safe_strcpy (prefs.pchat_text_font_main, font, sizeof(prefs.pchat_text_font_main));
 	}
 	else
 	{
@@ -905,7 +899,8 @@ load_default_config(void)
 	}
 
 	strcpy (prefs.pchat_text_font_alternative, DEF_FONT_ALTER);
-	strcpy (prefs.pchat_text_spell_langs, get_default_spell_languages ());
+	langs = get_default_spell_languages ();
+	safe_strcpy (prefs.pchat_text_spell_langs, langs, sizeof(prefs.pchat_text_spell_langs));
 
 
 	/* private variables */
@@ -917,6 +912,7 @@ load_default_config(void)
 
 	g_free (username);
 	g_free (realname);
+	g_free (langs);
 }
 
 int
@@ -1027,7 +1023,7 @@ save_config (void)
 
 	if (!cfg_put_str (fh, "version", PACKAGE_VERSION))
 	{
-                close (fh);
+		close (fh);
 		g_free (new_config);
 		return 0;
 	}
@@ -1040,7 +1036,7 @@ save_config (void)
 		case TYPE_STR:
 			if (!cfg_put_str (fh, vars[i].name, (char *) &prefs + vars[i].offset))
 			{
-                                close (fh);
+				close (fh);
 				g_free (new_config);
 				return 0;
 			}
@@ -1049,10 +1045,15 @@ save_config (void)
 		case TYPE_BOOL:
 			if (!cfg_put_int (fh, *((int *) &prefs + vars[i].offset), vars[i].name))
 			{
-                                close (fh);
+				close (fh);
 				g_free (new_config);
 				return 0;
 			}
+		}
+
+		if (vars[i].after_update != NULL)
+		{
+			vars[i].after_update();
 		}
 		i++;
 	}
@@ -1064,7 +1065,7 @@ save_config (void)
 		return 0;
 	}
 
-#ifdef _WIN32
+#ifdef WIN32
 	g_unlink (config);	/* win32 can't rename to an existing file */
 #endif
 	if (g_rename (new_config, config) == -1)
@@ -1104,19 +1105,19 @@ set_showval (session *sess, const struct prefs *var, char *tbuf)
 	switch (var->type)
 	{
 		case TYPE_STR:
-			sprintf (tbuf + len, "\00303:\017 %s\n", (char *) &prefs + var->offset);
+			sprintf (tbuf + len, "\0033:\017 %s\n", (char *) &prefs + var->offset);
 			break;
 		case TYPE_INT:
-			sprintf (tbuf + len, "\00303:\017 %d\n", *((int *) &prefs + var->offset));
+			sprintf (tbuf + len, "\0033:\017 %d\n", *((int *) &prefs + var->offset));
 			break;
 		case TYPE_BOOL:
 			if (*((int *) &prefs + var->offset))
 			{
-				sprintf (tbuf + len, "\00303:\017 %s\n", "ON");
+				sprintf (tbuf + len, "\0033:\017 %s\n", "ON");
 			}
 			else
 			{
-				sprintf (tbuf + len, "\00303:\017 %s\n", "OFF");
+				sprintf (tbuf + len, "\0033:\017 %s\n", "OFF");
 			}
 			break;
 	}
@@ -1301,6 +1302,11 @@ cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				{
 					set_showval (sess, &vars[i], tbuf);
 				}
+
+				if (vars[i].after_update != NULL)
+				{
+					vars[i].after_update();
+				}
 				break;
 			}
 		}
@@ -1321,7 +1327,7 @@ cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 }
 
 int
-xchat_open_file (char *file, int flags, int mode, int xof_flags)
+pchat_open_file (const char *file, int flags, int mode, int xof_flags)
 {
 	char *buf;
 	int fd;
@@ -1351,7 +1357,7 @@ xchat_open_file (char *file, int flags, int mode, int xof_flags)
 }
 
 FILE *
-xchat_fopen_file (const char *file, const char *mode, int xof_flags)
+pchat_fopen_file (const char *file, const char *mode, int xof_flags)
 {
 	char *buf;
 	FILE *fh;

@@ -2,10 +2,6 @@
  * Copyright (C) 1998-2010 Peter Zelezny.
  * Copyright (C) 2009-2013 Berke Viktor.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -26,33 +22,26 @@
 #include <time.h>						/* for time_t */
 #include "proto-irc.h"
 
-#ifndef XCHAT_DCC_H
-#define XCHAT_DCC_H
+#ifndef pchat_DCC_H
+#define pchat_DCC_H
 
-#define STAT_QUEUED 0
-#define STAT_ACTIVE 1
-#define STAT_FAILED 2
-#define STAT_DONE 3
-#define STAT_CONNECTING 4
-#define STAT_ABORTED 5
+enum dcc_state {
+	STAT_QUEUED = 0,
+	STAT_ACTIVE,
+	STAT_FAILED,
+	STAT_DONE,
+	STAT_CONNECTING,
+	STAT_ABORTED
+};
 
-#define TYPE_SEND 0
-#define TYPE_RECV 1
-#define TYPE_CHATRECV 2
-#define TYPE_CHATSEND 3
+enum dcc_type {
+	TYPE_SEND = 0,
+	TYPE_RECV,
+	TYPE_CHATRECV,
+	TYPE_CHATSEND
+};
 
 #define CPS_AVG_WINDOW 10
-
-/* can we do 64-bit dcc? */
-#if defined(G_GINT64_FORMAT) && defined(HAVE_STRTOULL)
-#define USE_DCC64
-/* we really get only 63 bits, since st_size is signed */
-#define DCC_SIZE gint64
-#define DCC_SFMT G_GINT64_FORMAT
-#else
-#define DCC_SIZE unsigned int
-#define DCC_SFMT "u"
-#endif
 
 struct DCC
 {
@@ -66,29 +55,29 @@ struct DCC
 	int wiotag;						/* writing/sending io tag */
 	int port;
 	int pasvid;						/* mIRC's passive DCC id */
-	int cps;
+	gint64 cps;
 	int resume_error;
 	int resume_errno;
 
-	gint64 lastcpstv, firstcpstv;  /* microseconds since epoch (from g_get_real_time) */
-	DCC_SIZE lastcpspos;
-	int maxcps;
+	GTimeVal lastcpstv, firstcpstv;
+	goffset lastcpspos;
+	gint64 maxcps;
 
 	unsigned char ack_buf[4];	/* buffer for reading 4-byte ack */
 	int ack_pos;
 
-	DCC_SIZE size;
-	DCC_SIZE resumable;
-	DCC_SIZE ack;
-	DCC_SIZE pos;
+	guint64 size;
+	guint64 resumable;
+	guint64 ack;
+	guint64 pos;
 	time_t starttime;
 	time_t offertime;
 	time_t lasttime;
 	char *file;					/* utf8 */
 	char *destfile;			/* utf8 */
 	char *nick;
-	unsigned char type;		  /* 0 = SEND  1 = RECV  2 = CHAT */
-	unsigned char dccstat;	  /* 0 = QUEUED  1 = ACTIVE  2 = FAILED  3 = DONE */
+	enum dcc_type type;
+	enum dcc_state dccstat;
 	unsigned int resume_sent:1;	/* resume request sent */
 	unsigned int fastsend:1;
 	unsigned int ackoffset:1;	/* is receiver sending acks as an offset from */
@@ -125,18 +114,17 @@ gboolean is_dcc_completed (struct DCC *dcc);
 void dcc_abort (session *sess, struct DCC *dcc);
 void dcc_get (struct DCC *dcc);
 int dcc_resume (struct DCC *dcc);
-void dcc_check_timeouts (void);
 void dcc_change_nick (server *serv, char *oldnick, char *newnick);
 void dcc_notify_kill (struct server *serv);
 struct DCC *dcc_write_chat (char *nick, char *text);
-void dcc_send (struct session *sess, char *to, char *file, int maxcps, int passive);
+void dcc_send (struct session *sess, char *to, char *file, gint64 maxcps, int passive);
 struct DCC *find_dcc (char *nick, char *file, int type);
 void dcc_get_nick (struct session *sess, char *nick);
 void dcc_chat (session *sess, char *nick, int passive);
 void handle_dcc (session *sess, char *nick, char *word[], char *word_eol[],
 					  const message_tags_data *tags_data);
 void dcc_show_list (session *sess);
-guint32 dcc_get_my_address (void);
+guint32 dcc_get_my_address (session *sess);
 void dcc_get_with_destfile (struct DCC *dcc, char *utf8file);
 
 #endif

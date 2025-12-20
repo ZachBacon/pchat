@@ -28,10 +28,10 @@
 
 #include "fe-gtk.h"
 #include "css-helpers.h"
-#include "../common/xchat.h"
+#include "../common/pchat.h"
 #include "../common/fe.h"
 #include "../common/server.h"
-#include "../common/xchatc.h"
+#include "../common/pchatc.h"
 #include "../common/outbound.h"
 #include "../common/inbound.h"
 #include "../common/plugin.h"
@@ -60,6 +60,15 @@ GtkosxApplication *osx_app = NULL;
 #include "plugin-tray.h"
 #include "textview-chat.h"
 #include "sexy-spell-entry.h"
+
+/* Stub function for unity desktop detection */
+gboolean
+unity_mode (void)
+{
+	/* In the original implementation, this would check if Unity desktop is running.
+	 * For now, we'll just return FALSE to indicate non-Unity desktop */
+	return FALSE;
+}
 
 #define GUI_SPACING (3)
 #define GUI_BORDER (0)
@@ -177,7 +186,7 @@ fe_flash_window (session *sess)
 /* set a tab plain, red, light-red, or blue */
 
 void
-fe_set_tab_color (struct session *sess, int col)
+fe_set_tab_color (struct session *sess, tabcolor col)
 {
 	struct session *server_sess = sess->server->server_session;
 	if (sess->gui->is_tab && (col == 0 || sess != current_tab))
@@ -185,56 +194,48 @@ fe_set_tab_color (struct session *sess, int col)
 		switch (col)
 		{
 		case 0:	/* no particular color (theme default) */
-			sess->new_data = FALSE;
-			sess->msg_said = FALSE;
-			sess->nick_said = FALSE;
+			sess->tab_state &= ~(TAB_STATE_NEW_DATA | TAB_STATE_NEW_MSG | TAB_STATE_NEW_HILIGHT);
 			chan_set_color (sess->res->tab, plain_list);
 			break;
 		case 1:	/* new data has been displayed (dark red) */
-			sess->new_data = TRUE;
-			sess->msg_said = FALSE;
-			sess->nick_said = FALSE;
+			sess->tab_state &= ~(TAB_STATE_NEW_MSG | TAB_STATE_NEW_HILIGHT);
+			sess->tab_state |= TAB_STATE_NEW_DATA;
 			chan_set_color (sess->res->tab, newdata_list);
 
 			if (chan_is_collapsed (sess->res->tab)
-				&& !(server_sess->msg_said || server_sess->nick_said)
+				&& !(server_sess->tab_state & (TAB_STATE_NEW_MSG | TAB_STATE_NEW_HILIGHT))
 				&& !(server_sess == current_tab))
 			{
-				server_sess->new_data = TRUE;
-				server_sess->msg_said = FALSE;
-				server_sess->nick_said = FALSE;
+				server_sess->tab_state &= ~(TAB_STATE_NEW_MSG | TAB_STATE_NEW_HILIGHT);
+				server_sess->tab_state |= TAB_STATE_NEW_DATA;
 				chan_set_color (chan_get_parent (sess->res->tab), newdata_list);
 			}
 
 			break;
 		case 2:	/* new message arrived in channel (light red) */
-			sess->new_data = FALSE;
-			sess->msg_said = TRUE;
-			sess->nick_said = FALSE;
+			sess->tab_state &= ~(TAB_STATE_NEW_DATA | TAB_STATE_NEW_HILIGHT);
+			sess->tab_state |= TAB_STATE_NEW_MSG;
 			chan_set_color (sess->res->tab, newmsg_list);
 
 			if (chan_is_collapsed (sess->res->tab)
-				&& !server_sess->nick_said
+				&& !(server_sess->tab_state & TAB_STATE_NEW_HILIGHT)
 				&& !(server_sess == current_tab))
 			{
-				server_sess->new_data = FALSE;
-				server_sess->msg_said = TRUE;
-				server_sess->nick_said = FALSE;
+				server_sess->tab_state &= ~(TAB_STATE_NEW_DATA | TAB_STATE_NEW_HILIGHT);
+				server_sess->tab_state |= TAB_STATE_NEW_MSG;
 				chan_set_color (chan_get_parent (sess->res->tab), newmsg_list);
 			}
 
 			break;
 		case 3:	/* your nick has been seen (blue) */
-			sess->new_data = FALSE;
-			sess->msg_said = FALSE;
-			sess->nick_said = TRUE;
+			sess->tab_state &= ~(TAB_STATE_NEW_DATA | TAB_STATE_NEW_MSG);
+			sess->tab_state |= TAB_STATE_NEW_HILIGHT;
 			chan_set_color (sess->res->tab, nickseen_list);
 
 			if (chan_is_collapsed (sess->res->tab) && !(server_sess == current_tab))
 			{
-				server_sess->new_data = FALSE;
-				server_sess->msg_said = FALSE;
-				server_sess->nick_said = TRUE;
+				server_sess->tab_state &= ~(TAB_STATE_NEW_DATA | TAB_STATE_NEW_MSG);
+				server_sess->tab_state |= TAB_STATE_NEW_HILIGHT;
 				chan_set_color (chan_get_parent (sess->res->tab), nickseen_list);
 			}
 
@@ -556,16 +557,14 @@ mg_focus (session *sess)
 		sess->server->server_session = sess;
 	}
 
-	if (sess->new_data || sess->nick_said || sess->msg_said)
+	if (sess->tab_state & (TAB_STATE_NEW_DATA | TAB_STATE_NEW_MSG | TAB_STATE_NEW_HILIGHT))
 	{
-		sess->nick_said = FALSE;
-		sess->msg_said = FALSE;
-		sess->new_data = FALSE;
+		sess->tab_state &= ~(TAB_STATE_NEW_DATA | TAB_STATE_NEW_MSG | TAB_STATE_NEW_HILIGHT);
 		lastact_update (sess);
 		/* when called via mg_changui_new, is_tab might be true, but
 			sess->res->tab is still NULL. */
 		if (sess->res->tab)
-			fe_set_tab_color (sess, 0);
+			fe_set_tab_color (sess, FE_COLOR_NONE);
 	}
 }
 
@@ -923,7 +922,7 @@ mg_populate (session *sess)
 	if (vis != gui->ul_hidden && allocation.width > 1)
 		render = FALSE;
 
-	pchat_chat_buffer_show (PCHAT_TEXTVIEW_CHAT (gui->xtext), res->buffer);
+	pchat_chat_buffer_show (PCHAT_TEXTVIEW_CHAT (gui->textview), res->buffer);
 
 	if (gui->is_tab)
 		gtk_widget_set_sensitive (gui->menu, TRUE);
@@ -1041,10 +1040,10 @@ mg_topdestroy_cb (GtkWidget *win, session *sess)
 /*	printf("enter mg_topdestroy. sess %p was destroyed\n", sess);*/
 
 	/* Detach buffer from widget before freeing to avoid GTK issues */
-	if (sess->gui && sess->gui->xtext && sess->res->buffer)
+	if (sess->gui && sess->gui->textview && sess->res->buffer)
 	{
 		GtkTextBuffer *empty_buf = gtk_text_buffer_new (NULL);
-		gtk_text_view_set_buffer (GTK_TEXT_VIEW (sess->gui->xtext), empty_buf);
+		gtk_text_view_set_buffer (GTK_TEXT_VIEW (sess->gui->textview), empty_buf);
 		g_object_unref (empty_buf);
 	}
 	
@@ -1064,10 +1063,10 @@ mg_ircdestroy (session *sess)
 	GSList *list;
 
 	/* Detach buffer from widget before freeing to avoid GTK issues */
-	if (sess->gui && sess->gui->xtext && sess->res->buffer)
+	if (sess->gui && sess->gui->textview && sess->res->buffer)
 	{
 		GtkTextBuffer *empty_buf = gtk_text_buffer_new (NULL);
-		gtk_text_view_set_buffer (GTK_TEXT_VIEW (sess->gui->xtext), empty_buf);
+		gtk_text_view_set_buffer (GTK_TEXT_VIEW (sess->gui->textview), empty_buf);
 		g_object_unref (empty_buf);
 	}
 	
@@ -1227,7 +1226,7 @@ mg_quit_dialog_response_cb (GtkDialog *dlg, gint response, gpointer user_data)
 	case 0: /* Quit */
 		if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (check)))
 			prefs.pchat_gui_quit_dialog = 0;
-		xchat_exit ();
+		pchat_exit ();
 		break;
 	case 1: /* minimize to tray */
 		if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (check)))
@@ -1272,7 +1271,7 @@ mg_open_quit_dialog (gboolean minimize_button)
 	cons = mg_count_networks ();
 	if (dccs + cons == 0 || !prefs.pchat_gui_quit_dialog)
 	{
-		xchat_exit ();
+		pchat_exit ();
 		return;
 	}
 
@@ -1566,7 +1565,7 @@ mg_set_guint8 (GtkCheckMenuItem *item, guint8 *setting)
 		log_open_or_close (sess);
 
 	chanopt_save (sess);
-	chanopt_save_all ();
+	chanopt_save_all (TRUE);
 }
 
 static void
@@ -1706,7 +1705,7 @@ mg_dnd_drop_file (session *sess, char *target, char *uri)
 			if (fname)
 			{
 				/* dcc_send() expects utf-8 */
-				p = xchat_filename_to_utf8 (fname, -1, 0, 0, 0);
+				p = g_filename_to_utf8 (fname, -1, 0, 0, 0);
 				if (p)
 				{
 					dcc_send (sess, target, p, prefs.pchat_dcc_max_send_cps, 0);
@@ -1768,8 +1767,8 @@ mg_add_chan (session *sess)
 
 	if (sess->res->buffer == NULL)
 	{
-		sess->res->buffer = pchat_chat_buffer_new (PCHAT_TEXTVIEW_CHAT (sess->gui->xtext));
-		pchat_textview_chat_set_show_timestamps (PCHAT_TEXTVIEW_CHAT (sess->gui->xtext), prefs.pchat_stamp_text);
+		sess->res->buffer = pchat_chat_buffer_new (PCHAT_TEXTVIEW_CHAT (sess->gui->textview));
+		pchat_textview_chat_set_show_timestamps (PCHAT_TEXTVIEW_CHAT (sess->gui->textview), prefs.pchat_stamp_text);
 		sess->res->user_model = userlist_create_model ();
 	}
 }
@@ -1843,7 +1842,7 @@ mg_tabwindow_kill_cb (GtkWidget *win, gpointer userdata)
 	session *sess;
 
 /*	puts("enter mg_tabwindow_kill_cb");*/
-	xchat_is_quitting = TRUE;
+	pchat_is_quitting = TRUE;
 
 	/* see if there's any non-tab windows left */
 	list = sess_list;
@@ -1853,7 +1852,7 @@ mg_tabwindow_kill_cb (GtkWidget *win, gpointer userdata)
 		next = list->next;
 		if (!sess->gui->is_tab)
 		{
-			xchat_is_quitting = FALSE;
+			pchat_is_quitting = FALSE;
 /*			puts("-> will not exit, some toplevel windows left");*/
 		} else
 		{
@@ -1909,7 +1908,7 @@ mg_link_irctab (session *sess, int focus)
 		win = mg_changui_destroy (sess);
 		mg_changui_new (sess, sess->res, 0, focus);
 		mg_populate (sess);
-		xchat_is_quitting = FALSE;
+		pchat_is_quitting = FALSE;
 		if (win)
 			gtk_widget_destroy (win);
 		return;
@@ -2275,9 +2274,9 @@ mg_create_topicbar (session *sess, GtkWidget *box)
 	gtk_box_pack_start (GTK_BOX (hbox), bbox, 0, 0, 0);
 	mg_create_dialogbuttons (bbox);
 
-	if (!prefs.pchat_gui_ulist_resizable)
+	/*if (!prefs.pchat_gui_ulist_resizable)
 		gtkutil_button (hbox, "go-last", _("Show/Hide userlist"),
-							 mg_userlist_toggle_cb, 0, 0);
+							 mg_userlist_toggle_cb, 0, 0);*/
 }
 
 /* check if a word is clickable */
@@ -2433,18 +2432,18 @@ mg_create_textarea (session *sess, GtkWidget *box)
 	gtk_widget_set_margin_bottom (scrolledwindow, 0);
 	gtk_box_pack_start (GTK_BOX (box), scrolledwindow, TRUE, TRUE, 0);
 
-	gui->xtext = pchat_textview_chat_new ();
-	pchat_textview_chat_set_max_auto_indent (PCHAT_TEXTVIEW_CHAT (gui->xtext), prefs.pchat_text_max_indent);
-	pchat_textview_chat_set_thin_separator (PCHAT_TEXTVIEW_CHAT (gui->xtext), prefs.pchat_text_thin_sep);
-	pchat_textview_chat_set_urlcheck_function (PCHAT_TEXTVIEW_CHAT (gui->xtext), mg_word_check);
-	pchat_textview_chat_set_max_lines (PCHAT_TEXTVIEW_CHAT (gui->xtext), prefs.pchat_text_max_lines);
-	gtk_widget_set_vexpand (GTK_WIDGET (gui->xtext), TRUE);
-	gtk_widget_set_hexpand (GTK_WIDGET (gui->xtext), TRUE);
-	gtk_container_add (GTK_CONTAINER (scrolledwindow), GTK_WIDGET (gui->xtext));
+	gui->textview = pchat_textview_chat_new ();
+	pchat_textview_chat_set_max_auto_indent (PCHAT_TEXTVIEW_CHAT (gui->textview), prefs.pchat_text_max_indent);
+	pchat_textview_chat_set_thin_separator (PCHAT_TEXTVIEW_CHAT (gui->textview), prefs.pchat_text_thin_sep);
+	pchat_textview_chat_set_urlcheck_function (PCHAT_TEXTVIEW_CHAT (gui->textview), mg_word_check);
+	pchat_textview_chat_set_max_lines (PCHAT_TEXTVIEW_CHAT (gui->textview), prefs.pchat_text_max_lines);
+	gtk_widget_set_vexpand (GTK_WIDGET (gui->textview), TRUE);
+	gtk_widget_set_hexpand (GTK_WIDGET (gui->textview), TRUE);
+	gtk_container_add (GTK_CONTAINER (scrolledwindow), GTK_WIDGET (gui->textview));
 
-	mg_update_xtext (GTK_WIDGET (gui->xtext));
+	mg_update_xtext (GTK_WIDGET (gui->textview));
 
-	g_signal_connect (G_OBJECT (gui->xtext), "word-clicked",
+	g_signal_connect (G_OBJECT (gui->textview), "word-clicked",
 							G_CALLBACK (mg_word_clicked), NULL);
 #ifndef _WIN32	/* needs more work */
 	gtk_drag_dest_set (gui->vscrollbar, 5, dnd_dest_targets, 2,
@@ -2458,9 +2457,9 @@ mg_create_textarea (session *sess, GtkWidget *box)
 	g_signal_connect (G_OBJECT (gui->vscrollbar), "drag_end",
 							G_CALLBACK (mg_drag_end_cb), NULL);
 
-	gtk_drag_dest_set (gui->xtext, GTK_DEST_DEFAULT_ALL, dnd_targets, 1,
+	gtk_drag_dest_set (gui->textview, GTK_DEST_DEFAULT_ALL, dnd_targets, 1,
 							 GDK_ACTION_MOVE | GDK_ACTION_COPY | GDK_ACTION_LINK);
-	g_signal_connect (G_OBJECT (gui->xtext), "drag_data_received",
+	g_signal_connect (G_OBJECT (gui->textview), "drag_data_received",
 							G_CALLBACK (mg_dialog_dnd_drop), NULL);
 #endif
 }
@@ -2981,7 +2980,7 @@ search_handle_event(int search_type, session *sess)
 
 	if (search_type != SEARCH_REFRESH)
 		text = gtk_entry_get_text (GTK_ENTRY(sess->gui->shentry));
-	found = pchat_textview_chat_search (PCHAT_TEXTVIEW_CHAT (sess->gui->xtext), text, flags, &err);
+	found = pchat_textview_chat_search (PCHAT_TEXTVIEW_CHAT (sess->gui->textview), text, flags, &err);
 
 	if (err)
 	{
@@ -2998,7 +2997,7 @@ search_handle_event(int search_type, session *sess)
 		else
 		{
 			/* Either end of search or not found, try again to wrap if only end */
-			found = pchat_textview_chat_search (PCHAT_TEXTVIEW_CHAT (sess->gui->xtext), text, flags, &err);
+			found = pchat_textview_chat_search (PCHAT_TEXTVIEW_CHAT (sess->gui->textview), text, flags, &err);
 			if (!found) /* Not found error */
 			{
 				gtk_entry_set_icon_from_icon_name (GTK_ENTRY (sess->gui->shentry), GTK_ENTRY_ICON_SECONDARY, "dialog-error");
@@ -3386,9 +3385,9 @@ mg_create_topwindow (session *sess)
 
 	if (sess->res->buffer == NULL)
 	{
-		sess->res->buffer = pchat_chat_buffer_new (PCHAT_TEXTVIEW_CHAT (sess->gui->xtext));
-		pchat_chat_buffer_show (PCHAT_TEXTVIEW_CHAT (sess->gui->xtext), sess->res->buffer);
-		pchat_textview_chat_set_show_timestamps (PCHAT_TEXTVIEW_CHAT (sess->gui->xtext), prefs.pchat_stamp_text);
+		sess->res->buffer = pchat_chat_buffer_new (PCHAT_TEXTVIEW_CHAT (sess->gui->textview));
+		pchat_chat_buffer_show (PCHAT_TEXTVIEW_CHAT (sess->gui->textview), sess->res->buffer);
+		pchat_textview_chat_set_show_timestamps (PCHAT_TEXTVIEW_CHAT (sess->gui->textview), prefs.pchat_stamp_text);
 		sess->res->user_model = userlist_create_model ();
 	}
 
@@ -3540,7 +3539,7 @@ mg_apply_setup (void)
 	while (list)
 	{
 		sess = list->data;
-		pchat_textview_chat_set_show_timestamps (PCHAT_TEXTVIEW_CHAT (sess->gui->xtext), prefs.pchat_stamp_text);
+		pchat_textview_chat_set_show_timestamps (PCHAT_TEXTVIEW_CHAT (sess->gui->textview), prefs.pchat_stamp_text);
 		/* Recalc handled automatically by TextView */
 		if (!sess->gui->is_tab || !done_main)
 			mg_place_userlist_and_chanview (sess->gui);

@@ -23,7 +23,7 @@
 #ifndef PCHAT_BANLIST_H
 #define PCHAT_BANLIST_H
 
-#include "../common/xchat.h"
+#include "../common/pchat.h"
 void banlist_opengui (session *sess);
 
 #ifndef RPL_BANLIST

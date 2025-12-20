@@ -25,16 +25,16 @@
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
 #include <glib/gi18n.h>
-#include "../xchat-plugin.h"
+#include "pchat-plugin.h"
+#include "dbus-plugin.h"
 
 #define PNAME _("remote access")
 #define PDESC _("plugin for remote access using DBUS")
 #define PVERSION ""
 
-#define DBUS_SERVICE "org.pchat.service"
 #define DBUS_OBJECT_PATH "/org/pchat"
 
-static xchat_plugin *ph;
+static pchat_plugin *ph;
 static guint last_context_id = 0;
 static GList *contexts = NULL;
 static GHashTable *clients = NULL;
@@ -51,7 +51,7 @@ struct RemoteObject
 
 	guint last_hook_id;
 	guint last_list_id;
-	xchat_context *context;
+	pchat_context *context;
 	char *dbus_path;
 	char *filename;
 	GHashTable *hooks;
@@ -68,14 +68,14 @@ typedef struct
 {
 	guint id;
 	int return_value;
-	xchat_hook *hook;
+	pchat_hook *hook;
 	RemoteObject *obj;
 } HookInfo;
 
 typedef struct
 {
 	guint id;
-	xchat_context *context;
+	pchat_context *context;
 } ContextInfo;
 
 enum
@@ -246,8 +246,8 @@ static gboolean		remote_object_send_modes	(RemoteObject *obj,
 /* Useful functions */
 
 static char**		build_list			(char *word[]);
-static guint		context_list_find_id		(xchat_context *context);
-static xchat_context*	context_list_find_context	(guint id);
+static guint		context_list_find_id		(pchat_context *context);
+static pchat_context*	context_list_find_context	(guint id);
 
 /* Remote Object */
 
@@ -259,14 +259,14 @@ hook_info_destroy (gpointer data)
 	if (info == NULL) {
 		return;
 	}
-	xchat_unhook (ph, info->hook);
+	pchat_unhook (ph, info->hook);
 	g_free (info);
 }
 
 static void
 list_info_destroy (gpointer data)
 {
-	xchat_list_free (ph, (xchat_list*)data);
+	pchat_list_free (ph, (pchat_list*)data);
 }
 
 static void
@@ -278,7 +278,7 @@ remote_object_finalize (GObject *obj)
 	g_hash_table_destroy (self->hooks);
 	g_free (self->dbus_path);
 	g_free (self->filename);
-	xchat_plugingui_remove (ph, self->handle);
+	pchat_plugingui_remove (ph, self->handle);
 
 	G_OBJECT_CLASS (remote_object_parent_class)->finalize (obj);
 }
@@ -301,7 +301,7 @@ remote_object_init (RemoteObject *obj)
 	obj->filename = NULL;
 	obj->last_hook_id = 0;
 	obj->last_list_id = 0;
-	obj->context = xchat_get_context (ph);
+	obj->context = pchat_get_context (ph);
 }
 
 static void
@@ -365,6 +365,7 @@ remote_object_connect (RemoteObject *obj,
 	static guint count = 0;
 	char *sender, *path;
 	RemoteObject *remote_object;
+	gchar count_buffer[15];
 	
 	sender = dbus_g_method_get_sender (context);
 	remote_object = g_hash_table_lookup (clients, sender);
@@ -373,11 +374,12 @@ remote_object_connect (RemoteObject *obj,
 		g_free (sender);
 		return TRUE;
 	}
-	path = g_build_filename (DBUS_OBJECT_PATH, count++, NULL);
+	g_snprintf(count_buffer, sizeof(count_buffer), "%u", count++);
+	path = g_build_filename (DBUS_OBJECT_PATH, count_buffer, NULL);
 	remote_object = g_object_new (REMOTE_TYPE_OBJECT, NULL);
 	remote_object->dbus_path = path;
 	remote_object->filename = g_path_get_basename (filename);
-	remote_object->handle = xchat_plugingui_add (ph,
+	remote_object->handle = pchat_plugingui_add (ph,
 						     remote_object->filename,
 						     name,
 						     desc,
@@ -413,8 +415,8 @@ remote_object_command (RemoteObject *obj,
 		       const char *command,
 		       GError **error)
 {
-	if (xchat_set_context (ph, obj->context)) {
-		xchat_command (ph, command);
+	if (pchat_set_context (ph, obj->context)) {
+		pchat_command (ph, command);
 	}
 	return TRUE;
 }
@@ -424,8 +426,8 @@ remote_object_print (RemoteObject *obj,
 		     const char *text,
 		     GError **error)
 {
-	if (xchat_set_context (ph, obj->context)) {
-		xchat_print (ph, text);
+	if (pchat_set_context (ph, obj->context)) {
+		pchat_print (ph, text);
 	}
 	return TRUE;
 }
@@ -437,7 +439,7 @@ remote_object_find_context (RemoteObject *obj,
 			    guint *ret_id,
 			    GError **error)
 {
-	xchat_context *context;
+	pchat_context *context;
 
 	if (*server == '\0') {
 		server = NULL;
@@ -445,7 +447,7 @@ remote_object_find_context (RemoteObject *obj,
 	if (*channel == '\0') {
 		channel = NULL;
 	}
-	context = xchat_find_context (ph, server, channel);
+	context = pchat_find_context (ph, server, channel);
 	*ret_id = context_list_find_id (context);
 
 	return TRUE;
@@ -466,7 +468,7 @@ remote_object_set_context (RemoteObject *obj,
 			   gboolean *ret,
 			   GError **error)
 {
-	xchat_context *context;
+	pchat_context *context;
 	
 	context = context_list_find_context (id);
 	if (context == NULL) {
@@ -487,12 +489,12 @@ remote_object_get_info (RemoteObject *obj,
 {
 	/* win_ptr is a GtkWindow* casted to char* and will crash
 	 * D-Bus if we send it as a string */
-	if (!xchat_set_context (ph, obj->context) ||
+	if (!pchat_set_context (ph, obj->context) ||
 	    g_str_equal (id, "win_ptr")) {
 		*ret_info = NULL;
 		return TRUE;
 	}
-	*ret_info = g_strdup (xchat_get_info (ph, id));
+	*ret_info = g_strdup (pchat_get_info (ph, id));
 	return TRUE;
 }
 
@@ -506,11 +508,11 @@ remote_object_get_prefs (RemoteObject *obj,
 {
 	const char *str;
 
-	if (!xchat_set_context (ph, obj->context)) {
+	if (!pchat_set_context (ph, obj->context)) {
 		*ret_type = 0;
 		return TRUE;
 	}
-	*ret_type = xchat_get_prefs (ph, name, &str, ret_int);
+	*ret_type = pchat_get_prefs (ph, name, &str, ret_int);
 	*ret_str = g_strdup (str);
 
 	return TRUE;
@@ -527,7 +529,7 @@ server_hook_cb (char *word[],
 
 	arg1 = build_list (word + 1);
 	arg2 = build_list (word_eol + 1);
-	info->obj->context = xchat_get_context (ph);
+	info->obj->context = pchat_get_context (ph);
 	g_signal_emit (info->obj,
 		       signals[SERVER_SIGNAL],
 		       0,
@@ -550,7 +552,7 @@ command_hook_cb (char *word[],
 
 	arg1 = build_list (word + 1);
 	arg2 = build_list (word_eol + 1);
-	info->obj->context = xchat_get_context (ph);
+	info->obj->context = pchat_get_context (ph);
 	g_signal_emit (info->obj,
 		       signals[COMMAND_SIGNAL],
 		       0,
@@ -570,7 +572,7 @@ print_hook_cb (char *word[],
 	char **arg1;
 
 	arg1 = build_list (word + 1);
-	info->obj->context = xchat_get_context (ph);
+	info->obj->context = pchat_get_context (ph);
 	g_signal_emit (info->obj,
 		       signals[PRINT_SIGNAL],
 		       0,
@@ -596,7 +598,7 @@ remote_object_hook_command (RemoteObject *obj,
 	info->obj = obj;
 	info->return_value = return_value;
 	info->id = ++obj->last_hook_id;
-	info->hook = xchat_hook_command (ph,
+	info->hook = pchat_hook_command (ph,
 					 name,
 					 priority,
 					 command_hook_cb,
@@ -622,7 +624,7 @@ remote_object_hook_server (RemoteObject *obj,
 	info->obj = obj;
 	info->return_value = return_value;
 	info->id = ++obj->last_hook_id;
-	info->hook = xchat_hook_server (ph,
+	info->hook = pchat_hook_server (ph,
 					name,
 					priority,
 					server_hook_cb,
@@ -647,7 +649,7 @@ remote_object_hook_print (RemoteObject *obj,
 	info->obj = obj;
 	info->return_value = return_value;
 	info->id = ++obj->last_hook_id;
-	info->hook = xchat_hook_print (ph,
+	info->hook = pchat_hook_print (ph,
 				       name,
 				       priority,
 				       print_hook_cb,
@@ -673,14 +675,14 @@ remote_object_list_get (RemoteObject *obj,
 			guint *ret_id,
 			GError **error)
 {
-	xchat_list *xlist;
+	pchat_list *xlist;
 	guint *id;
 
-	if (!xchat_set_context (ph, obj->context)) {
+	if (!pchat_set_context (ph, obj->context)) {
 		*ret_id = 0;
 		return TRUE;
 	}
-	xlist = xchat_list_get (ph, name);
+	xlist = pchat_list_get (ph, name);
 	if (xlist == NULL) {
 		*ret_id = 0;
 		return TRUE;
@@ -701,14 +703,14 @@ remote_object_list_next	(RemoteObject *obj,
 			 gboolean *ret,
 			 GError **error)
 {
-	xchat_list *xlist;
+	pchat_list *xlist;
 	
 	xlist = g_hash_table_lookup (obj->lists, &id);
 	if (xlist == NULL) {
 		*ret = FALSE;
 		return TRUE;
 	}
-	*ret = xchat_list_next (ph, xlist);
+	*ret = pchat_list_next (ph, xlist);
 
 	return TRUE;
 }			 
@@ -720,10 +722,10 @@ remote_object_list_str (RemoteObject *obj,
 			char **ret_str,
 			GError **error)
 {
-	xchat_list *xlist;
+	pchat_list *xlist;
 	
 	xlist = g_hash_table_lookup (obj->lists, &id);
-	if (xlist == NULL && !xchat_set_context (ph, obj->context)) {
+	if (xlist == NULL && !pchat_set_context (ph, obj->context)) {
 		*ret_str = NULL;
 		return TRUE;
 	}
@@ -731,7 +733,7 @@ remote_object_list_str (RemoteObject *obj,
 		*ret_str = NULL;
 		return TRUE;
 	}
-	*ret_str = g_strdup (xchat_list_str (ph, xlist, name));
+	*ret_str = g_strdup (pchat_list_str (ph, xlist, name));
 
 	return TRUE;
 }
@@ -743,19 +745,19 @@ remote_object_list_int (RemoteObject *obj,
 			int *ret_int,
 			GError **error)
 {
-	xchat_list *xlist;
+	pchat_list *xlist;
 	
 	xlist = g_hash_table_lookup (obj->lists, &id);
-	if (xlist == NULL && !xchat_set_context (ph, obj->context)) {
+	if (xlist == NULL && !pchat_set_context (ph, obj->context)) {
 		*ret_int = -1;
 		return TRUE;
 	}
 	if (g_str_equal (name, "context")) {
-		xchat_context *context;
-		context = (xchat_context*)xchat_list_str (ph, xlist, name);
+		pchat_context *context;
+		context = (pchat_context*)pchat_list_str (ph, xlist, name);
 		*ret_int = context_list_find_id (context);
 	} else {
-		*ret_int = xchat_list_int (ph, xlist, name);
+		*ret_int = pchat_list_int (ph, xlist, name);
 	}
 
 	return TRUE;
@@ -768,14 +770,14 @@ remote_object_list_time (RemoteObject *obj,
 			 guint64 *ret_time,
 			 GError **error)
 {
-	xchat_list *xlist;
+	pchat_list *xlist;
 	
 	xlist = g_hash_table_lookup (obj->lists, &id);
 	if (xlist == NULL) {
 		*ret_time = (guint64) -1;
 		return TRUE;
 	}
-	*ret_time = xchat_list_time (ph, xlist, name);
+	*ret_time = pchat_list_time (ph, xlist, name);
 	
 	return TRUE;
 }
@@ -786,7 +788,7 @@ remote_object_list_fields (RemoteObject *obj,
 			   char ***ret,
 			   GError **error)
 {
-	*ret = g_strdupv ((char**)xchat_list_fields (ph, name));
+	*ret = g_strdupv ((char**)pchat_list_fields (ph, name));
 	if (*ret == NULL) {
 		*ret = g_new0 (char*, 1);
 	}
@@ -816,9 +818,9 @@ remote_object_emit_print (RemoteObject *obj,
 		argv[i] = args[i];
 	}
 
-	*ret = xchat_set_context (ph, obj->context);
+	*ret = pchat_set_context (ph, obj->context);
 	if (*ret) {
-		*ret = xchat_emit_print (ph, event_name, argv[0], argv[1],
+		*ret = pchat_emit_print (ph, event_name, argv[0], argv[1],
 							 argv[2], argv[3]);
 	}
 
@@ -832,8 +834,8 @@ remote_object_nickcmp (RemoteObject *obj,
 		       int *ret,
 		       GError **error)
 {
-	xchat_set_context (ph, obj->context);
-	*ret = xchat_nickcmp (ph, nick1, nick2);
+	pchat_set_context (ph, obj->context);
+	*ret = pchat_nickcmp (ph, nick1, nick2);
 	return TRUE;
 }
 
@@ -845,7 +847,7 @@ remote_object_strip (RemoteObject *obj,
 		     char **ret_str,
 		     GError **error)
 {
-	*ret_str = xchat_strip (ph, str, len, flag);
+	*ret_str = pchat_strip (ph, str, len, flag);
 	return TRUE;
 }
 
@@ -857,8 +859,8 @@ remote_object_send_modes (RemoteObject *obj,
 			  char mode,
 			  GError **error)
 {
-	if (xchat_set_context (ph, obj->context)) {
-		xchat_send_modes (ph, targets,
+	if (pchat_set_context (ph, obj->context)) {
+		pchat_send_modes (ph, targets,
 				  g_strv_length ((char**)targets),
 				  modes_per_line,
 				  sign, mode);
@@ -894,7 +896,7 @@ init_dbus (void)
 
 	connection = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
 	if (connection == NULL) {
-		xchat_printf (ph, _("Couldn't connect to session bus: %s\n"),
+		pchat_printf (ph, _("Couldn't connect to session bus: %s\n"),
 			      error->message);
 		g_error_free (error);
 		return FALSE;
@@ -911,7 +913,7 @@ init_dbus (void)
 				G_TYPE_INVALID,
 				G_TYPE_UINT, &request_name_result,
 				G_TYPE_INVALID)) {
-		xchat_printf (ph, _("Failed to acquire %s: %s\n"),
+		pchat_printf (ph, _("Failed to acquire %s: %s\n"),
 			      DBUS_SERVICE,
 			      error->message);
 		g_error_free (error);
@@ -936,7 +938,7 @@ init_dbus (void)
 	return TRUE;
 }
 
-/* xchat_plugin stuffs */
+/* pchat_plugin stuffs */
 
 static char**
 build_list (char *word[])
@@ -962,7 +964,7 @@ build_list (char *word[])
 }
 
 static guint
-context_list_find_id (xchat_context *context)
+context_list_find_id (pchat_context *context)
 {
 	GList *l = NULL;
 
@@ -975,7 +977,7 @@ context_list_find_id (xchat_context *context)
 	return 0;
 }
 
-static xchat_context*
+static pchat_context*
 context_list_find_context (guint id)
 {
 	GList *l = NULL;
@@ -997,10 +999,10 @@ open_context_cb (char *word[],
 	
 	info = g_new0 (ContextInfo, 1);
 	info->id = ++last_context_id;
-	info->context = xchat_get_context (ph);
+	info->context = pchat_get_context (ph);
 	contexts = g_list_prepend (contexts, info);
 
-	return XCHAT_EAT_NONE;
+	return pchat_EAT_NONE;
 }
 
 static int
@@ -1008,7 +1010,7 @@ close_context_cb (char *word[],
 		  void *userdata)
 {
 	GList *l;
-	xchat_context *context = xchat_get_context (ph);
+	pchat_context *context = pchat_get_context (ph);
 
 	for (l = contexts; l != NULL; l = l->next) {
 		if (((ContextInfo*)l->data)->context == context) {
@@ -1018,7 +1020,7 @@ close_context_cb (char *word[],
 		}
 	}
 
-	return XCHAT_EAT_NONE;
+	return pchat_EAT_NONE;
 }
 
 static gboolean
@@ -1042,14 +1044,14 @@ unload_plugin_cb (char *word[], char *word_eol[], void *userdata)
 		g_signal_emit (obj, 
 			       signals[UNLOAD_SIGNAL],
 			       0);
-		return XCHAT_EAT_ALL;
+		return pchat_EAT_ALL;
 	}
 	
-	return XCHAT_EAT_NONE;
+	return pchat_EAT_NONE;
 }
 
 int
-dbus_plugin_init (xchat_plugin *plugin_handle,
+dbus_plugin_init (pchat_plugin *plugin_handle,
 		  char **plugin_name,
 		  char **plugin_desc,
 		  char **plugin_version,
@@ -1061,25 +1063,25 @@ dbus_plugin_init (xchat_plugin *plugin_handle,
 	*plugin_version = PVERSION;
 
 	if (init_dbus()) {
-		/*xchat_printf (ph, _("%s loaded successfully!\n"), PNAME);*/
+		/*pchat_printf (ph, _("%s loaded successfully!\n"), PNAME);*/
 
 		clients = g_hash_table_new_full (g_str_hash,
 						 g_str_equal,
 						 g_free,
 						 g_object_unref);
 
-		xchat_hook_print (ph, "Open Context",
-				  XCHAT_PRI_NORM,
+		pchat_hook_print (ph, "Open Context",
+				  pchat_PRI_NORM,
 				  open_context_cb,
 				  NULL);
 
-		xchat_hook_print (ph, "Close Context",
-				  XCHAT_PRI_NORM,
+		pchat_hook_print (ph, "Close Context",
+				  pchat_PRI_NORM,
 				  close_context_cb,
 				  NULL);
 
-		xchat_hook_command (ph, "unload",
-				    XCHAT_PRI_HIGHEST,
+		pchat_hook_command (ph, "unload",
+				    pchat_PRI_HIGHEST,
 				    unload_plugin_cb, NULL, NULL);
 	}
 

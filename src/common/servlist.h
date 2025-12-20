@@ -2,9 +2,6 @@
  * Copyright (C) 1998-2010 Peter Zelezny.
  * Copyright (C) 2009-2013 Berke Viktor.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -48,7 +45,6 @@ typedef struct ircnet
 	char *real;
 	char *pass;
 	int logintype;
-	char *comment;
 	char *encoding;
 	GSList *servlist;
 	GSList *commandlist;
@@ -83,9 +79,13 @@ extern GSList *network_list;
 #define LOGIN_CHALLENGEAUTH		8
 #define LOGIN_CUSTOM			9
 #define LOGIN_SASLEXTERNAL		10
+#define LOGIN_SASL_SCRAM_SHA_1	11
+#define LOGIN_SASL_SCRAM_SHA_256	12
+#define LOGIN_SASL_SCRAM_SHA_512	13
 
 #define CHALLENGEAUTH_ALGO		"HMAC-SHA-256"
 #define CHALLENGEAUTH_NICK		"Q@CServe.quakenet.org"
+#define CHALLENGEAUTH_FULLHOST		"Q!TheQBot@CServe.quakenet.org"
 
 /* DEFAULT_CHARSET is already defined in wingdi.h */
 #define IRC_DEFAULT_CHARSET		"UTF-8 (Unicode)"

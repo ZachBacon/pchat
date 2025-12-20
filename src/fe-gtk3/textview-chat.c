@@ -13,7 +13,7 @@
 #include <unistd.h>
 #include "textview-chat.h"
 #include "css-helpers.h"
-#include "../common/xchat.h"
+#include "../common/pchat.h"
 #include "../common/util.h"
 
 /* IRC color/format codes */
@@ -95,6 +95,27 @@ static const GdkRGBA mirc_colors[16] = {
 	{ 0.5, 0.5, 0.5, 1.0 },    /* 14 grey */
 	{ 0.75, 0.75, 0.75, 1.0 }  /* 15 light grey */
 };
+
+/* Idle callback data for deferred scrolling */
+typedef struct {
+	PchatTextViewChat *chat;
+	GtkTextMark *mark;
+} ScrollData;
+
+static gboolean
+scroll_to_mark_idle (gpointer user_data)
+{
+	ScrollData *data = user_data;
+	
+	if (GTK_IS_TEXT_VIEW (data->chat) && GTK_IS_TEXT_MARK (data->mark))
+	{
+		gtk_text_view_scroll_to_mark (GTK_TEXT_VIEW (data->chat), data->mark,
+		                              0.0, TRUE, 0.0, 1.0);
+	}
+	
+	g_free (data);
+	return G_SOURCE_REMOVE;
+}
 
 static void
 pchat_textview_chat_create_tags (PchatTextViewChat *chat)
@@ -449,8 +470,11 @@ pchat_chat_buffer_show (PchatTextViewChat *chat, PchatChatBuffer *buf)
 	priv->current_buffer = buf;
 	gtk_text_view_set_buffer (GTK_TEXT_VIEW (chat), buf->buffer);
 	
-	/* Scroll to end */
-	gtk_text_view_scroll_mark_onscreen (GTK_TEXT_VIEW (chat), buf->end_mark);
+	/* Scroll to end using idle callback to ensure proper layout */
+	ScrollData *scroll_data = g_new0 (ScrollData, 1);
+	scroll_data->chat = chat;
+	scroll_data->mark = buf->end_mark;
+	g_idle_add (scroll_to_mark_idle, scroll_data);
 }
 
 PchatChatBuffer *
@@ -705,8 +729,11 @@ pchat_textview_chat_append (PchatTextViewChat *chat, const gchar *text, gsize le
 	pchat_textview_chat_append_with_formatting (chat, buf->buffer, text, len);
 	buf->line_count++;
 	
-	/* Auto-scroll to bottom */
-	gtk_text_view_scroll_mark_onscreen (GTK_TEXT_VIEW (chat), buf->end_mark);
+	/* Auto-scroll to bottom using idle callback to ensure layout is complete */
+	ScrollData *scroll_data = g_new0 (ScrollData, 1);
+	scroll_data->chat = chat;
+	scroll_data->mark = buf->end_mark;
+	g_idle_add (scroll_to_mark_idle, scroll_data);
 }
 
 /* Buffer-specific append - for appending to buffers that aren't currently shown */

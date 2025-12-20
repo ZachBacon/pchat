@@ -31,8 +31,8 @@
 #include "../common/inet.h"
 #include "fe-gtk.h"
 
-#include "../common/xchat.h"
-#include "../common/xchatc.h"
+#include "../common/pchat.h"
+#include "../common/pchatc.h"
 #include "../common/fe.h"
 #include "../common/util.h"
 #include "../common/network.h"
@@ -112,15 +112,15 @@ static short view_mode;	/* 1=download 2=upload 3=both */
 
 
 static void
-proper_unit (DCC_SIZE size, char *buf, int buf_len)
+proper_unit (guint64 size, char *buf, int buf_len)
 {
 	if (size <= KILOBYTE)
 	{
-		snprintf (buf, buf_len, "%"DCC_SFMT"B", size);
+		snprintf (buf, buf_len, "%" G_GUINT64_FORMAT "B", size);
 	}
 	else if (size > KILOBYTE && size <= MEGABYTE)
 	{
-		snprintf (buf, buf_len, "%"DCC_SFMT"kB", size / KILOBYTE);
+		snprintf (buf, buf_len, "%" G_GUINT64_FORMAT "kB", size / KILOBYTE);
 	}
 	else
 	{

@@ -2,10 +2,6 @@
  * Copyright (C) 1998-2010 Peter Zelezny.
  * Copyright (C) 2009-2013 Berke Viktor.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -96,12 +92,13 @@ void inbound_cap_ack (server *serv, char *nick, char *extensions,
 							 const message_tags_data *tags_data);
 void inbound_cap_ls (server *serv, char *nick, char *extensions,
 							const message_tags_data *tags_data);
-void inbound_cap_nak (server *serv, const message_tags_data *tags_data);
+void inbound_cap_nak (server *serv, char *extensions, const message_tags_data *tags_data);
 void inbound_cap_list (server *serv, char *nick, char *extensions,
 							  const message_tags_data *tags_data);
+void inbound_cap_del (server *serv, char *nick, char *extensions,
+							  const message_tags_data *tags_data);
 void inbound_sasl_authenticate (server *serv, char *data);
-int inbound_sasl_error (server *serv);
-void inbound_sasl_supportedmechs (server *serv, char *list);
+void inbound_sasl_error (server *serv);
 void do_dns (session *sess, char *nick, char *host,
 				 const message_tags_data *tags_data);
 gboolean alert_match_word (char *word, char *masks);

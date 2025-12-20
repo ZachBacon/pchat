@@ -2,10 +2,6 @@
  * Copyright (C) 1998-2010 Peter Zelezny.
  * Copyright (C) 2009-2013 Berke Viktor.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -21,12 +17,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __PCHAT_PLATFORM_SUPPORT_H__
-#define __PCHAT_PLATFORM_SUPPORT_H__
+#ifndef PCHAT_PLUGIN_IDENTD_H
+#define PCHAT_PLUGIN_IDENTD_H
 
-char        *pchat_platform_support_get_lib_dir (void);
-char        *pchat_platform_support_get_locale_dir (void);
-char        *pchat_platform_support_get_data_dir (void);
-char        *pchat_platform_support_get_user_home_dir (const char *name);
+int identd_plugin_init (pchat_plugin *plugin_handle, char **plugin_name,
+				char **plugin_desc, char **plugin_version, char *arg);
 
-#endif /* __PCHAT_PLATFORM_SUPPORT_H__ */
+int identd_plugin_deinit (void);
+
+#endif

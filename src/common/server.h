@@ -2,9 +2,6 @@
  * Copyright (C) 1998-2010 Peter Zelezny.
  * Copyright (C) 2009-2013 Berke Viktor.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -27,8 +24,8 @@ extern GSList *serv_list;
 
 /* eventually need to keep the tcp_* functions isolated to server.c */
 int tcp_send_len (server *serv, char *buf, int len);
-void tcp_sendf (server *serv, char *fmt, ...);
-int tcp_send_real (void *ssl, int sok, char *encoding, int using_irc, char *buf, int len);
+void tcp_sendf (server *serv, const char *fmt, ...) G_GNUC_PRINTF (2, 3);
+int tcp_send_real (void *ssl, int sok, GIConv write_converter, char *buf, int len);
 
 server *server_new (void);
 int is_server (server *serv);

@@ -35,8 +35,8 @@
 
 #include <gdk/gdkkeysyms.h>
 
-#include "../common/xchat.h"
-#include "../common/xchatc.h"
+#include "../common/pchat.h"
+#include "../common/pchatc.h"
 #include "../common/cfgfiles.h"
 #include "../common/outbound.h"
 #include "../common/util.h"
@@ -479,7 +479,7 @@ chanlist_filereq_done (server *serv, char *file)
 	if (!file)
 		return;
 
-	fh = xchat_open_file (file, O_TRUNC | O_WRONLY | O_CREAT, 0600,
+	fh = pchat_open_file (file, O_TRUNC | O_WRONLY | O_CREAT, 0600,
 								 XOF_DOMODE | XOF_FULLPATH);
 	if (fh == -1)
 		return;

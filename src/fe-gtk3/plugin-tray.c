@@ -29,9 +29,9 @@
 
 #include <string.h>
 #include "fe-gtk.h"
-#include "../common/xchat-plugin.h"
-#include "../common/xchat.h"
-#include "../common/xchatc.h"
+#include "../common/pchat-plugin.h"
+#include "../common/pchat.h"
+#include "../common/pchatc.h"
 #include "../common/inbound.h"
 #include "../common/server.h"
 #include "../common/fe.h"
@@ -90,7 +90,7 @@ static TrayStatus tray_status;
 static guint tray_menu_timer;
 static gint64 tray_menu_inactivetime;
 #endif
-static xchat_plugin *ph;
+static pchat_plugin *ph;
 
 static TrayIcon custom_icon1;
 static TrayIcon custom_icon2;
@@ -113,7 +113,7 @@ tray_get_window_status (void)
 {
 	const char *st;
 
-	st = xchat_get_info (ph, "win_status");
+	st = pchat_get_info (ph, "win_status");
 
 	if (!st)
 		return WS_HIDDEN;
@@ -178,7 +178,7 @@ fe_tray_set_balloon (const char *title, const char *text)
 
 	/* no balloons if the window is focused */
 	ws = tray_get_window_status ();
-	if ((prefs.pchat_away_omit_alerts && xchat_get_info(ph, "away")) ||
+	if ((prefs.pchat_away_omit_alerts && pchat_get_info(ph, "away")) ||
 		(prefs.pchat_gui_focus_omitalerts && ws == WS_FOCUSED))
 		return;
 
@@ -426,9 +426,9 @@ tray_toggle_visibility (gboolean force_hide)
 		return FALSE;
 
 	/* ph may have an invalid context now */
-	xchat_set_context (ph, xchat_find_context (ph, NULL, NULL));
+	pchat_set_context (ph, pchat_find_context (ph, NULL, NULL));
 
-	win = GTK_WINDOW (xchat_get_info (ph, "gtkwin_ptr"));
+	win = GTK_WINDOW (pchat_get_info (ph, "gtkwin_ptr"));
 
 	tray_stop_flash ();
 	tray_reset_counts ();
@@ -439,7 +439,7 @@ tray_toggle_visibility (gboolean force_hide)
 	if (force_hide || gtk_widget_get_visible (GTK_WIDGET (win)))
 	{
 		if (prefs.pchat_gui_tray_away)
-			xchat_command (ph, "ALLSERV AWAY");
+			pchat_command (ph, "ALLSERV AWAY");
 		gtk_window_get_position (win, &x, &y);
 		screen = gtk_window_get_screen (win);
 		maximized = prefs.pchat_gui_win_state;
@@ -449,7 +449,7 @@ tray_toggle_visibility (gboolean force_hide)
 	else
 	{
 		if (prefs.pchat_gui_tray_away)
-			xchat_command (ph, "ALLSERV BACK");
+			pchat_command (ph, "ALLSERV BACK");
 		gtk_window_set_screen (win, screen);
 		gtk_window_move (win, x, y);
 		if (maximized)
@@ -624,7 +624,7 @@ tray_menu_cb (GtkWidget *widget, guint button, guint time, gpointer userdata)
 	int away_status;
 
 	/* ph may have an invalid context now */
-	xchat_set_context (ph, xchat_find_context (ph, NULL, NULL));
+	pchat_set_context (ph, pchat_find_context (ph, NULL, NULL));
 
 	/* close any old menu */
 	if (G_IS_OBJECT (menu))
@@ -712,7 +712,7 @@ static int
 tray_hilight_cb (char *word[], void *userdata)
 {
 	/*if (tray_status == TS_HIGHLIGHT)
-		return XCHAT_EAT_NONE;*/
+		return PCHAT_EAT_NONE;*/
 
 	if (prefs.pchat_input_tray_hilight)
 	{
@@ -722,24 +722,24 @@ tray_hilight_cb (char *word[], void *userdata)
 		tray_hilight_count++;
 		if (tray_hilight_count == 1)
 			tray_set_tipf (_(DISPLAY_NAME": Highlighted message from: %s (%s)"),
-								word[1], xchat_get_info (ph, "channel"));
+								word[1], pchat_get_info (ph, "channel"));
 		else
 			tray_set_tipf (_(DISPLAY_NAME": %u highlighted messages, latest from: %s (%s)"),
-								tray_hilight_count, word[1], xchat_get_info (ph, "channel"));
+								tray_hilight_count, word[1], pchat_get_info (ph, "channel"));
 	}
 
 	if (prefs.pchat_input_balloon_hilight)
 		tray_set_balloonf (word[2], _("Highlighted message from: %s (%s)"),
-								 word[1], xchat_get_info (ph, "channel"));
+								 word[1], pchat_get_info (ph, "channel"));
 
-	return XCHAT_EAT_NONE;
+	return PCHAT_EAT_NONE;
 }
 
 static int
 tray_message_cb (char *word[], void *userdata)
 {
 	if (/*tray_status == TS_MESSAGE ||*/ tray_status == TS_HIGHLIGHT)
-		return XCHAT_EAT_NONE;
+		return PCHAT_EAT_NONE;
 
 	if (prefs.pchat_input_tray_chans)
 	{
@@ -748,16 +748,16 @@ tray_message_cb (char *word[], void *userdata)
 		tray_pub_count++;
 		if (tray_pub_count == 1)
 			tray_set_tipf (_(DISPLAY_NAME": Channel message from: %s (%s)"),
-								word[1], xchat_get_info (ph, "channel"));
+								word[1], pchat_get_info (ph, "channel"));
 		else
 			tray_set_tipf (_(DISPLAY_NAME": %u channel messages."), tray_pub_count);
 	}
 
 	if (prefs.pchat_input_balloon_chans)
 		tray_set_balloonf (word[2], _("Channel message from: %s (%s)"),
-								 word[1], xchat_get_info (ph, "channel"));
+								 word[1], pchat_get_info (ph, "channel"));
 
-	return XCHAT_EAT_NONE;
+	return PCHAT_EAT_NONE;
 }
 
 static void
@@ -768,9 +768,9 @@ tray_priv (char *from, char *text)
 	if (alert_match_word (from, prefs.pchat_irc_no_hilight))
 		return;
 
-	network = xchat_get_info (ph, "network");
+	network = pchat_get_info (ph, "network");
 	if (!network)
-		network = xchat_get_info (ph, "server");
+		network = pchat_get_info (ph, "server");
 
 	if (prefs.pchat_input_tray_priv)
 	{
@@ -795,7 +795,7 @@ tray_priv_cb (char *word[], void *userdata)
 {
 	tray_priv (word[1], word[2]);
 
-	return XCHAT_EAT_NONE;
+	return PCHAT_EAT_NONE;
 }
 
 static int
@@ -804,7 +804,7 @@ tray_invited_cb (char *word[], void *userdata)
 	if (!prefs.pchat_away_omit_alerts || tray_find_away_status () != 1)
 		tray_priv (word[2], "Invited");
 
-	return XCHAT_EAT_NONE;
+	return PCHAT_EAT_NONE;
 }
 
 static int
@@ -813,11 +813,11 @@ tray_dcc_cb (char *word[], void *userdata)
 	const char *network;
 
 /*	if (tray_status == TS_FILEOFFER)
-		return XCHAT_EAT_NONE;*/
+		return PCHAT_EAT_NONE;*/
 
-	network = xchat_get_info (ph, "network");
+	network = pchat_get_info (ph, "network");
 	if (!network)
-		network = xchat_get_info (ph, "server");
+		network = pchat_get_info (ph, "server");
 
 	if (prefs.pchat_input_tray_priv && (!prefs.pchat_away_omit_alerts || tray_find_away_status () != 1))
 	{
@@ -836,7 +836,7 @@ tray_dcc_cb (char *word[], void *userdata)
 		tray_set_balloonf ("", _("File offer from: %s (%s)"),
 								word[1], network);
 
-	return XCHAT_EAT_NONE;
+	return PCHAT_EAT_NONE;
 }
 
 static int
@@ -844,7 +844,7 @@ tray_focus_cb (char *word[], void *userdata)
 {
 	tray_stop_flash ();
 	tray_reset_counts ();
-	return XCHAT_EAT_NONE;
+	return PCHAT_EAT_NONE;
 }
 
 static void
@@ -875,7 +875,7 @@ tray_apply_setup (void)
 }
 
 int
-tray_plugin_init (xchat_plugin *plugin_handle, char **plugin_name,
+tray_plugin_init (pchat_plugin *plugin_handle, char **plugin_name,
 				char **plugin_desc, char **plugin_version, char *arg)
 {
 	/* we need to save this for use with any xchat_* functions */
@@ -885,21 +885,21 @@ tray_plugin_init (xchat_plugin *plugin_handle, char **plugin_name,
 	*plugin_desc = "";
 	*plugin_version = "";
 
-	xchat_hook_print (ph, "Channel Msg Hilight", -1, tray_hilight_cb, NULL);
-	xchat_hook_print (ph, "Channel Action Hilight", -1, tray_hilight_cb, NULL);
+	pchat_hook_print (ph, "Channel Msg Hilight", -1, tray_hilight_cb, NULL);
+	pchat_hook_print (ph, "Channel Action Hilight", -1, tray_hilight_cb, NULL);
 
-	xchat_hook_print (ph, "Channel Message", -1, tray_message_cb, NULL);
-	xchat_hook_print (ph, "Channel Action", -1, tray_message_cb, NULL);
-	xchat_hook_print (ph, "Channel Notice", -1, tray_message_cb, NULL);
+	pchat_hook_print (ph, "Channel Message", -1, tray_message_cb, NULL);
+	pchat_hook_print (ph, "Channel Action", -1, tray_message_cb, NULL);
+	pchat_hook_print (ph, "Channel Notice", -1, tray_message_cb, NULL);
 
-	xchat_hook_print (ph, "Private Message", -1, tray_priv_cb, NULL);
-	xchat_hook_print (ph, "Private Message to Dialog", -1, tray_priv_cb, NULL);
-	xchat_hook_print (ph, "Notice", -1, tray_priv_cb, NULL);
-	xchat_hook_print (ph, "Invited", -1, tray_invited_cb, NULL);
+	pchat_hook_print (ph, "Private Message", -1, tray_priv_cb, NULL);
+	pchat_hook_print (ph, "Private Message to Dialog", -1, tray_priv_cb, NULL);
+	pchat_hook_print (ph, "Notice", -1, tray_priv_cb, NULL);
+	pchat_hook_print (ph, "Invited", -1, tray_invited_cb, NULL);
 
-	xchat_hook_print (ph, "DCC Offer", -1, tray_dcc_cb, NULL);
+	pchat_hook_print (ph, "DCC Offer", -1, tray_dcc_cb, NULL);
 
-	xchat_hook_print (ph, "Focus Window", -1, tray_focus_cb, NULL);
+	pchat_hook_print (ph, "Focus Window", -1, tray_focus_cb, NULL);
 
 	if (prefs.pchat_gui_tray && !unity_mode ())
 		tray_init ();
@@ -908,7 +908,7 @@ tray_plugin_init (xchat_plugin *plugin_handle, char **plugin_name,
 }
 
 int
-tray_plugin_deinit (xchat_plugin *plugin_handle)
+tray_plugin_deinit (pchat_plugin *plugin_handle)
 {
 #ifdef _WIN32
 	tray_cleanup ();

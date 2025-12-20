@@ -2,9 +2,6 @@
  * Copyright (C) 1998-2010 Peter Zelezny.
  * Copyright (C) 2009-2013 Berke Viktor.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -20,8 +17,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef PCHAT_SSL_H
-#define PCHAT_SSL_H
+#ifndef pchat_SSL_H
+#define pchat_SSL_H
 
 struct cert_info {
     char subject[256];
@@ -40,7 +37,7 @@ struct cert_info {
 
 struct chiper_info {
     char version[16];
-    char chiper[24];
+    char chiper[48];
     int chiper_bits;
 };
 
@@ -48,14 +45,14 @@ SSL_CTX *_SSL_context_init (void (*info_cb_func));
 #define _SSL_context_free(a)	SSL_CTX_free(a);
 
 SSL *_SSL_socket (SSL_CTX *ctx, int sd);
-char *_SSL_set_verify (SSL_CTX *ctx, void *(verify_callback), char *cacert);
+char *_SSL_set_verify (SSL_CTX *ctx, void *(verify_callback));
 /*
     int SSL_connect(SSL *);
     int SSL_accept(SSL *);
     int SSL_get_fd(SSL *);
 */
 void _SSL_close (SSL * ssl);
-
+int _SSL_check_hostname(X509 *cert, const char *host);
 int _SSL_get_cert_info (struct cert_info *cert_info, SSL * ssl);
 struct chiper_info *_SSL_get_cipher_info (SSL * ssl);
 

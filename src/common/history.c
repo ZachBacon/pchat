@@ -1,10 +1,6 @@
 /* X-Chat
  * Copyright (C) 1998 Peter Zelezny.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -28,8 +24,7 @@
 void
 history_add (struct history *his, char *text)
 {
-	if (his->lines[his->realpos])
-		free (his->lines[his->realpos]);
+	g_free (his->lines[his->realpos]);
 	his->lines[his->realpos] = g_strdup (text);
 	his->realpos++;
 	if (his->realpos == HISTORY_SIZE)
@@ -45,7 +40,7 @@ history_free (struct history *his)
 	{
 		if (his->lines[i])
 		{
-			free (his->lines[i]);
+			g_free (his->lines[i]);
 			his->lines[i] = 0;
 		}
 	}
@@ -57,7 +52,7 @@ history_down (struct history *his)
 	int next;
 
 	if (his->pos == his->realpos)	/* allow down only after up */
-		return 0;
+		return NULL;
 	if (his->realpos == 0)
 	{
 		if (his->pos == HISTORY_SIZE - 1)
@@ -84,7 +79,7 @@ history_down (struct history *his)
 		return his->lines[his->pos];
 	}
 
-	return 0;
+	return NULL;
 }
 
 char *
@@ -95,11 +90,11 @@ history_up (struct history *his, char *current_text)
 	if (his->realpos == HISTORY_SIZE - 1)
 	{
 		if (his->pos == 0)
-			return 0;
+			return NULL;
 	} else
 	{
 		if (his->pos == his->realpos + 1)
-			return 0;
+			return NULL;
 	}
 
 	next = HISTORY_SIZE - 1;
@@ -122,5 +117,5 @@ history_up (struct history *his, char *current_text)
 		return his->lines[his->pos];
 	}
 
-	return 0;
+	return NULL;
 }

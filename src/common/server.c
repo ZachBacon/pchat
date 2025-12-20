@@ -1,9 +1,6 @@
 /* X-Chat
  * Copyright (C) 1998 Peter Zelezny.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -34,7 +31,7 @@
 #define WANTARPA
 #include "inet.h"
 
-#ifdef _WIN32
+#ifdef WIN32
 #include <winbase.h>
 #include <io.h>
 #else
@@ -43,12 +40,12 @@
 #include <unistd.h>
 #endif
 
-#include "xchat.h"
+#include "pchat.h"
 #include "fe.h"
 #include "cfgfiles.h"
 #include "network.h"
 #include "notify.h"
-#include "xchatc.h"
+#include "pchatc.h"
 #include "inbound.h"
 #include "outbound.h"
 #include "text.h"
@@ -64,16 +61,7 @@
 #include "ssl.h"
 #endif
 
-#ifdef _WIN32
-#include "identd.h"
-#endif
-
-#ifdef USE_LIBPROXY
-#include <proxy.h>
-#endif
-
 #ifdef USE_OPENSSL
-extern SSL_CTX *ctx;				  /* xchat.c */
 /* local variables */
 static struct session *g_sess = NULL;
 #endif
@@ -86,65 +74,35 @@ static void server_disconnect (session * sess, int sendquit, int err);
 static int server_cleanup (server * serv);
 static void server_connect (server *serv, char *hostname, int port, int no_login);
 
-#ifdef USE_LIBPROXY
-extern pxProxyFactory *libproxy_factory;
-#endif
+static void
+write_error (char *message, GError **error)
+{
+	if (error == NULL || *error == NULL) {
+		return;
+	}
+	g_printerr ("%s: %s\n", message, (*error)->message);
+	g_clear_error (error);
+}
 
 /* actually send to the socket. This might do a character translation or
    send via SSL. server/dcc both use this function. */
 
 int
-tcp_send_real (void *ssl, int sok, char *encoding, int using_irc, char *buf, int len)
+tcp_send_real (void *ssl, int sok, GIConv write_converter, char *buf, int len)
 {
 	int ret;
-	char *locale;
-	gsize loc_len;
 
-	if (encoding == NULL)	/* system */
-	{
-		locale = NULL;
-		if (!prefs.utf8_locale)
-		{
-			const gchar *charset;
-
-			g_get_charset (&charset);
-			locale = g_convert_with_fallback (buf, len, charset, "UTF-8",
-														 "?", 0, &loc_len, 0);
-		}
-	} else
-	{
-		if (using_irc)	/* using "IRC" encoding (CP1252/UTF-8 hybrid) */
-			/* if all chars fit inside CP1252, use that. Otherwise this
-			   returns NULL and we send UTF-8. */
-			locale = g_convert (buf, len, "CP1252", "UTF-8", 0, &loc_len, 0);
-		else
-			locale = g_convert_with_fallback (buf, len, encoding, "UTF-8",
-														 "?", 0, &loc_len, 0);
-	}
-
-	if (locale)
-	{
-		len = loc_len;
+	gsize buf_encoded_len;
+	gchar *buf_encoded = text_convert_invalid (buf, len, write_converter, arbitrary_encoding_fallback_string, &buf_encoded_len);
 #ifdef USE_OPENSSL
-		if (!ssl)
-			ret = send (sok, locale, len, 0);
-		else
-			ret = _SSL_send (ssl, locale, len);
+	if (!ssl)
+		ret = send (sok, buf_encoded, buf_encoded_len, 0);
+	else
+		ret = _SSL_send (ssl, buf_encoded, buf_encoded_len);
 #else
-		ret = send (sok, locale, len, 0);
+	ret = send (sok, buf_encoded, buf_encoded_len, 0);
 #endif
-		g_free (locale);
-	} else
-	{
-#ifdef USE_OPENSSL
-		if (!ssl)
-			ret = send (sok, buf, len, 0);
-		else
-			ret = _SSL_send (ssl, buf, len);
-#else
-		ret = send (sok, buf, len, 0);
-#endif
-	}
+	g_free (buf_encoded);
 
 	return ret;
 }
@@ -156,8 +114,7 @@ server_send_real (server *serv, char *buf, int len)
 
 	url_check_line (buf);
 
-	return tcp_send_real (serv->ssl, serv->sok, serv->encoding, serv->using_irc,
-								 buf, len);
+	return tcp_send_real (serv->ssl, serv->sok, serv->write_converter, buf, len);
 }
 
 /* new throttling system, uses the same method as the Undernet
@@ -245,13 +202,35 @@ tcp_send_len (server *serv, char *buf, int len)
 	}
 	else
 	{
-		/* WHO/MODE get the lowest priority */
-		if (g_ascii_strncasecmp (dbuf + 1, "WHO ", 4) == 0 ||
-		/* but only MODE queries, not changes */
-			(g_ascii_strncasecmp (dbuf + 1, "MODE", 4) == 0 &&
-			 strchr (dbuf, '-') == NULL &&
-			 strchr (dbuf, '+') == NULL))
+		/* WHO gets the lowest priority */
+		if (g_ascii_strncasecmp (dbuf + 1, "WHO ", 4) == 0)
 			dbuf[0] = 0;
+		/* as do MODE queries (but not changes) */
+		else if (g_ascii_strncasecmp (dbuf + 1, "MODE ", 5) == 0)
+		{
+			char *mode_str, *mode_str_end, *loc;
+			/* skip spaces before channel/nickname */
+			for (mode_str = dbuf + 5; *mode_str == ' '; ++mode_str);
+			/* skip over channel/nickname */
+			mode_str = strchr (mode_str, ' ');
+			if (mode_str)
+			{
+				/* skip spaces before mode string */
+				for (; *mode_str == ' '; ++mode_str);
+				/* find spaces after end of mode string */
+				mode_str_end = strchr (mode_str, ' ');
+				/* look for +/- within the mode string */
+				loc = strchr (mode_str, '-');
+				if (loc && (!mode_str_end || loc < mode_str_end))
+					goto keep_priority;
+				loc = strchr (mode_str, '+');
+				if (loc && (!mode_str_end || loc < mode_str_end))
+					goto keep_priority;
+			}
+			dbuf[0] = 0;
+keep_priority:
+			;
+		}
 	}
 
 	serv->outbound_queue = g_slist_append (serv->outbound_queue, dbuf);
@@ -263,14 +242,8 @@ tcp_send_len (server *serv, char *buf, int len)
 	return 1;
 }
 
-/*int
-tcp_send (server *serv, char *buf)
-{
-	return tcp_send_len (serv, buf, strlen (buf));
-}*/
-
 void
-tcp_sendf (server *serv, char *fmt, ...)
+tcp_sendf (server *serv, const char *fmt, ...)
 {
 	va_list args;
 	/* keep this buffer in BSS. Converting UTF-8 to ISO-8859-x might make the
@@ -300,7 +273,7 @@ static void
 close_socket (int sok)
 {
 	/* close the socket in 5 seconds so the QUIT message is not lost */
-	fe_timeout_add (5000, close_socket_cb, GINT_TO_POINTER (sok));
+	fe_timeout_add_seconds (5, close_socket_cb, GINT_TO_POINTER (sok));
 }
 
 /* handle 1 line of text received from the server */
@@ -308,102 +281,18 @@ close_socket (int sok)
 static void
 server_inline (server *serv, char *line, gssize len)
 {
-	char *utf_line_allocated = NULL;
-
-	/* Checks whether we're set to use UTF-8 charset */
-	if (serv->using_irc ||				/* 1. using CP1252/UTF-8 Hybrid */
-		(serv->encoding == NULL && prefs.utf8_locale) || /* OR 2. using system default->UTF-8 */
-	    (serv->encoding != NULL &&				/* OR 3. explicitly set to UTF-8 */
-		 (g_ascii_strcasecmp (serv->encoding, "UTF8") == 0 ||
-		  g_ascii_strcasecmp (serv->encoding, "UTF-8") == 0)))
-	{
-		/* The user has the UTF-8 charset set, either via /charset
-		command or from his UTF-8 locale. Thus, we first try the
-		UTF-8 charset, and if we fail to convert, we assume
-		it to be ISO-8859-1 (see text_validate). */
-
-		utf_line_allocated = text_validate (&line, &len);
-
-	}
+	gsize len_utf8;
+	if (!strcmp (serv->encoding, "UTF-8"))
+		line = text_fixup_invalid_utf8 (line, len, &len_utf8);
 	else
-	{
-		/* Since the user has an explicit charset set, either
-		via /charset command or from his non-UTF8 locale,
-		we don't fallback to ISO-8859-1 and instead try to remove
-		errnoeous octets till the string is convertable in the
-		said charset. */
+		line = text_convert_invalid (line, len, serv->read_converter, unicode_fallback_string, &len_utf8);
 
-		const char *encoding = NULL;
-
-		if (serv->encoding != NULL)
-			encoding = serv->encoding;
-		else
-			g_get_charset (&encoding);
-
-		if (encoding != NULL)
-		{
-			char *conv_line; /* holds a copy of the original string */
-			gsize conv_len; /* tells g_convert how much of line to convert */
-			gsize utf_len;
-			gsize read_len;
-			GError *err;
-			gboolean retry;
-
-			conv_line = g_malloc (len + 1);
-			memcpy (conv_line, line, len);
-			conv_line[len] = 0;
-			conv_len = len;
-
-			/* if CP1255, convert it with the NUL terminator.
-				Works around SF bug #1122089 */
-			if (serv->using_cp1255)
-				conv_len++;
-
-			do
-			{
-				err = NULL;
-				retry = FALSE;
-				utf_line_allocated = g_convert_with_fallback (conv_line, conv_len, "UTF-8", encoding, "?", &read_len, &utf_len, &err);
-				if (err != NULL)
-				{
-					if (err->code == G_CONVERT_ERROR_ILLEGAL_SEQUENCE && conv_len > (read_len + 1))
-					{
-						/* Make our best bet by removing the erroneous char.
-						   This will work for casual 8-bit strings with non-standard chars. */
-						memmove (conv_line + read_len, conv_line + read_len + 1, conv_len - read_len -1);
-						conv_len--;
-						retry = TRUE;
-					}
-					g_error_free (err);
-				}
-			} while (retry);
-
-			g_free (conv_line);
-
-			/* If any conversion has occured at all. Conversion might fail
-			due to errors other than invalid sequences, e.g. unknown charset. */
-			if (utf_line_allocated != NULL)
-			{
-				line = utf_line_allocated;
-				len = utf_len;
-				if (serv->using_cp1255 && len > 0)
-					len--;
-			}
-			else
-			{
-				/* If all fails, treat as UTF-8 with fallback to ISO-8859-1. */
-				utf_line_allocated = text_validate (&line, &len);
-			}
-		}
-	}
-
-	fe_add_rawlog (serv, line, len, FALSE);
+	fe_add_rawlog (serv, line, len_utf8, FALSE);
 
 	/* let proto-irc.c handle it */
-	serv->p_inline (serv, line, len);
+	serv->p_inline (serv, line, len_utf8);
 
-	if (utf_line_allocated != NULL) /* only if a special copy was allocated */
-		g_free (utf_line_allocated);
+	g_free (line);
 }
 
 /* read data from socket */
@@ -473,7 +362,7 @@ server_read (GIOChannel *source, GIOCondition condition, server *serv)
 				serv->linebuf[serv->pos] = lbuf[i];
 				if (serv->pos >= (sizeof (serv->linebuf) - 1))
 					fprintf (stderr,
-								"*** PCHAT WARNING: Buffer overflow - shit server!\n");
+								"*** HEXCHAT WARNING: Buffer overflow - non-compliant server!\n");
 				else
 					serv->pos++;
 			}
@@ -520,7 +409,7 @@ server_connected (server * serv)
 	fe_server_event (serv, FE_SE_CONNECT, 0);
 }
 
-#ifdef _WIN32
+#ifdef WIN32
 
 static gboolean
 server_close_pipe (int *pipefd)	/* see comments below */
@@ -548,7 +437,7 @@ server_stopconnecting (server * serv)
 		serv->joindelay_tag = 0;
 	}
 
-#ifndef _WIN32
+#ifndef WIN32
 	/* kill the child process trying to connect */
 	kill (serv->childpid, SIGKILL);
 	waitpid (serv->childpid, NULL, 0);
@@ -604,28 +493,34 @@ ssl_cb_verify (int ok, X509_STORE_CTX * ctx)
 	char subject[256];
 	char issuer[256];
 	char buf[512];
-	X509 *cert;
+	X509 *current_cert = X509_STORE_CTX_get_current_cert (ctx);
 
-	cert = X509_STORE_CTX_get_current_cert (ctx);
-	X509_NAME_oneline (X509_get_subject_name (cert), subject,
-							 sizeof (subject));
-	X509_NAME_oneline (X509_get_issuer_name (cert), issuer,
-							 sizeof (issuer));
+	if (!current_cert)
+		return TRUE;
+
+	X509_NAME_oneline (X509_get_subject_name (current_cert),
+	                   subject, sizeof (subject));
+	X509_NAME_oneline (X509_get_issuer_name (current_cert),
+	                   issuer, sizeof (issuer));
 
 	g_snprintf (buf, sizeof (buf), "* Subject: %s", subject);
 	EMIT_SIGNAL (XP_TE_SSLMESSAGE, g_sess, buf, NULL, NULL, NULL, 0);
 	g_snprintf (buf, sizeof (buf), "* Issuer: %s", issuer);
 	EMIT_SIGNAL (XP_TE_SSLMESSAGE, g_sess, buf, NULL, NULL, NULL, 0);
 
-	return (TRUE);					  /* always ok */
+	return TRUE;
 }
 
 static int
 ssl_do_connect (server * serv)
 {
-	char buf[128];
+	char buf[256]; // ERR_error_string() MUST have this size
 
 	g_sess = serv->server_session;
+
+	/* Set SNI hostname before connect */
+	SSL_set_tlsext_host_name(serv->ssl, serv->hostname);
+
 	if (SSL_connect (serv->ssl) <= 0)
 	{
 		char err_buf[128];
@@ -704,9 +599,8 @@ ssl_do_connect (server * serv)
 							 NULL, 0);
 		} else
 		{
-			g_snprintf (buf, sizeof (buf), " * No Certificate");
-			EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL,
-							 NULL, 0);
+			g_snprintf (buf, sizeof (buf), "No Certificate");
+			goto conn_fail;
 		}
 
 		chiper_info = _SSL_get_cipher_info (serv->ssl);	/* static buffer */
@@ -723,9 +617,22 @@ ssl_do_connect (server * serv)
 		switch (verify_error)
 		{
 		case X509_V_OK:
+			{
+				X509 *cert = SSL_get_peer_certificate (serv->ssl);
+				int hostname_err;
+				if ((hostname_err = _SSL_check_hostname(cert, serv->hostname)) != 0)
+				{
+					g_snprintf (buf, sizeof (buf), "* Verify E: Failed to validate hostname? (%d)%s",
+							 hostname_err, serv->accept_invalid_cert ? " -- Ignored" : "");
+					if (serv->accept_invalid_cert)
+						EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL, NULL, 0);
+					else
+						goto conn_fail;
+				}
+				break;
+			}
 			/* g_snprintf (buf, sizeof (buf), "* Verify OK (?)"); */
 			/* EMIT_SIGNAL (XP_TE_SSLMESSAGE, serv->server_session, buf, NULL, NULL, NULL, 0); */
-			break;
 		case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY:
 		case X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE:
 		case X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT:
@@ -744,6 +651,7 @@ ssl_do_connect (server * serv)
 			g_snprintf (buf, sizeof (buf), "%s.? (%d)",
 						 X509_verify_cert_error_string (verify_error),
 						 verify_error);
+conn_fail:
 			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, buf, NULL, NULL,
 							 NULL, 0);
 
@@ -797,22 +705,25 @@ static void
 auto_reconnect (server *serv, int send_quit, int err)
 {
 	session *s;
-	GSList *list;
 	int del;
 
 	if (serv->server_session == NULL)
 		return;
 
-	list = sess_list;
-	while (list)				  /* make sure auto rejoin can work */
+	if (prefs.pchat_irc_reconnect_rejoin)
 	{
-		s = list->data;
-		if (s->type == SESS_CHANNEL && s->channel[0])
+		GSList *list;
+		list = sess_list;
+		while (list)				  /* make sure auto rejoin can work */
 		{
-			strcpy (s->waitchannel, s->channel);
-			strcpy (s->willjoinchannel, s->channel);
+			s = list->data;
+			if (s->type == SESS_CHANNEL && s->channel[0])
+			{
+				strcpy (s->waitchannel, s->channel);
+				strcpy (s->willjoinchannel, s->channel);
+			}
+			list = list->next;
 		}
-		list = list->next;
 	}
 
 	if (serv->connected)
@@ -822,7 +733,7 @@ auto_reconnect (server *serv, int send_quit, int err)
 	if (del < 1000)
 		del = 500;				  /* so it doesn't block the gui */
 
-#ifndef _WIN32
+#ifndef WIN32
 	if (err == -1 || err == 0 || err == ECONNRESET || err == ETIMEDOUT)
 #else
 	if (err == -1 || err == 0 || err == WSAECONNRESET || err == WSAETIMEDOUT)
@@ -861,14 +772,14 @@ server_connect_success (server *serv)
 
 		/* it'll be a memory leak, if connection isn't terminated by
 		   server_cleanup() */
-		serv->ssl = _SSL_socket (ctx, serv->sok);
-		if ((err = _SSL_set_verify (ctx, ssl_cb_verify, NULL)))
+		if ((err = _SSL_set_verify (serv->ctx, ssl_cb_verify)))
 		{
 			EMIT_SIGNAL (XP_TE_CONNFAIL, serv->server_session, err, NULL,
 							 NULL, NULL, 0);
 			server_cleanup (serv);	/* ->connecting = FALSE */
 			return;
 		}
+		serv->ssl = _SSL_socket (serv->ctx, serv->sok);
 		/* FIXME: it'll be needed by new servers */
 		/* send(serv->sok, "STLS\r\n", 6, 0); sleep(1); */
 		set_nonblocking (serv->sok);
@@ -908,12 +819,10 @@ server_read_child (GIOChannel *source, GIOCondition condition, server *serv)
 		closesocket (serv->sok4);
 		if (serv->proxy_sok4 != -1)
 			closesocket (serv->proxy_sok4);
-#ifdef USE_IPV6
 		if (serv->sok6 != -1)
 			closesocket (serv->sok6);
 		if (serv->proxy_sok6 != -1)
 			closesocket (serv->proxy_sok6);
-#endif
 		EMIT_SIGNAL (XP_TE_UKNHOST, sess, NULL, NULL, NULL, NULL, 0);
 		if (!servlist_cycle (serv))
 			if (prefs.pchat_net_auto_reconnectonfail)
@@ -925,12 +834,10 @@ server_read_child (GIOChannel *source, GIOCondition condition, server *serv)
 		closesocket (serv->sok4);
 		if (serv->proxy_sok4 != -1)
 			closesocket (serv->proxy_sok4);
-#ifdef USE_IPV6
 		if (serv->sok6 != -1)
 			closesocket (serv->sok6);
 		if (serv->proxy_sok6 != -1)
 			closesocket (serv->proxy_sok6);
-#endif
 		EMIT_SIGNAL (XP_TE_CONNFAIL, sess, errorstring (atoi (tbuf)), NULL,
 						 NULL, NULL, 0);
 		if (!servlist_cycle (serv))
@@ -942,33 +849,10 @@ server_read_child (GIOChannel *source, GIOCondition condition, server *serv)
 		waitline2 (source, ip, sizeof ip);
 		waitline2 (source, outbuf, sizeof outbuf);
 		EMIT_SIGNAL (XP_TE_CONNECT, sess, host, ip, outbuf, NULL, 0);
-#ifdef _WIN32
-		if (prefs.pchat_identd)
-		{
-			if (serv->network && ((ircnet *)serv->network)->user)
-			{
-				identd_start (((ircnet *)serv->network)->user);
-			}
-			else
-			{
-				identd_start (prefs.pchat_irc_user_name);
-			}
-		}
-#else
-		g_snprintf (outbuf, sizeof (outbuf), "%s/auth/xchat_auth",
-					 g_get_home_dir ());
-		if (access (outbuf, X_OK) == 0)
-		{
-			g_snprintf (outbuf, sizeof (outbuf), "exec -d %s/auth/xchat_auth %s",
-						 g_get_home_dir (), prefs.pchat_irc_user_name);
-			handle_command (serv->server_session, outbuf, FALSE);
-		}
-#endif
 		break;
 	case '4':						  /* success */
 		waitline2 (source, tbuf, sizeof (tbuf));
 		serv->sok = atoi (tbuf);
-#ifdef USE_IPV6
 		/* close the one we didn't end up using */
 		if (serv->sok == serv->sok4)
 			closesocket (serv->sok6);
@@ -981,7 +865,30 @@ server_read_child (GIOChannel *source, GIOCondition condition, server *serv)
 			else
 				closesocket (serv->proxy_sok4);
 		}
-#endif
+
+		{
+			struct sockaddr_storage addr;
+			int addr_len = sizeof (addr);
+			guint16 port;
+			ircnet *net = serv->network;
+
+			if (!getsockname (serv->sok, (struct sockaddr *)&addr, &addr_len))
+			{
+				if (addr.ss_family == AF_INET)
+					port = ntohs(((struct sockaddr_in *)&addr)->sin_port);
+				else
+					port = ntohs(((struct sockaddr_in6 *)&addr)->sin6_port);
+
+				g_snprintf (outbuf, sizeof (outbuf), "IDENTD %"G_GUINT16_FORMAT" ", port);
+				if (net && net->user && !(net->flags & FLAG_USE_GLOBAL))
+					g_strlcat (outbuf, net->user, sizeof (outbuf));
+				else
+					g_strlcat (outbuf, prefs.pchat_irc_user_name, sizeof (outbuf));
+
+				handle_command (serv->server_session, outbuf, FALSE);
+			}
+		}
+
 		server_connect_success (serv);
 		break;
 	case '5':						  /* prefs ip discovered */
@@ -989,7 +896,7 @@ server_read_child (GIOChannel *source, GIOCondition condition, server *serv)
 		prefs.local_ip = inet_addr (tbuf);
 		break;
 	case '7':						  /* gethostbyname (prefs.pchat_net_bind_host) failed */
-		g_snprintf (outbuf, sizeof (outbuf),
+		sprintf (outbuf,
 					_("Cannot resolve hostname %s\nCheck your IP Settings!\n"),
 					prefs.pchat_net_bind_host);
 		PrintText (sess, outbuf);
@@ -1093,7 +1000,7 @@ server_disconnect (session * sess, int sendquit, int err)
 		notc_msg (sess);
 		return;
 	case 1:							  /* it was in the process of connecting */
-		g_snprintf (tbuf, sizeof (tbuf), "%d", sess->server->childpid);
+		sprintf (tbuf, "%d", sess->server->childpid);
 		EMIT_SIGNAL (XP_TE_STOPCONNECT, sess, tbuf, NULL, NULL, NULL, 0);
 		return;
 	case 3:
@@ -1159,7 +1066,7 @@ traverse_socks (int print_fd, int sok, char *serverAddr, int port)
 	sc.type = 1;
 	sc.port = htons (port);
 	sc.address = inet_addr (serverAddr);
-	strncpy (sc.username, prefs.pchat_irc_user_name, 9);
+	g_strlcpy (sc.username, prefs.pchat_irc_user_name, sizeof (sc.username));
 
 	send (sok, (char *) &sc, 8 + strlen (sc.username) + 1, 0);
 	buf[1] = 0;
@@ -1211,6 +1118,7 @@ traverse_socks5 (int print_fd, int sok, char *serverAddr, int port)
 	if (auth)
 	{
 		int len_u=0, len_p=0;
+		unsigned char *u_p_buf;
 
 		/* authentication sub-negotiation (RFC1929) */
 		if (buf[1] != 2)  /* UPA not supported by server */
@@ -1219,18 +1127,22 @@ traverse_socks5 (int print_fd, int sok, char *serverAddr, int port)
 			return 1;
 		}
 
-		memset (buf, 0, sizeof(buf));
-
 		/* form the UPA request */
 		len_u = strlen (prefs.pchat_net_proxy_user);
 		len_p = strlen (prefs.pchat_net_proxy_pass);
-		buf[0] = 1;
-		buf[1] = len_u;
-		memcpy (buf + 2, prefs.pchat_net_proxy_user, len_u);
-		buf[2 + len_u] = len_p;
-		memcpy (buf + 3 + len_u, prefs.pchat_net_proxy_pass, len_p);
 
-		send (sok, buf, 3 + len_u + len_p, 0);
+        packetlen = 2 + len_u + 1 + len_p;
+		u_p_buf = g_malloc0 (packetlen);
+
+		u_p_buf[0] = 1;
+		u_p_buf[1] = len_u;
+		memcpy (u_p_buf + 2, prefs.pchat_net_proxy_user, len_u);
+		u_p_buf[2 + len_u] = len_p;
+		memcpy (u_p_buf + 3 + len_u, prefs.pchat_net_proxy_pass, len_p);
+
+		send (sok, u_p_buf, packetlen, 0);
+		g_free(u_p_buf);
+
 		if ( recv (sok, buf, 2, 0) != 2 )
 			goto read_error;
 		if ( buf[1] != 0 )
@@ -1482,16 +1394,16 @@ server_child (server * serv)
 
 	if (!serv->dont_use_proxy) /* blocked in serverlist? */
 	{
-		if (FALSE)
-			;
-#ifdef USE_LIBPROXY
-		else if (prefs.pchat_net_proxy_type == 5)
+		if (prefs.pchat_net_proxy_type == 5)
 		{
 			char **proxy_list;
 			char *url, *proxy;
+			GProxyResolver *resolver;
+			GError *error = NULL;
 
+			resolver = g_proxy_resolver_get_default ();
 			url = g_strdup_printf ("irc://%s:%d", hostname, port);
-			proxy_list = px_proxy_factory_get_proxies (libproxy_factory, url);
+			proxy_list = g_proxy_resolver_lookup (resolver, url, NULL, &error);
 
 			if (proxy_list) {
 				/* can use only one */
@@ -1504,6 +1416,8 @@ server_child (server * serv)
 					proxy_type = 3;
 				else if (!strncmp (proxy, "socks", 5))
 					proxy_type = 2;
+			} else {
+				write_error ("Failed to lookup proxy", &error);
 			}
 
 			if (proxy_type) {
@@ -1518,8 +1432,8 @@ server_child (server * serv)
 			g_strfreev (proxy_list);
 			g_free (url);
 		}
-#endif
-		else if (prefs.pchat_net_proxy_host[0] &&
+
+		if (prefs.pchat_net_proxy_host[0] &&
 			   prefs.pchat_net_proxy_type > 0 &&
 			   prefs.pchat_net_proxy_use != 2) /* proxy is NOT dcc-only */
 		{
@@ -1608,15 +1522,13 @@ server_child (server * serv)
 
 xit:
 
-#if defined (USE_IPV6) || defined (_WIN32)
 	/* this is probably not needed */
 	net_store_destroy (ns_server);
 	if (ns_proxy)
 		net_store_destroy (ns_proxy);
-#endif
 
 	/* no need to free ip/real_hostname, this process is exiting */
-#ifdef _WIN32
+#ifdef WIN32
 	/* under win32 we use a thread -> shared memory, must free! */
 	g_free (proxy_ip);
 	g_free (ip);
@@ -1634,9 +1546,9 @@ server_connect (server *serv, char *hostname, int port, int no_login)
 	session *sess = serv->server_session;
 
 #ifdef USE_OPENSSL
-	if (!ctx && serv->use_ssl)
+	if (!serv->ctx && serv->use_ssl)
 	{
-		if (!(ctx = _SSL_context_init (ssl_cb_info)))
+		if (!(serv->ctx = _SSL_context_init (ssl_cb_info)))
 		{
 			fprintf (stderr, "_SSL_context_init failed\n");
 			exit (1);
@@ -1647,7 +1559,7 @@ server_connect (server *serv, char *hostname, int port, int no_login)
 	if (!hostname[0])
 		return;
 
-	if (port < 0)
+	if (port < 1 || port > 65535)
 	{
 		/* use default port for this server type */
 		port = 6667;
@@ -1655,8 +1567,8 @@ server_connect (server *serv, char *hostname, int port, int no_login)
 		if (serv->use_ssl)
 			port = 6697;
 #endif
+		g_debug ("Attempted to connect to invalid port, assuming default port %d", port);
 	}
-	port &= 0xffff;	/* wrap around */
 
 	if (serv->connected || serv->connecting || serv->recondelay_tag)
 		server_disconnect (sess, TRUE, -1);
@@ -1679,18 +1591,18 @@ server_connect (server *serv, char *hostname, int port, int no_login)
 		/* first try network specific cert/key */
 		cert_file = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "certs" G_DIR_SEPARATOR_S "%s.pem",
 					 get_xdir (), server_get_network (serv, TRUE));
-		if (SSL_CTX_use_certificate_file (ctx, cert_file, SSL_FILETYPE_PEM) == 1)
+		if (SSL_CTX_use_certificate_file (serv->ctx, cert_file, SSL_FILETYPE_PEM) == 1)
 		{
-			if (SSL_CTX_use_PrivateKey_file (ctx, cert_file, SSL_FILETYPE_PEM) == 1)
+			if (SSL_CTX_use_PrivateKey_file (serv->ctx, cert_file, SSL_FILETYPE_PEM) == 1)
 				serv->have_cert = TRUE;
 		}
 		else
 		{
 			/* if that doesn't exist, try <config>/certs/client.pem */
 			cert_file = g_build_filename (get_xdir (), "certs", "client.pem", NULL);
-			if (SSL_CTX_use_certificate_file (ctx, cert_file, SSL_FILETYPE_PEM) == 1)
+			if (SSL_CTX_use_certificate_file (serv->ctx, cert_file, SSL_FILETYPE_PEM) == 1)
 			{
-				if (SSL_CTX_use_PrivateKey_file (ctx, cert_file, SSL_FILETYPE_PEM) == 1)
+				if (SSL_CTX_use_PrivateKey_file (serv->ctx, cert_file, SSL_FILETYPE_PEM) == 1)
 					serv->have_cert = TRUE;
 			}
 		}
@@ -1707,7 +1619,7 @@ server_connect (server *serv, char *hostname, int port, int no_login)
 	fe_set_away (serv);
 	server_flush_queue (serv);
 
-#ifdef _WIN32
+#ifdef WIN32
 	if (_pipe (read_des, 4096, _O_BINARY) < 0)
 #else
 	if (pipe (read_des) < 0)
@@ -1725,7 +1637,7 @@ server_connect (server *serv, char *hostname, int port, int no_login)
 	serv->proxy_sok4 = -1;
 	serv->proxy_sok6 = -1;
 
-#ifdef _WIN32
+#ifdef WIN32
 	CloseHandle (CreateThread (NULL, 0,
 										(LPTHREAD_START_ROUTINE)server_child,
 										serv, 0, (DWORD *)&pid));
@@ -1750,7 +1662,7 @@ server_connect (server *serv, char *hostname, int port, int no_login)
 	}
 #endif
 	serv->childpid = pid;
-#ifdef _WIN32
+#ifdef WIN32
 	serv->iotag = fe_input_add (serv->childread, FIA_READ|FIA_FD, server_read_child,
 #else
 	serv->iotag = fe_input_add (serv->childread, FIA_READ, server_read_child,
@@ -1775,31 +1687,46 @@ server_set_encoding (server *serv, char *new_encoding)
 {
 	char *space;
 
-	if (serv->encoding)
-	{
-		g_free (serv->encoding);
-		/* can be left as NULL to indicate system encoding */
-		serv->encoding = NULL;
-		serv->using_cp1255 = FALSE;
-		serv->using_irc = FALSE;
-	}
+	g_free (serv->encoding);
 
 	if (new_encoding)
 	{
 		serv->encoding = g_strdup (new_encoding);
-		/* the serverlist GUI might have added a space
+		/* the serverlist GUI might have added a space 
 			and short description - remove it. */
 		space = strchr (serv->encoding, ' ');
 		if (space)
 			space[0] = 0;
 
-		/* server_inline() uses these flags */
-		if (!g_ascii_strcasecmp (serv->encoding, "CP1255") ||
-			 !g_ascii_strcasecmp (serv->encoding, "WINDOWS-1255"))
-			serv->using_cp1255 = TRUE;
-		else if (!g_ascii_strcasecmp (serv->encoding, "IRC"))
-			serv->using_irc = TRUE;
+		/* Default legacy "IRC" encoding to utf-8. */
+		if (g_ascii_strcasecmp (serv->encoding, "IRC") == 0)
+		{
+			g_free (serv->encoding);
+			serv->encoding = g_strdup ("UTF-8");
+		}
+
+		else if (!servlist_check_encoding (serv->encoding))
+		{
+			g_free (serv->encoding);
+			serv->encoding = g_strdup ("UTF-8");
+		}
 	}
+	else
+	{
+		serv->encoding = g_strdup ("UTF-8");
+	}
+
+	if (serv->read_converter != NULL)
+	{
+		g_iconv_close (serv->read_converter);
+	}
+	serv->read_converter = g_iconv_open ("UTF-8", serv->encoding);
+
+	if (serv->write_converter != NULL)
+	{
+		g_iconv_close (serv->write_converter);
+	}
+	serv->write_converter = g_iconv_open (serv->encoding, "UTF-8");
 }
 
 server *
@@ -1838,14 +1765,23 @@ server_set_defaults (server *serv)
 	g_free (serv->chanmodes);
 	g_free (serv->nick_prefixes);
 	g_free (serv->nick_modes);
-
+#ifdef USE_OPENSSL
+        g_clear_pointer (&serv->scram_session, scram_session_free);
+#endif
 	serv->chantypes = g_strdup ("#&!+");
 	serv->chanmodes = g_strdup ("beI,k,l");
 	serv->nick_prefixes = g_strdup ("@%+");
 	serv->nick_modes = g_strdup ("ohv");
+	serv->modes_per_line = 3; /* https://datatracker.ietf.org/doc/html/rfc1459#section-4.2.3.1 */
+	serv->sasl_mech = MECH_PLAIN;
+
+	if (!serv->encoding)
+		server_set_encoding (serv, "UTF-8");
 
 	serv->nickcount = 1;
 	serv->end_of_motd = FALSE;
+	serv->sent_capend = FALSE;
+	serv->use_listargs = FALSE;
 	serv->is_away = FALSE;
 	serv->supports_watch = FALSE;
 	serv->supports_monitor = FALSE;
@@ -1858,6 +1794,7 @@ server_set_defaults (server *serv)
 	serv->have_idmsg = FALSE;
 	serv->have_accnotify = FALSE;
 	serv->have_extjoin = FALSE;
+	serv->have_account_tag = FALSE;
 	serv->have_server_time = FALSE;
 	serv->have_sasl = FALSE;
 	serv->have_except = FALSE;
@@ -1988,13 +1925,23 @@ server_free (server *serv)
 
 	g_free (serv->nick_modes);
 	g_free (serv->nick_prefixes);
-    g_free (serv->chanmodes);
-    g_free (serv->chantypes);
-    g_free (serv->bad_nick_prefixes);
-    g_free (serv->last_away_reason);
-    g_free (serv->encoding);
+	g_free (serv->chanmodes);
+	g_free (serv->chantypes);
+	g_free (serv->bad_nick_prefixes);
+	g_free (serv->last_away_reason);
+	g_free (serv->encoding);
+
+	g_iconv_close (serv->read_converter);
+	g_iconv_close (serv->write_converter);
+
 	if (serv->favlist)
 		g_slist_free_full (serv->favlist, (GDestroyNotify) servlist_favchan_free);
+#ifdef USE_OPENSSL
+	if (serv->ctx)
+		_SSL_context_free (serv->ctx);
+
+        g_clear_pointer (&serv->scram_session, scram_session_free);
+#endif
 
 	fe_server_callback (serv);
 

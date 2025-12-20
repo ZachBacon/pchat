@@ -25,7 +25,7 @@
 
 #include "fe-gtk.h"
 #include "../common/cfgfiles.h"
-#include "../common/xchat.h"
+#include "../common/pchat.h"
 #include "../common/fe.h"
 
 #include <gio/gio.h>

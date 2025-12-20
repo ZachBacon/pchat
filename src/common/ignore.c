@@ -1,10 +1,6 @@
 /* X-Chat
  * Copyright (C) 1998 Peter Zelezny.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -27,19 +23,19 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#ifdef _WIN32
+#ifdef WIN32
 #include <io.h>
 #else
 #include <unistd.h>
 #endif
 
-#include "xchat.h"
+#include "pchat.h"
 #include "ignore.h"
 #include "cfgfiles.h"
 #include "fe.h"
 #include "text.h"
 #include "util.h"
-#include "xchatc.h"
+#include "pchatc.h"
 #include "typedef.h"
 
 
@@ -57,7 +53,7 @@ static int ignored_total = 0;
 struct ignore *
 ignore_exists (char *mask)
 {
-	struct ignore *ig = 0;
+	struct ignore *ig = NULL;
 	GSList *list;
 
 	list = ignore_list;
@@ -83,7 +79,7 @@ ignore_exists (char *mask)
 int
 ignore_add (char *mask, int type, gboolean overwrite)
 {
-	struct ignore *ig = 0;
+	struct ignore *ig = NULL;
 	int change_only = FALSE;
 
 	/* first check if it's already ignored */
@@ -92,10 +88,7 @@ ignore_add (char *mask, int type, gboolean overwrite)
 		change_only = TRUE;
 
 	if (!change_only)
-		ig = malloc (sizeof (struct ignore));
-
-	if (!ig)
-		return 0;
+		ig = g_new (struct ignore, 1);
 
 	ig->mask = g_strdup (mask);
 
@@ -196,8 +189,8 @@ ignore_del (char *mask, struct ignore *ig)
 	if (ig)
 	{
 		ignore_list = g_slist_remove (ignore_list, ig);
-		free (ig->mask);
-		free (ig);
+		g_free (ig->mask);
+		g_free (ig);
 		fe_ignore_update (1);
 		return TRUE;
 	}
@@ -285,30 +278,26 @@ ignore_load ()
 	struct ignore *ignore;
 	struct stat st;
 	char *cfg, *my_cfg;
-	int fh, i;
+	int fh;
 
-	fh = xchat_open_file ("ignore.conf", O_RDONLY, 0, 0);
+	fh = pchat_open_file ("ignore.conf", O_RDONLY, 0, 0);
 	if (fh != -1)
 	{
 		fstat (fh, &st);
 		if (st.st_size)
 		{
-			cfg = malloc (st.st_size + 1);
-			cfg[0] = '\0';
-			i = read (fh, cfg, st.st_size);
-			if (i >= 0)
-				cfg[i] = '\0';
+			cfg = g_malloc0 (st.st_size + 1);
+			read (fh, cfg, st.st_size);
 			my_cfg = cfg;
 			while (my_cfg)
 			{
-				ignore = malloc (sizeof (struct ignore));
-				memset (ignore, 0, sizeof (struct ignore));
+				ignore = g_new0 (struct ignore, 1);
 				if ((my_cfg = ignore_read_next_entry (my_cfg, ignore)))
 					ignore_list = g_slist_prepend (ignore_list, ignore);
 				else
-					free (ignore);
+					g_free (ignore);
 			}
-			free (cfg);
+			g_free (cfg);
 		}
 		close (fh);
 	}
@@ -322,7 +311,7 @@ ignore_save ()
 	GSList *temp = ignore_list;
 	struct ignore *ig;
 
-	fh = xchat_open_file ("ignore.conf", O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
+	fh = pchat_open_file ("ignore.conf", O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
 	if (fh != -1)
 	{
 		while (temp)
@@ -351,17 +340,6 @@ flood_autodialog_timeout (gpointer data)
 int
 flood_check (char *nick, char *ip, server *serv, session *sess, int what)	/*0=ctcp  1=priv */
 {
-	/*
-	   serv
-	   int ctcp_counter;
-	   time_t ctcp_last_time;
-	   prefs
-	   unsigned int ctcp_number_limit;
-	   unsigned int ctcp_time_limit;
-	 */
-	char buf[512];
-	char real_ip[132];
-	int i;
 	time_t current_time;
 	current_time = time (NULL);
 
@@ -378,20 +356,24 @@ flood_check (char *nick, char *ip, server *serv, session *sess, int what)	/*0=ct
 				serv->ctcp_counter++;
 				if (serv->ctcp_counter == prefs.pchat_flood_ctcp_num)	/*if we reached the maximun numbers of ctcp in the seconds limits */
 				{
+					char *mask, *message, *real_ip;
+
 					serv->ctcp_last_time = current_time;	/*we got the flood, restore all the vars for next one */
 					serv->ctcp_counter = 0;
-					for (i = 0; i < 128; i++)
-						if (ip[i] == '@')
-							break;
-					g_snprintf (real_ip, sizeof (real_ip), "*!*%s", &ip[i]);
 
-					g_snprintf (buf, sizeof (buf),
-								 _("You are being CTCP flooded from %s, ignoring %s\n"),
-								 nick, real_ip);
-					PrintText (sess, buf);
+					real_ip = strchr (ip, '@');
+					if (real_ip != NULL)
+						mask = g_strdup_printf ("*!*%s", real_ip);
+					else
+						mask = g_strdup_printf ("%s!*", nick);
 
-					/* ignore CTCP */
-					ignore_add (real_ip, IG_CTCP, FALSE);
+					message = g_strdup_printf (_("You are being CTCP flooded from %s, ignoring %s\n"), nick, mask);
+
+					PrintText (sess, message);
+					ignore_add (mask, IG_CTCP, FALSE);
+
+					g_free (message);
+					g_free (mask);
 					return 0;
 				}
 			}
@@ -407,6 +389,7 @@ flood_check (char *nick, char *ip, server *serv, session *sess, int what)	/*0=ct
 			if (difftime (current_time, serv->msg_last_time) <
 				 prefs.pchat_flood_msg_time)
 			{
+				char buf[512];
 				serv->msg_counter++;
 				if (serv->msg_counter == prefs.pchat_flood_msg_num)	/*if we reached the maximun numbers of ctcp in the seconds limits */
 				{
@@ -421,7 +404,7 @@ flood_check (char *nick, char *ip, server *serv, session *sess, int what)	/*0=ct
 					{
 						prefs.pchat_gui_autoopen_dialog = 0;
 						/* turn it back on in 30 secs */
-						fe_timeout_add (30000, flood_autodialog_timeout, NULL);
+						fe_timeout_add_seconds (30, flood_autodialog_timeout, NULL);
 					}
 					return 0;
 				}

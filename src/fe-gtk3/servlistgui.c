@@ -24,8 +24,8 @@
 #include <gdk/gdkkeysyms.h>
 
 #include "fe-gtk.h"
-#include "../common/xchat.h"
-#include "../common/xchatc.h"
+#include "../common/pchat.h"
+#include "../common/pchatc.h"
 #include "../common/servlist.h"
 #include "../common/cfgfiles.h"
 #include "../common/fe.h"
@@ -1307,7 +1307,7 @@ servlist_delete_cb (GtkWidget *win, GdkEventAny *event, gpointer userdata)
 	selected_net = NULL;
 
 	if (sess_list == NULL)
-		xchat_exit ();
+		pchat_exit ();
 
 	return FALSE;
 }
@@ -1321,7 +1321,7 @@ servlist_close_cb (GtkWidget *button, gpointer userdata)
 	selected_net = NULL;
 
 	if (sess_list == NULL)
-		xchat_exit ();
+		pchat_exit ();
 }
 
 /* convert "host:port" format to "host/port" */

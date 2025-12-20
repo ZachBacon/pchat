@@ -4,7 +4,7 @@ add_library(pchatcommon STATIC
     chanopt.c
     ctcp.c
     dcc.c
-    xchat.c
+    pchat.c
     history.c
     ignore.c
     inbound.c
@@ -14,8 +14,10 @@ add_library(pchatcommon STATIC
     notify.c
     outbound.c
     plugin.c
+    plugin-identd.c
     plugin-timer.c
     proto-irc.c
+    scram.c
     server.c
     servlist.c
     text.c
@@ -28,13 +30,9 @@ add_library(pchatcommon STATIC
 # Platform-specific sources
 if(WIN32)
     target_sources(pchatcommon PRIVATE
-        identd.c
-        pchat-platform-support-win32.c
+        sysinfo/win32/backend.c
     )
-else()
-    target_sources(pchatcommon PRIVATE
-        pchat-platform-support.c
-    )
+    target_include_directories(pchatcommon PRIVATE sysinfo)
 endif()
 
 # OpenSSL support
@@ -73,13 +71,13 @@ if(LIBPROXY_FOUND)
     target_link_libraries(pchatcommon PRIVATE ${LIBPROXY_LIBRARIES})
 endif()
 
-# Generate text events
-add_executable(make-te make-te.c)
+# Generate text events using Python script
+find_program(PYTHON_EXECUTABLE python3 REQUIRED)
 
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/textevents.h ${CMAKE_CURRENT_BINARY_DIR}/textenums.h
-    COMMAND make-te < ${CMAKE_CURRENT_SOURCE_DIR}/textevents.in > ${CMAKE_CURRENT_BINARY_DIR}/textevents.h 2> ${CMAKE_CURRENT_BINARY_DIR}/textenums.h
-    DEPENDS make-te ${CMAKE_CURRENT_SOURCE_DIR}/textevents.in
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/make-te.py ${CMAKE_CURRENT_SOURCE_DIR}/textevents.in ${CMAKE_CURRENT_BINARY_DIR}/textevents.h ${CMAKE_CURRENT_BINARY_DIR}/textenums.h
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/make-te.py ${CMAKE_CURRENT_SOURCE_DIR}/textevents.in
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
@@ -114,5 +112,5 @@ endif()
 
 # Install headers if plugin support is enabled
 if(ENABLE_PLUGIN)
-    install(FILES xchat-plugin.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/pchat)
+    install(FILES pchat-plugin.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/pchat)
 endif()

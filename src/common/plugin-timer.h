@@ -2,9 +2,6 @@
  * Copyright (C) 1998-2010 Peter Zelezny.
  * Copyright (C) 2009-2013 Berke Viktor.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -23,7 +20,7 @@
 #ifndef PCHAT_PLUGIN_TIMER_H
 #define PCHAT_PLUGIN_TIMER_H
 
-int timer_plugin_init (xchat_plugin *plugin_handle, char **plugin_name,
+int timer_plugin_init (pchat_plugin *plugin_handle, char **plugin_name,
 				char **plugin_desc, char **plugin_version, char *arg);
 
 #endif

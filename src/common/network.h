@@ -2,10 +2,6 @@
  * Copyright (C) 1998-2010 Peter Zelezny.
  * Copyright (C) 2009-2013 Berke Viktor.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -27,12 +23,7 @@
 typedef struct netstore_
 {
 #ifdef NETWORK_PRIVATE
-#ifdef USE_IPV6
 	struct addrinfo *ip6_hostent;
-#else
-	struct hostent *ip4_hostent;
-	struct sockaddr_in addr;
-#endif
 #else
 	int _dummy;	/* some compilers don't like empty structs */
 #endif
@@ -47,11 +38,5 @@ char *net_resolve (netstore *ns, char *hostname, int port, char **real_host);
 void net_bind (netstore *tobindto, int sok4, int sok6);
 char *net_ip (guint32 addr);
 void net_sockets (int *sok4, int *sok6);
-/* functions for MSPROXY only! */
-void udp_sockets (int *sok4, int *sok6);
-void net_store_fill_any (netstore *ns);
-void net_store_fill_v4 (netstore *ns, guint32 addr, int port);
-guint32 net_getsockaddr_v4 (netstore *ns);
-int net_getsockport(int sok4, int sok6);
 
 #endif

@@ -36,9 +36,9 @@
 
 #include "fe-gtk.h"
 
-#include "../common/xchat.h"
+#include "../common/pchat.h"
 #include "../common/cfgfiles.h"
-#include "../common/xchatc.h"
+#include "../common/pchatc.h"
 #include "../common/fe.h"
 #include "menu.h"
 #include "gtkutil.h"
@@ -70,7 +70,7 @@ editlist_save (GtkWidget *igad, gchar *file)
 	char *name, *cmd;
 	int fh;
 
-	fh = xchat_open_file (file, O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
+	fh = pchat_open_file (file, O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
 	if (fh != -1)
 	{
 		if (gtk_tree_model_get_iter_first (GTK_TREE_MODEL (store), &iter))

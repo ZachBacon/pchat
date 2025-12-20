@@ -34,8 +34,8 @@
 
 #include <gdk/gdkkeysyms.h>
 
-#include "../common/xchat.h"
-#include "../common/xchatc.h"
+#include "../common/pchat.h"
+#include "../common/pchatc.h"
 #include "../common/cfgfiles.h"
 #include "../common/server.h"
 #include "gtkutil.h"
@@ -67,7 +67,7 @@ rawlog_save (server *serv, char *file)
 	if (file)
 	{
 		if (serv->gui->rawlog_window)
-			fh = xchat_open_file (file, O_TRUNC | O_WRONLY | O_CREAT,
+			fh = pchat_open_file (file, O_TRUNC | O_WRONLY | O_CREAT,
 										 0600, XOF_DOMODE | XOF_FULLPATH);
 		if (fh != -1)
 		{

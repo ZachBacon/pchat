@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python
 
 # HexChat
 # Copyright (C) 1998-2010 Peter Zelezny.
@@ -19,29 +19,33 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 #
 
-import dbus
+from gi.repository import Gio
 
-bus = dbus.SessionBus()
-proxy = bus.get_object('org.pchat.service', '/org/pchat/Remote')
-remote = dbus.Interface(proxy, 'org.pchat.connection')
-path = remote.Connect ("example.py",
-		       "Python example",
-		       "Example of a D-Bus client written in python",
-		       "1.0")
-proxy = bus.get_object('org.pchat.service', path)
-xchat = dbus.Interface(proxy, 'org.pchat.plugin')
+bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+connection = Gio.DBusProxy.new_sync(bus, Gio.DBusProxyFlags.NONE, None,
+  						'org.pchat.service', '/org/pchat/Remote', 'org.pchat.connection', None)
+path = connection.Connect('(ssss)', 
+					'example.py',
+					'Python example', 
+					'Example of a D-Bus client written in python', 
+					'1.0')		
+pchat = Gio.DBusProxy.new_sync(bus, Gio.DBusProxyFlags.NONE, None,
+								'org.pchat.service', path, 'org.pchat.plugin', None)
+         
+# Note the type before every arguement, this must be done.
+# Type requirements are listed in our docs and characters are listed in the dbus docs.
+# s = string, u = uint, i = int, etc.
 
-channels = xchat.ListGet ("channels")
-while xchat.ListNext (channels):
-	name = xchat.ListStr (channels, "channel")
+channels = pchat.ListGet ('(s)', "channels")
+while pchat.ListNext ('(u)', channels):
+	name = pchat.ListStr ('(us)', channels, "channel")
 	print("------- " + name + " -------")
-	xchat.SetContext (xchat.ListInt (channels, "context"))
-	xchat.EmitPrint ("Channel Message", ["John", "Hi there", "@"])
-	users = xchat.ListGet ("users")
-	while xchat.ListNext (users):
-		print("Nick: " + xchat.ListStr (users, "nick"))
-	xchat.ListFree (users)
-xchat.ListFree (channels)
+	pchat.SetContext ('(u)', pchat.ListInt ('(us)', channels, "context"))
+	pchat.EmitPrint ('(sas)', "Channel Message", ["John", "Hi there", "@"])
+	users = pchat.ListGet ('(s)', "users")
+	while pchat.ListNext ('(u)', users):
+		print("Nick: " + pchat.ListStr ('(us)', users, "nick"))
+	pchat.ListFree ('(u)', users)
+pchat.ListFree ('(u)', channels)
 
-print(xchat.Strip ("\00312Blue\003 \002Bold!\002", -1, 1|2))
-
+print(hexchat.Strip ('(sii)', "\00312Blue\003 \002Bold!\002", -1, 1|2))

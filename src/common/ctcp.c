@@ -1,9 +1,5 @@
-/* HexChat
- * Copyright (C) 1998-2010 Peter Zelezny.
- * Copyright (C) 2009-2013 Berke Viktor.
- *
- * PChat
- * Copyright (C) 2025 Zach Bacon
+/* X-Chat
+ * Copyright (C) 1998 Peter Zelezny.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,11 +20,11 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifndef _WIN32
+#ifndef WIN32
 #include <unistd.h>
 #endif
 
-#include "xchat.h"
+#include "pchat.h"
 #include "cfgfiles.h"
 #include "util.h"
 #include "modes.h"
@@ -39,7 +35,7 @@
 #include "text.h"
 #include "ctcp.h"
 #include "server.h"
-#include "xchatc.h"
+#include "pchatc.h"
 
 
 static void
@@ -53,7 +49,7 @@ ctcp_reply (session *sess, char *nick, char *word[], char *word_eol[],
 	check_special_chars (conf, TRUE);
 	auto_insert (tbuf, sizeof (tbuf), conf, word, word_eol, "", "", word_eol[5],
 					 server_get_network (sess->server, TRUE), "", "", nick, "");
-	free (conf);
+	g_free (conf);
 	handle_command (sess, tbuf, FALSE);
 }
 
@@ -63,6 +59,7 @@ ctcp_check (session *sess, char *nick, char *word[], char *word_eol[],
 {
 	int ret = 0;
 	char *po;
+	struct popup *pop;
 	GSList *list = ctcp_list;
 
 	po = strchr (ctcp, '\001');
@@ -75,7 +72,6 @@ ctcp_check (session *sess, char *nick, char *word[], char *word_eol[],
 
 	while (list)
 	{
-		struct popup *pop;
 		pop = (struct popup *) list->data;
 		if (!g_ascii_strcasecmp (ctcp, pop->name))
 		{
@@ -97,9 +93,6 @@ ctcp_handle (session *sess, char *to, char *nick, char *ip,
 	server *serv = sess->server;
 	char outbuf[1024];
 	int ctcp_offset = 2;
-
-	if (serv->have_idmsg && (word[4][1] == '+' || word[4][1] == '-') )
-			ctcp_offset = 3;
 
 	/* consider DCC to be different from other CTCPs */
 	if (!g_ascii_strncasecmp (msg, "DCC", 3))
@@ -133,7 +126,7 @@ ctcp_handle (session *sess, char *to, char *nick, char *ip,
 		if (ctcp_check (sess, nick, word, word_eol, word[4] + ctcp_offset))
 			goto generic;
 
-		inbound_action (sess, to, nick, ip, msg + 7, FALSE, id, tags_data);
+		inbound_action (sess, to, nick, ip, msg + 7, FALSE, tags_data->identified, tags_data);
 		return;
 	}
 
@@ -142,7 +135,7 @@ ctcp_handle (session *sess, char *to, char *nick, char *ip,
 
 	if (!g_ascii_strcasecmp (msg, "VERSION") && !prefs.pchat_irc_hide_version)
 	{
-#ifdef _WIN32
+#ifdef WIN32
 		g_snprintf (outbuf, sizeof (outbuf), "VERSION PChat "PACKAGE_VERSION" [x%d] / %s",
 					 get_cpu_arch (), get_sys_str (1));
 #else
@@ -151,6 +144,9 @@ ctcp_handle (session *sess, char *to, char *nick, char *ip,
 #endif
 		serv->p_nctcp (serv, nick, outbuf);
 	}
+
+	if (word[4][1] == '\0')
+		return;
 
 	if (!ctcp_check (sess, nick, word, word_eol, word[4] + ctcp_offset))
 	{
@@ -176,7 +172,7 @@ ctcp_handle (session *sess, char *to, char *nick, char *ip,
 			}
 
 			/* don't let IRCers specify path */
-#ifdef _WIN32
+#ifdef WIN32
 			if (strchr (word[5], '/') == NULL && strchr (word[5], '\\') == NULL)
 #else
 			if (strchr (word[5], '/') == NULL)

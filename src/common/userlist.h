@@ -2,9 +2,6 @@
  * Copyright (C) 1998-2010 Peter Zelezny.
  * Copyright (C) 2009-2013 Berke Viktor.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -23,8 +20,8 @@
 #include <time.h>
 #include "proto-irc.h"
 
-#ifndef PCHAT_USERLIST_H
-#define PCHAT_USERLIST_H
+#ifndef pchat_USERLIST_H
+#define pchat_USERLIST_H
 
 struct User
 {
@@ -64,5 +61,7 @@ void userlist_update_mode (session *sess, char *name, char mode, char sign);
 GSList *userlist_flat_list (session *sess);
 GList *userlist_double_list (session *sess);
 void userlist_rehash (session *sess);
+int nick_cmp_az_ops (server *serv, struct User *user1, struct User *user2);
+int nick_cmp_alpha (struct User *user1, struct User *user2, server *serv);
 
 #endif

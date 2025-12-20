@@ -44,10 +44,10 @@
 #include <cairo.h>
 #include <pango/pangocairo.h>
 
-#include "../common/xchat.h"
+#include "../common/pchat.h"
 #include "../common/fe.h"
 #include "../common/util.h"
-#include "../common/xchatc.h"
+#include "../common/pchatc.h"
 #include "../common/url.h"
 #include "../common/marshal.h"
 #include "fe-gtk.h"

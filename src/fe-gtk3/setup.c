@@ -24,13 +24,13 @@
 
 #include "fe-gtk.h"
 #include "css-helpers.h"
-#include "../common/xchat.h"
+#include "../common/pchat.h"
 #include "../common/cfgfiles.h"
 #include "../common/fe.h"
 #include "../common/text.h"
 #include "../common/userlist.h"
 #include "../common/util.h"
-#include "../common/xchatc.h"
+#include "../common/pchatc.h"
 #include "gtkutil.h"
 #include "maingui.h"
 #include "palette.h"
@@ -50,7 +50,7 @@
 static int last_selected_page = 0;
 static int last_selected_row = 0; /* sound row */
 static gboolean color_change;
-static struct xchatprefs setup_prefs;
+static struct pchatprefs setup_prefs;
 static GtkWidget *cancel_button;
 static GtkWidget *font_dialog = NULL;
 
@@ -2058,7 +2058,7 @@ setup_apply_entry_style (GtkWidget *entry)
 static void
 setup_apply_to_sess (session_gui *gui)
 {
-	mg_update_xtext (GTK_WIDGET (gui->xtext));
+	mg_update_xtext (GTK_WIDGET (gui->textview));
 
 	if (prefs.pchat_gui_ulist_style && GTK_IS_WIDGET (gui->user_tree) && gtk_widget_get_realized (gui->user_tree))
 	{
@@ -2188,7 +2188,7 @@ setup_apply_real (int new_pix, int do_ulist, int do_layout)
 }
 
 static void
-setup_apply (struct xchatprefs *pr)
+setup_apply (struct pchatprefs *pr)
 {
 #ifdef _WIN32
 	PangoFontDescription *old_desc;
@@ -2233,8 +2233,8 @@ setup_apply (struct xchatprefs *pr)
 		noapply = TRUE;
 	if (DIFF (pchat_gui_ulist_icons))
 		noapply = TRUE;
-	if (DIFF (pchat_gui_ulist_resizable))
-		noapply = TRUE;
+	/*if (DIFF (pchat_gui_ulist_resizable))
+		noapply = TRUE;*/
 	if (DIFF (pchat_gui_ulist_show_hosts))
 		noapply = TRUE;
 	if (DIFF (pchat_gui_ulist_style))

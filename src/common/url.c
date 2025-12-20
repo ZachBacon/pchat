@@ -1,9 +1,6 @@
 /* X-Chat
  * Copyright (C) 1998 Peter Zelezny.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -23,8 +20,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "xchat.h"
-#include "xchatc.h"
+#include "pchat.h"
+#include "pchatc.h"
 #include "cfgfiles.h"
 #include "fe.h"
 #include "tree.h"
@@ -56,7 +53,7 @@ static gboolean match_path (const char *word, int *start, int *end);
 static int
 url_free (char *url, void *data)
 {
-	free (url);
+	g_free (url);
 	return TRUE;
 }
 
@@ -83,9 +80,9 @@ url_save_tree (const char *fname, const char *mode, gboolean fullpath)
 	FILE *fd;
 
 	if (fullpath)
-		fd = xchat_fopen_file (fname, mode, XOF_FULLPATH);
+		fd = pchat_fopen_file (fname, mode, XOF_FULLPATH);
 	else
-		fd = xchat_fopen_file (fname, mode, 0);
+		fd = pchat_fopen_file (fname, mode, 0);
 	if (fd == NULL)
 		return;
 
@@ -99,14 +96,14 @@ url_save_node (char* url)
 	FILE *fd;
 
 	/* open <config>/url.log in append mode */
-	fd = xchat_fopen_file ("url.log", "a", 0);
+	fd = pchat_fopen_file ("url.log", "a", 0);
 	if (fd == NULL)
 	{
 		return;
 	}
 
 	fprintf (fd, "%s\n", url);
-	fclose (fd);
+	fclose (fd);	
 }
 
 static int
@@ -127,13 +124,7 @@ url_add (char *urltext, int len)
 		return;
 	}
 
-	data = malloc (len + 1);
-	if (!data)
-	{
-		return;
-	}
-	memcpy (data, urltext, len);
-	data[len] = 0;
+	data = g_strndup (urltext, len);
 
 	if (data[len - 1] == '.')	/* chop trailing dot */
 	{
@@ -154,7 +145,7 @@ url_add (char *urltext, int len)
 	/* the URL is saved already, only continue if we need the URL grabber too */
 	if (!prefs.pchat_url_grabber)
 	{
-		free (data);
+		g_free (data);
 		return;
 	}
 
@@ -166,7 +157,7 @@ url_add (char *urltext, int len)
 
 	if (url_find (data))
 	{
-		free (data);
+		g_free (data);
 		return;
 	}
 
@@ -175,7 +166,7 @@ url_add (char *urltext, int len)
 	if (prefs.pchat_url_grabber_limit > 0 && size >= prefs.pchat_url_grabber_limit)
 	{
 		/* the loop is necessary to handle having the limit lowered while
-		   PChat is running */
+		   HexChat is running */
 		size -= prefs.pchat_url_grabber_limit;
 		for(; size > 0; size--)
 		{
@@ -183,7 +174,7 @@ url_add (char *urltext, int len)
 
 			pos = tree_remove_at_pos (url_tree, 0);
 			g_tree_remove (url_btree, pos);
-			free (pos);
+			g_free (pos);
 		}
 	}
 
@@ -247,7 +238,7 @@ match_nick (const char *word, int *start, int *end)
 	if (strchr (NICKPRE, word[*start])
 		&& !strchr (nick_prefixes, word[*start]))
 		return FALSE;
-
+	
 	/* nick prefix is not part of the matched word */
 	if (strchr (nick_prefixes, word[*start]))
 		(*start)++;
@@ -285,7 +276,7 @@ match_channel (const char *word, int *start, int *end)
 	/* Or just #channel */
 	else if (strchr (chan_prefixes, word[*start]) != NULL)
 		return TRUE;
-
+	
 	return FALSE;
 }
 
@@ -340,7 +331,7 @@ url_check_line (char *buf)
 	GRegex *re(void);
 	GMatchInfo *gmi;
 	char *po = buf;
-	int i;
+	size_t i;
 
 	/* Skip over message prefix */
 	if (*po == ':')
@@ -399,27 +390,27 @@ regex_match (const GRegex *re, const char *word, int *start, int *end)
 	GMatchInfo *gmi;
 
 	g_regex_match (re, word, 0, &gmi);
-
+	
 	if (!g_match_info_matches (gmi))
 	{
 		g_match_info_free (gmi);
 		return FALSE;
 	}
-
+	
 	while (g_match_info_matches (gmi))
 	{
 		g_match_info_fetch_pos (gmi, 0, start, end);
 		g_match_info_next (gmi, NULL);
 	}
-
+	
 	g_match_info_free (gmi);
-
+	
 	return TRUE;
 }
 
 /*	Miscellaneous description --- */
-#define DOMAIN "[a-z0-9][-a-z0-9]*(\\.[-a-z0-9]+)*"
-#define TLD "\\.[a-z][-a-z0-9]*[a-z]"
+#define DOMAIN "[_\\pL\\pN\\pS][-_\\pL\\pN\\pS]*(\\.[-_\\pL\\pN\\pS]+)*"
+#define TLD "\\.[\\pL][-\\pL\\pN]*[\\pL]"
 #define IPADDR "[0-9]{1,3}(\\.[0-9]{1,3}){3}"
 #define IPV6GROUP "([0-9a-f]{0,4})"
 #define IPV6ADDR "((" IPV6GROUP "(:" IPV6GROUP "){7})"	\
@@ -432,7 +423,7 @@ regex_match (const GRegex *re, const char *word, int *start, int *end)
 #define OPT_PORT "(" PORT ")?"
 
 static GRegex *
-make_re (char *grist)
+make_re (const char *grist)
 {
 	GRegex *ret;
 	GError *err = NULL;
@@ -452,7 +443,7 @@ re_host (void)
 	if (host_ret) return host_ret;
 
 	host_ret = make_re ("(" "(" HOST_URL PORT ")|(" HOST ")" ")");
-
+	
 	return host_ret;
 }
 
@@ -527,6 +518,8 @@ struct
 	{ "pop",       "/", URI_AUTHORITY | URI_OPT_USERINFO | URI_PATH },
 	{ "nfs",       "/", URI_AUTHORITY | URI_OPT_USERINFO | URI_PATH },
 	{ "smb",       "/", URI_AUTHORITY | URI_OPT_USERINFO | URI_PATH },
+	{ "gopher",    "/", URI_AUTHORITY | URI_PATH },
+	{ "gemini",    "/", URI_AUTHORITY | URI_PATH },
 	{ "ssh",       "",  URI_AUTHORITY | URI_OPT_USERINFO },
 	{ "sip",       "",  URI_AUTHORITY | URI_USERINFO },
 	{ "sips",      "",  URI_AUTHORITY | URI_USERINFO },
@@ -542,6 +535,7 @@ struct
 	{ "spotify",   "",  URI_PATH },
 	{ "lastfm",    "/", URI_PATH },
 	{ "xfire",     "",  URI_PATH },
+	{ "ts3server", "",  URI_PATH },
 	{ NULL,        "",  0}
 };
 
@@ -587,21 +581,17 @@ re_url (void)
 
 		if (uri[i].flags & URI_AUTHORITY)
 			g_string_append (grist_gstr, HOST_URL_OPT_TLD OPT_PORT);
-
+		
 		if (uri[i].flags & URI_PATH)
 		{
-			char *sep_escaped;
+			char *sep_escaped = g_regex_escape_string (uri[i].path_sep, strlen(uri[i].path_sep));
 
-			sep_escaped = g_regex_escape_string (uri[i].path_sep,
-							     strlen(uri[i].path_sep));
+			g_string_append_printf (grist_gstr, "(" "%s" PATH ")?", sep_escaped);
 
-			g_string_append_printf(grist_gstr, "(" "%s" PATH ")?",
-					       sep_escaped);
-
-			g_free(sep_escaped);
+			g_free (sep_escaped);
 		}
 
-		g_string_append(grist_gstr, ")");
+		g_string_append (grist_gstr, ")");
 	}
 
 	grist = g_string_free (grist_gstr, FALSE);
@@ -613,7 +603,7 @@ re_url (void)
 }
 
 /*	EMAIL description --- */
-#define EMAIL "[a-z][-_a-z0-9]+@" "(" HOST_URL ")"
+#define EMAIL "[a-z0-9][._%+-a-z0-9]+@" "(" HOST_URL ")"
 
 static const GRegex *
 re_email (void)
@@ -674,7 +664,7 @@ re_channel (void)
 }
 
 /*	PATH description --- */
-#ifdef _WIN32
+#ifdef WIN32
 /* Windows path can be .\ ..\ or C: D: etc */
 #define FS_PATH "^(\\.{1,2}\\\\|[a-z]:).*"
 #else

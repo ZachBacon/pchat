@@ -34,7 +34,7 @@
 #include "fe-gtk.h"
 #include "palette.h"
 
-#include "../common/xchat.h"
+#include "../common/pchat.h"
 #include "../common/util.h"
 #include "../common/cfgfiles.h"
 #include "../common/typedef.h"
@@ -133,10 +133,10 @@ palette_load (void)
 	guint16 red, green, blue;
 	int upgrade = FALSE;
 
-	fh = xchat_open_file ("colors.conf", O_RDONLY, 0, 0);
+	fh = pchat_open_file ("colors.conf", O_RDONLY, 0, 0);
 	if (fh == -1)
 	{
-		fh = xchat_open_file ("palette.conf", O_RDONLY, 0, 0);
+		fh = pchat_open_file ("palette.conf", O_RDONLY, 0, 0);
 		upgrade = TRUE;
 	}
 
@@ -216,7 +216,7 @@ palette_save (void)
 	int i, j, fh;
 	char prefname[256];
 
-	fh = xchat_open_file ("colors.conf", O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
+	fh = pchat_open_file ("colors.conf", O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
 	if (fh != -1)
 	{
 		/* mIRC colors 0-31 are here */

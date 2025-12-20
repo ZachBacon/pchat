@@ -2,9 +2,6 @@
  * Copyright (C) 1998-2010 Peter Zelezny.
  * Copyright (C) 2009-2013 Berke Viktor.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -46,8 +43,8 @@ void scrollback_load (session *sess);
 int text_word_check (char *word, int len);
 void PrintText (session *sess, char *text);
 void PrintTextTimeStamp (session *sess, char *text, time_t timestamp);
-void PrintTextf (session *sess, char *format, ...);
-void PrintTextTimeStampf (session *sess, time_t timestamp, char *format, ...);
+void PrintTextf (session *sess, const char *format, ...) G_GNUC_PRINTF (2, 3);
+void PrintTextTimeStampf (session *sess, time_t timestamp, const char *format, ...) G_GNUC_PRINTF (3, 4);
 void log_close (session *sess);
 void log_open_or_close (session *sess);
 void load_text_events (void);
@@ -60,15 +57,19 @@ void text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
 		time_t timestamp);
 int text_emit_by_name (char *name, session *sess, time_t timestamp,
 					   char *a, char *b, char *c, char *d);
-char *text_validate (char **text, gssize *len);
+gchar *text_convert_invalid (const gchar* text, gssize len, GIConv converter, const gchar *fallback, gsize *len_out);
+gchar *text_fixup_invalid_utf8 (const gchar* text, gssize len, gsize *len_out);
 int get_stamp_str (char *fmt, time_t tim, char **ret);
 void format_event (session *sess, int index, char **args, char *o, gsize sizeofo, unsigned int stripcolor_args);
 char *text_find_format_string (char *name);
- 
+
+extern const gchar* unicode_fallback_string;
+extern const gchar* arbitrary_encoding_fallback_string;
+
 void sound_play (const char *file, gboolean quiet);
 void sound_play_event (int i);
 void sound_beep (session *);
-void sound_load ();
-void sound_save ();
+void sound_load (void);
+void sound_save (void);
 
 #endif

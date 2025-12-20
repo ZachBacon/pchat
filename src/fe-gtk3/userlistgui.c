@@ -27,13 +27,13 @@
 
 #include <gdk/gdkkeysyms.h>
 
-#include "../common/xchat.h"
+#include "../common/pchat.h"
 #include "../common/util.h"
 #include "../common/userlist.h"
 #include "../common/modes.h"
 #include "../common/text.h"
 #include "../common/notify.h"
-#include "../common/xchatc.h"
+#include "../common/pchatc.h"
 #include "../common/fe.h"
 #include "gtkutil.h"
 #include "palette.h"
@@ -335,7 +335,7 @@ fe_userlist_rehash (session *sess, struct User *user)
 }
 
 void
-fe_userlist_insert (session *sess, struct User *newuser, int row, int sel)
+fe_userlist_insert (session *sess, struct User *newuser, gboolean sel)
 {
 	GtkTreeModel *model = sess->res->user_model;
 	GdkPixbuf *pix = get_user_icon (sess->server, newuser);
@@ -360,7 +360,7 @@ fe_userlist_insert (session *sess, struct User *newuser, int row, int sel)
 		pix = NULL;
 	}
 
-	gtk_list_store_insert_with_values (GTK_LIST_STORE (model), &iter, row,
+gtk_list_store_insert_with_values (GTK_LIST_STORE (model), &iter, -1,
 									COL_PIX, pix,
 									COL_NICK, nick,
 									COL_HOST, newuser->hostname,
@@ -401,7 +401,8 @@ fe_userlist_insert (session *sess, struct User *newuser, int row, int sel)
 void
 fe_userlist_move (session *sess, struct User *user, int new_row)
 {
-	fe_userlist_insert (sess, user, new_row, fe_userlist_remove (sess, user));
+	gboolean was_selected = fe_userlist_remove (sess, user);
+	fe_userlist_insert (sess, user, was_selected);
 }
 
 void

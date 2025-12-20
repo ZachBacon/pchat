@@ -27,7 +27,7 @@
 #include <fcntl.h>
 #include "fe-gtk.h"
 
-#include "../common/xchat.h"
+#include "../common/pchat.h"
 #include "../common/ignore.h"
 #include "../common/cfgfiles.h"
 #include "../common/fe.h"

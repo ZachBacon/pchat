@@ -19,10 +19,10 @@
  * xclaesse@gmail.com
  */
 
-#ifndef PCHAT_DBUS_PLUGIN_H
-#define PCHAT_DBUS_PLUGIN_H
+#ifndef pchat_DBUS_PLUGIN_H
+#define pchat_DBUS_PLUGIN_H
 
-int	dbus_plugin_init	(xchat_plugin *plugin_handle,
+int	dbus_plugin_init	(pchat_plugin *plugin_handle,
 				 char **plugin_name,
 				 char **plugin_desc,
 				 char **plugin_version,

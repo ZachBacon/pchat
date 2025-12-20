@@ -29,8 +29,8 @@
 
 #include "fe-gtk.h"
 
-#include "../common/xchat.h"
-#include "../common/xchatc.h"
+#include "../common/pchat.h"
+#include "../common/pchatc.h"
 #include "../common/cfgfiles.h"
 #include "../common/outbound.h"
 #include "../common/fe.h"
@@ -114,8 +114,8 @@ PrintTextRaw (void *buf_ptr, unsigned char *text, int indent, time_t stamp)
 	int beep_done = FALSE;
 	
 	/* Get the chat widget from the current session - this is a bit hacky but maintains compatibility */
-	if (current_sess && current_sess->gui && current_sess->gui->xtext)
-		chat = PCHAT_TEXTVIEW_CHAT (current_sess->gui->xtext);
+	if (current_sess && current_sess->gui && current_sess->gui->textview)
+		chat = PCHAT_TEXTVIEW_CHAT (current_sess->gui->textview);
 	else
 		return;  /* No widget available */
 

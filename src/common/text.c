@@ -1,9 +1,6 @@
 /* X-Chat
  * Copyright (C) 1998 Peter Zelezny.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -19,7 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <glib.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -29,14 +25,14 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
-#ifdef _WIN32
+#ifdef WIN32
 #include <io.h>
 #else
 #include <unistd.h>
 #include <sys/mman.h>
 #endif
 
-#include "xchat.h"
+#include "pchat.h"
 #include "cfgfiles.h"
 #include "chanopt.h"
 #include "plugin.h"
@@ -44,16 +40,19 @@
 #include "server.h"
 #include "util.h"
 #include "outbound.h"
-#include "xchatc.h"
+#include "pchatc.h"
 #include "text.h"
 #include "typedef.h"
-#ifdef _WIN32
+#ifdef WIN32
 #include <windows.h>
 #endif
 
 #ifdef USE_LIBCANBERRA
 #include <canberra.h>
 #endif
+
+const gchar* unicode_fallback_string = "\357\277\275"; /* The Unicode replacement character 0xFFFD */
+const gchar* arbitrary_encoding_fallback_string = "?";
 
 struct pevt_stage1
 {
@@ -66,74 +65,46 @@ struct pevt_stage1
 static ca_context *ca_con;
 #endif
 
+#define SCROLLBACK_MAX 32000
+
 static void mkdir_p (char *filename);
 static char *log_create_filename (char *channame);
 
 static char *
 scrollback_get_filename (session *sess)
 {
-	char *net, *chan, *buf;
+	char *net, *chan, *buf, *ret = NULL;
 
 	net = server_get_network (sess->server, FALSE);
 	if (!net)
 		return NULL;
 
+	net = log_create_filename (net);
 	buf = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "scrollback" G_DIR_SEPARATOR_S "%s" G_DIR_SEPARATOR_S "%s.txt", get_xdir (), net, "");
 	mkdir_p (buf);
 	g_free (buf);
 
 	chan = log_create_filename (sess->channel);
-	buf = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "scrollback" G_DIR_SEPARATOR_S "%s" G_DIR_SEPARATOR_S "%s.txt", get_xdir (), net, chan);
-	free (chan);
+	if (chan[0])
+		buf = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "scrollback" G_DIR_SEPARATOR_S "%s" G_DIR_SEPARATOR_S "%s.txt", get_xdir (), net, chan);
+	else
+		buf = NULL;
+	g_free (chan);
+	g_free (net);
 
-	return buf;
+	if (buf)
+	{
+		ret = g_filename_from_utf8 (buf, -1, NULL, NULL, NULL);
+		g_free (buf);
+	}
+
+	return ret;
 }
-
-#if 0
-
-static void
-scrollback_unlock (session *sess)
-{
-	char buf[1024];
-
-	if (scrollback_get_filename (sess, buf, sizeof (buf) - 6) == NULL)
-		return;
-
-	strcat (buf, ".lock");
-	unlink (buf);
-}
-
-static gboolean
-scrollback_lock (session *sess)
-{
-	char buf[1024];
-	int fh;
-
-	if (scrollback_get_filename (sess, buf, sizeof (buf) - 6) == NULL)
-		return FALSE;
-
-	strcat (buf, ".lock");
-
-	if (access (buf, F_OK) == 0)
-		return FALSE;	/* can't get lock */
-
-	fh = open (buf, O_CREAT | O_TRUNC | O_APPEND | O_WRONLY, 0644);
-	if (fh == -1)
-		return FALSE;
-
-	return TRUE;
-}
-
-#endif
 
 void
 scrollback_close (session *sess)
 {
-	if (sess->scrollfd != -1)
-	{
-		close (sess->scrollfd);
-		sess->scrollfd = -1;
-	}
+	g_clear_object (&sess->scrollfile);
 }
 
 /* shrink the file to roughly prefs.pchat_text_max_lines */
@@ -141,29 +112,13 @@ scrollback_close (session *sess)
 static void
 scrollback_shrink (session *sess)
 {
-	char *file;
-	char *buf;
-	int fh;
-	int lines;
-	int line;
+	char *buf, *p;
 	gsize len;
-	char *p;
+	gint offset, lines = 0;
+	const gint max_lines = MIN(prefs.pchat_text_max_lines, SCROLLBACK_MAX);
 
-	scrollback_close (sess);
-	sess->scrollwritten = 0;
-	lines = 0;
-
-	if ((file = scrollback_get_filename (sess)) == NULL)
-	{
-		g_free (file);
+	if (!g_file_load_contents (sess->scrollfile, NULL, &buf, &len, NULL, NULL))
 		return;
-	}
-
-	if (!g_file_get_contents (file, &buf, &len, NULL))
-	{
-		g_free (file);
-		return;
-	}
 
 	/* count all lines */
 	p = buf;
@@ -174,44 +129,39 @@ scrollback_shrink (session *sess)
 		p++;
 	}
 
-	fh = g_open (file, O_CREAT | O_TRUNC | O_APPEND | O_WRONLY | OFLAGS, 0644);
-	g_free (file);
-	if (fh == -1)
-	{
-		free (buf);
-		return;
-	}
+	offset = lines - max_lines;
 
-	line = 0;
+	/* now just go back to where we want to start the file */
 	p = buf;
+	lines = 0;
 	while (p != buf + len)
 	{
 		if (*p == '\n')
 		{
-			line++;
-			if (line >= lines - prefs.pchat_text_max_lines &&
-				 p + 1 != buf + len)
+			lines++;
+			if (lines == offset)
 			{
 				p++;
-				write (fh, p, len - (p - buf));
 				break;
 			}
 		}
 		p++;
 	}
 
-	close (fh);
-	free (buf);
+	if (g_file_replace_contents (sess->scrollfile, p, strlen(p), NULL, FALSE,
+							G_FILE_CREATE_PRIVATE, NULL, NULL, NULL))
+		sess->scrollwritten = lines;
+
+	g_free (buf);
 }
 
 static void
-scrollback_save (session *sess, char *text)
+scrollback_save (session *sess, char *text, time_t stamp)
 {
+	GOutputStream *ostream;
 	char *buf;
-	time_t stamp;
-	int len;
 
-	if (sess->type == SESS_SERVER)
+	if (sess->type == SESS_SERVER && prefs.pchat_gui_tab_server == 1)
 		return;
 
 	if (sess->text_scrollback == SET_DEFAULT)
@@ -225,47 +175,56 @@ scrollback_save (session *sess, char *text)
 			return;
 	}
 
-	if (sess->scrollfd == -1)
+	if (!sess->scrollfile)
 	{
 		if ((buf = scrollback_get_filename (sess)) == NULL)
 			return;
 
-		sess->scrollfd = g_open (buf, O_CREAT | O_APPEND | O_WRONLY | OFLAGS, 0644);
+		sess->scrollfile = g_file_new_for_path (buf);
 		g_free (buf);
-		if (sess->scrollfd == -1)
-			return;
+	}
+	else
+	{
+		/* Users can delete the folder after it's created... */
+		GFile *parent = g_file_get_parent (sess->scrollfile);
+		g_file_make_directory_with_parents (parent, NULL, NULL);
+		g_object_unref (parent);
 	}
 
-	stamp = time (0);
+	ostream = G_OUTPUT_STREAM(g_file_append_to (sess->scrollfile, G_FILE_CREATE_PRIVATE, NULL, NULL));
+	if (!ostream)
+		return;
+
+	if (!stamp)
+		stamp = time(0);
 	if (sizeof (stamp) == 4)	/* gcc will optimize one of these out */
 		buf = g_strdup_printf ("T %d ", (int) stamp);
 	else
 		buf = g_strdup_printf ("T %" G_GINT64_FORMAT " ", (gint64)stamp);
-	write (sess->scrollfd, buf, strlen (buf));
-	g_free (buf);
 
-	len = strlen (text);
-	write (sess->scrollfd, text, len);
-	if (len && text[len - 1] != '\n')
-		write (sess->scrollfd, "\n", 1);
+	g_output_stream_write (ostream, buf, strlen (buf), NULL, NULL);
+	g_output_stream_write (ostream, text, strlen (text), NULL, NULL);
+	if (!g_str_has_suffix (text, "\n"))
+		g_output_stream_write (ostream, "\n", 1, NULL, NULL);
+
+	g_free (buf);
+	g_object_unref (ostream);
 
 	sess->scrollwritten++;
 
-	if ((sess->scrollwritten * 2 > prefs.pchat_text_max_lines && prefs.pchat_text_max_lines > 0) ||
-       sess->scrollwritten > 32000)
+	if ((sess->scrollwritten > prefs.pchat_text_max_lines && prefs.pchat_text_max_lines > 0) ||
+       sess->scrollwritten > SCROLLBACK_MAX)
 		scrollback_shrink (sess);
 }
 
 void
 scrollback_load (session *sess)
 {
-	char *buf;
-	char *text;
-	time_t stamp;
-	int lines;
-	GIOChannel *io;
-	GError *file_error = NULL;
-	GError *io_err = NULL;
+	GInputStream *stream;
+	GDataInputStream *istream;
+	gchar *buf, *text;
+	gint lines = 0;
+	time_t stamp = 0;
 
 	if (sess->text_scrollback == SET_DEFAULT)
 	{
@@ -278,38 +237,58 @@ scrollback_load (session *sess)
 			return;
 	}
 
-	if ((buf = scrollback_get_filename (sess)) == NULL)
+	if (!sess->scrollfile)
+	{
+		if ((buf = scrollback_get_filename (sess)) == NULL)
+			return;
+
+		sess->scrollfile = g_file_new_for_path (buf);
+		g_free (buf);
+	}
+
+	stream = G_INPUT_STREAM(g_file_read (sess->scrollfile, NULL, NULL));
+	if (!stream)
 		return;
 
-	io = g_io_channel_new_file (buf, "r", &file_error);
-	g_free (buf);
-	if (!io)
-		return;
-
-	lines = 0;
+	istream = g_data_input_stream_new (stream);
+	/*
+	 * This is to avoid any issues moving between windows/unix
+	 * but the docs mention an invalid \r without a following \n
+	 * can lock up the program... (Our write() always adds \n)
+	 */
+	g_data_input_stream_set_newline_type (istream, G_DATA_STREAM_NEWLINE_TYPE_ANY);
+	g_object_unref (stream);
 
 	while (1)
 	{
+		GError *err = NULL;
 		gsize n_bytes;
-		GIOStatus io_status;
 
-		io_status = g_io_channel_read_line (io, &buf, &n_bytes, NULL, &io_err);
+		buf = g_data_input_stream_read_line_utf8 (istream, &n_bytes, NULL, &err);
 
-		if (io_status == G_IO_STATUS_NORMAL)
+		if (!err && buf)
 		{
-			char *buf_tmp;
-
-			n_bytes--;
-			buf_tmp = buf;
-			buf = g_strndup (buf_tmp, n_bytes);
-			g_free (buf_tmp);
-
-			if (buf[0] == 'T')
+			/*
+			 * Some scrollback lines have three blanks after the timestamp and a newline
+			 * Some have only one blank and a newline
+			 * Some don't even have a timestamp
+			 * Some don't have any text at all
+			 */
+			if (buf[0] == 'T' && buf[1] == ' ')
 			{
-				/* g_ascii_strtoul doesn't exist in modern GLib, use g_ascii_strtoull */
-				stamp = g_ascii_strtoull (buf + 2, NULL, 10);
+				if (sizeof (time_t) == 4)
+					stamp = strtoul (buf + 2, NULL, 10);
+				else
+					stamp = g_ascii_strtoull (buf + 2, NULL, 10); /* in case time_t is 64 bits */
+
+				if (G_UNLIKELY(stamp == 0))
+				{
+					g_warning ("Invalid timestamp in scrollback file");
+					continue;
+				}
+
 				text = strchr (buf + 3, ' ');
-				if (text)
+				if (text && text[1])
 				{
 					if (prefs.pchat_text_stripcolor_replay)
 					{
@@ -323,25 +302,50 @@ scrollback_load (session *sess)
 						g_free (text);
 					}
 				}
-				lines++;
+				else
+				{
+					fe_print_text (sess, "  ", stamp, TRUE);
+				}
 			}
+			else
+			{
+				if (strlen (buf))
+					fe_print_text (sess, buf, 0, TRUE);
+				else
+					fe_print_text (sess, "  ", 0, TRUE);
+			}
+			lines++;
 
 			g_free (buf);
 		}
+		else if (err)
+		{
+			/* If its only an encoding error it may be specific to the line */
+			if (g_error_matches (err, G_CONVERT_ERROR, G_CONVERT_ERROR_ILLEGAL_SEQUENCE))
+			{
+				g_warning ("Invalid utf8 in scrollback file");
+				g_clear_error (&err);
+				continue;
+			}
 
-		else
+			/* For general errors just give up */
+			g_clear_error (&err);
 			break;
+		}
+		else /* No new line */
+		{
+			break;
+		}
 	}
 
-	g_io_channel_unref (io);
+	g_object_unref (istream);
 
 	sess->scrollwritten = lines;
 
 	if (lines)
 	{
 		text = ctime (&stamp);
-		text[24] = 0;	/* get rid of the \n */
-		buf = g_strdup_printf ("\n*\t%s %s\n\n", _("Loaded log from"), text);
+		buf = g_strdup_printf ("\n*\t%s %s\n", _("Loaded log from"), text);
 		fe_print_text (sess, buf, 0, TRUE);
 		g_free (buf);
 		/*EMIT_SIGNAL (XP_TE_GENMSG, sess, "*", buf, NULL, NULL, NULL, 0);*/
@@ -365,16 +369,30 @@ log_close (session *sess)
 	}
 }
 
+/*
+ * filename should be in utf8 encoding and will be
+ * converted to filesystem encoding automatically.
+ */
 static void
 mkdir_p (char *filename)
 {
-	char *dirname;
-
+	char *dirname, *dirname_fs;
+	GError *err = NULL;
+	
 	dirname = g_path_get_dirname (filename);
+	dirname_fs = g_filename_from_utf8 (dirname, -1, NULL, NULL, &err);
+	if (!dirname_fs)
+	{
+		g_warning ("%s", err->message);
+		g_error_free (err);
+		g_free (dirname);
+		return;
+	}
 
-	g_mkdir_with_parents (dirname, 0700);
+	g_mkdir_with_parents (dirname_fs, 0700);
 
 	g_free (dirname);
+	g_free (dirname_fs);
 }
 
 static char *
@@ -383,13 +401,13 @@ log_create_filename (char *channame)
 	char *tmp, *ret;
 	int mbl;
 
-	ret = tmp = strdup (channame);
+	ret = tmp = g_strdup (channame);
 	while (*tmp)
 	{
 		mbl = g_utf8_skip[((unsigned char *)tmp)[0]];
 		if (mbl == 1)
 		{
-#ifndef _WIN32
+#ifndef WIN32
 			*tmp = rfc_tolower (*tmp);
 			if (*tmp == '/')
 #else
@@ -487,12 +505,11 @@ log_create_pathname (char *servname, char *channame, char *netname)
 {
 	char fname[384];
 	char fnametime[384];
-	struct tm *tm;
 	time_t now;
 
 	if (!netname)
 	{
-		netname = strdup ("NETWORK");
+		netname = g_strdup ("NETWORK");
 	}
 	else
 	{
@@ -502,21 +519,23 @@ log_create_pathname (char *servname, char *channame, char *netname)
 	/* first, everything is in UTF-8 */
 	if (!rfc_casecmp (channame, servname))
 	{
-		channame = strdup ("server");
+		channame = g_strdup ("server");
 	}
 	else
 	{
 		channame = log_create_filename (channame);
 	}
 
+	servname = log_create_filename (servname);
+
 	log_insert_vars (fname, sizeof (fname), prefs.pchat_irc_logmask, channame, netname, servname);
-	free (channame);
-	free (netname);
+	g_free (channame);
+	g_free (netname);
+	g_free (servname);
 
 	/* insert time/date */
 	now = time (NULL);
-	tm = localtime (&now);
-	strftime_validated (fnametime, sizeof (fnametime), fname, tm);
+	strftime_utf8 (fnametime, sizeof (fnametime), fname, now);
 
 	/* If one uses log mask variables, such as "%c/...", %c will be empty upon
 	 * connecting since there's no channel name yet, so we have to make sure
@@ -533,7 +552,7 @@ log_create_pathname (char *servname, char *channame, char *netname)
 	/* create all the subdirectories */
 	mkdir_p (fname);
 
-	return g_strdup(fname);
+	return g_strdup (fname);
 }
 
 static int
@@ -555,7 +574,7 @@ log_open_file (char *servname, char *channame, char *netname)
 		return -1;
 	currenttime = time (NULL);
 	write (fd, buf,
-			 snprintf (buf, sizeof (buf), _("**** BEGIN LOGGING AT %s\n"),
+			 g_snprintf (buf, sizeof (buf), _("**** BEGIN LOGGING AT %s\n"),
 						  ctime (&currenttime)));
 
 	return fd;
@@ -572,14 +591,15 @@ log_open (session *sess)
 
 	if (!log_error && sess->logfd == -1)
 	{
-		char *message;
+		char *filename = log_create_pathname (sess->server->servername, sess->channel, server_get_network (sess->server, FALSE));
+		char *message = g_strdup_printf (_("* Can't open log file(s) for writing. Check the\npermissions on %s"), filename);
 
-		message = g_strdup_printf (_("* Can't open log file(s) for writing. Check the\npermissions on %s"),
-			log_create_pathname (sess->server->servername, sess->channel, server_get_network (sess->server, FALSE)));
+		g_free (filename);
 
 		fe_message (message, FE_MSG_WAIT | FE_MSG_ERROR);
 
 		g_free (message);
+
 		log_error = TRUE;
 	}
 }
@@ -606,38 +626,33 @@ log_open_or_close (session *sess)
 int
 get_stamp_str (char *fmt, time_t tim, char **ret)
 {
-	char *loc = NULL;
 	char dest[128];
-	gsize len;
+	gsize len_locale;
+	gsize len_utf8;
 
-	/* strftime wants the format string in LOCALE! */
-	if (!prefs.utf8_locale)
+	/* strftime requires the format string to be in locale encoding. */
+	fmt = g_locale_from_utf8 (fmt, -1, NULL, NULL, NULL);
+
+	len_locale = strftime_validated (dest, sizeof (dest), fmt, localtime (&tim));
+
+	g_free (fmt);
+
+	if (len_locale == 0)
 	{
-		const gchar *charset;
-
-		g_get_charset (&charset);
-		loc = g_convert_with_fallback (fmt, -1, charset, "UTF-8", "?", 0, 0, 0);
-		if (loc)
-			fmt = loc;
+		return 0;
 	}
 
-	len = strftime_validated (dest, sizeof (dest), fmt, localtime (&tim));
-	if (len)
+	*ret = g_locale_to_utf8 (dest, len_locale, NULL, &len_utf8, NULL);
+	if (*ret == NULL)
 	{
-		if (prefs.utf8_locale)
-			*ret = g_strdup (dest);
-		else
-			*ret = g_locale_to_utf8 (dest, len, 0, &len, 0);
+		return 0;
 	}
 
-	if (loc)
-		g_free (loc);
-
-	return len;
+	return len_utf8;
 }
 
 static void
-log_write (session *sess, char *text)
+log_write (session *sess, char *text, time_t ts)
 {
 	char *temp;
 	char *stamp;
@@ -656,31 +671,43 @@ log_write (session *sess, char *text)
 	}
 
 	if (sess->logfd == -1)
+	{
 		log_open (sess);
+	}
 
 	/* change to a different log file? */
-	file = log_create_pathname (sess->server->servername, sess->channel,
-										 server_get_network (sess->server, FALSE));
+	file = log_create_pathname (sess->server->servername, sess->channel, server_get_network (sess->server, FALSE));
 	if (file)
 	{
 		if (g_access (file, F_OK) != 0)
 		{
-			close (sess->logfd);
-			sess->logfd = log_open_file (sess->server->servername, sess->channel,
-												  server_get_network (sess->server, FALSE));
+			if (sess->logfd != -1)
+			{
+				close (sess->logfd);
+			}
+
+			sess->logfd = log_open_file (sess->server->servername, sess->channel, server_get_network (sess->server, FALSE));
 		}
+
 		g_free (file);
+	}
+
+	if (sess->logfd == -1)
+	{
+		return;
 	}
 
 	if (prefs.pchat_stamp_log)
 	{
-		len = get_stamp_str (prefs.pchat_stamp_log_format, time (0), &stamp);
+		if (!ts) ts = time(0);
+		len = get_stamp_str (prefs.pchat_stamp_log_format, ts, &stamp);
 		if (len)
 		{
 			write (sess->logfd, stamp, len);
 			g_free (stamp);
 		}
 	}
+
 	temp = strip_color (text, -1, STRIP_ALL);
 	len = strlen (temp);
 	write (sess->logfd, temp, len);
@@ -690,156 +717,126 @@ log_write (session *sess, char *text)
 	g_free (temp);
 }
 
-/* converts a CP1252/ISO-8859-1(5) hybrid to UTF-8                           */
-/* Features: 1. It never fails, all 00-FF chars are converted to valid UTF-8 */
-/*           2. Uses CP1252 in the range 80-9f because ISO doesn't have any- */
-/*              thing useful in this range and it helps us receive from mIRC */
-/*           3. The five undefined chars in CP1252 80-9f are replaced with   */
-/*              ISO-8859-15 control codes.                                   */
-/*           4. Handles 0xa4 as a Euro symbol ala ISO-8859-15.               */
-/*           5. Uses ISO-8859-1 (which matches CP1252) for everything else.  */
-/*           6. This routine measured 3x faster than g_convert :)            */
-
-static unsigned char *
-iso_8859_1_to_utf8 (unsigned char *text, int len, gsize *bytes_written)
+/**
+ * Converts a given string using the given iconv converter. This is similar to g_convert_with_fallback, except that it is tolerant of sequences in
+ * the original input that are invalid even in from_encoding. g_convert_with_fallback fails for such text, whereas this function replaces such a
+ * sequence with the fallback string.
+ *
+ * If len is -1, strlen(text) is used to calculate the length. Do not pass -1 if text is supposed to contain \0 bytes, such as if from_encoding is a
+ * multi-byte encoding like UTF-16.
+ */
+gchar *
+text_convert_invalid (const gchar* text, gssize len, GIConv converter, const gchar *fallback, gsize *len_out)
 {
-	unsigned int idx;
-	unsigned char *res, *output;
-	static const unsigned short lowtable[] = /* 74 byte table for 80-a4 */
-	{
-	/* compressed utf-8 table: if the first byte's 0x20 bit is set, it
-	   indicates a 2-byte utf-8 sequence, otherwise prepend a 0xe2. */
-		0x82ac, /* 80 Euro. CP1252 from here on... */
-		0xe281, /* 81 NA */
-		0x809a, /* 82 */
-		0xe692, /* 83 */
-		0x809e, /* 84 */
-		0x80a6, /* 85 */
-		0x80a0, /* 86 */
-		0x80a1, /* 87 */
-		0xeb86, /* 88 */
-		0x80b0, /* 89 */
-		0xe5a0, /* 8a */
-		0x80b9, /* 8b */
-		0xe592, /* 8c */
-		0xe28d, /* 8d NA */
-		0xe5bd, /* 8e */
-		0xe28f, /* 8f NA */
-		0xe290, /* 90 NA */
-		0x8098, /* 91 */
-		0x8099, /* 92 */
-		0x809c, /* 93 */
-		0x809d, /* 94 */
-		0x80a2, /* 95 */
-		0x8093, /* 96 */
-		0x8094, /* 97 */
-		0xeb9c, /* 98 */
-		0x84a2, /* 99 */
-		0xe5a1, /* 9a */
-		0x80ba, /* 9b */
-		0xe593, /* 9c */
-		0xe29d, /* 9d NA */
-		0xe5be, /* 9e */
-		0xe5b8, /* 9f */
-		0xe2a0, /* a0 */
-		0xe2a1, /* a1 */
-		0xe2a2, /* a2 */
-		0xe2a3, /* a3 */
-		0x82ac  /* a4 ISO-8859-15 Euro. */
-	};
+	gchar *result_part;
+	gsize result_part_len;
+	const gchar *end;
+	gsize invalid_start_pos;
+	GString *result;
+	const gchar *current_start;
 
 	if (len == -1)
-		len = strlen (text);
-
-	/* worst case scenario: every byte turns into 3 bytes */
-	res = output = g_malloc ((len * 3) + 1);
-	if (!output)
-		return NULL;
-
-	while (len)
 	{
-		if (G_LIKELY (*text < 0x80))
-		{
-			*output = *text;	/* ascii maps directly */
-		}
-		else if (*text <= 0xa4)	/* 80-a4 use a lookup table */
-		{
-			idx = *text - 0x80;
-			if (lowtable[idx] & 0x2000)
-			{
-				*output++ = (lowtable[idx] >> 8) & 0xdf; /* 2 byte utf-8 */
-				*output = lowtable[idx] & 0xff;
-			}
-			else
-			{
-				*output++ = 0xe2;	/* 3 byte utf-8 */
-				*output++ = (lowtable[idx] >> 8) & 0xff;
-				*output = lowtable[idx] & 0xff;
-			}
-		}
-		else if (*text < 0xc0)
-		{
-			*output++ = 0xc2;
-			*output = *text;
-		}
-		else
-		{
-			*output++ = 0xc3;
-			*output = *text - 0x40;
-		}
-		output++;
-		text++;
-		len--;
+		len = strlen (text);
 	}
-	*output = 0;	/* terminate */
-	*bytes_written = output - res;
 
-	return res;
+	end = text + len;
+
+	/* Find the first position of an invalid sequence. */
+	result_part = g_convert_with_iconv (text, len, converter, &invalid_start_pos, &result_part_len, NULL);
+	g_iconv (converter, NULL, NULL, NULL, NULL);
+
+	if (result_part != NULL)
+	{
+		/* All text converted successfully on the first try. Return it. */
+
+		if (len_out != NULL)
+		{
+			*len_out = result_part_len;
+		}
+
+		return result_part;
+	}
+
+	/* One or more invalid sequences exist that need to be replaced with the fallback. */
+
+	result = g_string_sized_new (len);
+	current_start = text;
+
+	for (;;)
+	{
+		g_assert (current_start + invalid_start_pos < end);
+
+		/* Convert everything before the position of the invalid sequence. It should be successful.
+		 * But iconv may not convert everything till invalid_start_pos since the last few bytes may be part of a shift sequence.
+		 * So get the new bytes_read and use it as the actual invalid_start_pos to handle this.
+		 *
+		 * See https://github.com/hexchat/hexchat/issues/1758
+		 */
+		result_part = g_convert_with_iconv (current_start, invalid_start_pos, converter, &invalid_start_pos, &result_part_len, NULL);
+		g_iconv (converter, NULL, NULL, NULL, NULL);
+
+		g_assert (result_part != NULL);
+		g_string_append_len (result, result_part, result_part_len);
+		g_free (result_part);
+
+		/* Append the fallback */
+		g_string_append (result, fallback);
+
+		/* Now try converting everything after the invalid sequence. */
+		current_start += invalid_start_pos + 1;
+
+		result_part = g_convert_with_iconv (current_start, end - current_start, converter, &invalid_start_pos, &result_part_len, NULL);
+		g_iconv (converter, NULL, NULL, NULL, NULL);
+
+		if (result_part != NULL)
+		{
+			/* The rest of the text converted successfully. Append it and return the whole converted text. */
+
+			g_string_append_len (result, result_part, result_part_len);
+			g_free (result_part);
+
+			if (len_out != NULL)
+			{
+				*len_out = result->len;
+			}
+
+			return g_string_free (result, FALSE);
+		}
+
+		/* The rest of the text didn't convert successfully. invalid_start_pos has the position of the next invalid sequence. */
+	}
 }
 
-char *
-text_validate (char **text, gssize *len)
+/**
+ * Replaces any invalid UTF-8 in the given text with the unicode replacement character.
+ */
+gchar *
+text_fixup_invalid_utf8 (const gchar* text, gssize len, gsize *len_out)
 {
-	char *utf;
-	gsize utf_len;
-
-	/* valid utf8? */
-	if (g_utf8_validate (*text, *len, 0))
-		return NULL;
-
-#ifdef _WIN32
-	if (GetACP () == 1252) /* our routine is better than iconv's 1252 */
+#if GLIB_CHECK_VERSION (2, 52, 0)
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+	gchar *result = g_utf8_make_valid (text, len);
+G_GNUC_END_IGNORE_DEPRECATIONS
+	if (len_out)
+	{
+		*len_out = strlen (result);
+	}
+	return result;
 #else
-	if (prefs.utf8_locale)
+	static GIConv utf8_fixup_converter = NULL;
+	if (utf8_fixup_converter == NULL)
+	{
+		utf8_fixup_converter = g_iconv_open ("UTF-8", "UTF-8");
+	}
+
+	return text_convert_invalid (text, len, utf8_fixup_converter, unicode_fallback_string, len_out);
 #endif
-		/* fallback to iso-8859-1 */
-		utf = iso_8859_1_to_utf8 (*text, *len, &utf_len);
-	else
-	{
-		/* fallback to locale */
-		utf = g_locale_to_utf8 (*text, *len, 0, &utf_len, NULL);
-		if (!utf)
-			utf = iso_8859_1_to_utf8 (*text, *len, &utf_len);
-	}
-
-	if (!utf)
-	{
-		*text = g_strdup ("%INVALID%");
-		*len = 9;
-	} else
-	{
-		*text = utf;
-		*len = utf_len;
-	}
-
-	return utf;
 }
 
 void
 PrintTextTimeStamp (session *sess, char *text, time_t timestamp)
 {
-	char *conv;
-
 	if (!sess)
 	{
 		if (!sess_list)
@@ -848,22 +845,19 @@ PrintTextTimeStamp (session *sess, char *text, time_t timestamp)
 	}
 
 	/* make sure it's valid utf8 */
-	if (text[0] == 0)
+	if (text[0] == '\0')
 	{
-		text = "\n";
-		conv = NULL;
-	} else
+		text = g_strdup ("\n");
+	}
+	else
 	{
-		gssize len = -1;
-		conv = text_validate ((char **)&text, &len);
+		text = text_fixup_invalid_utf8 (text, -1, NULL);
 	}
 
-	log_write (sess, text);
-	scrollback_save (sess, text);
+	log_write (sess, text, timestamp);
+	scrollback_save (sess, text, timestamp);
 	fe_print_text (sess, text, timestamp, FALSE);
-
-	if (conv)
-		g_free (conv);
+	g_free (text);
 }
 
 void
@@ -873,7 +867,7 @@ PrintText (session *sess, char *text)
 }
 
 void
-PrintTextf (session *sess, char *format, ...)
+PrintTextf (session *sess, const char *format, ...)
 {
 	va_list args;
 	char *buf;
@@ -887,7 +881,7 @@ PrintTextf (session *sess, char *format, ...)
 }
 
 void
-PrintTextTimeStampf (session *sess, time_t timestamp, char *format, ...)
+PrintTextTimeStampf (session *sess, time_t timestamp, const char *format, ...)
 {
 	va_list args;
 	char *buf;
@@ -978,6 +972,7 @@ static char * const pevt_join_help[] = {
 	N_("The nick of the joining person"),
 	N_("The channel being joined"),
 	N_("The host of the person"),
+	N_("The account of the person"),
 };
 
 static char * const pevt_chanaction_help[] = {
@@ -1003,6 +998,11 @@ static char * const pevt_privmsg_help[] = {
 static char * const pevt_capack_help[] = {
 	N_("Server Name"),
 	N_("Acknowledged Capabilities")
+};
+
+static char * const pevt_capdel_help[] = {
+	N_("Server Name"),
+	N_("Removed Capabilities")
 };
 
 static char * const pevt_caplist_help[] = {
@@ -1156,26 +1156,26 @@ static char * const pevt_chanrmlimit_help[] = {
 };
 
 static char * const pevt_chandeop_help[] = {
-	N_("The nick of the person of did the deop'ing"),
+	N_("The nick of the person who did the deop'ing"),
 	N_("The nick of the person who has been deop'ed"),
 };
 static char * const pevt_chandehop_help[] = {
-	N_("The nick of the person of did the dehalfop'ing"),
+	N_("The nick of the person who did the dehalfop'ing"),
 	N_("The nick of the person who has been dehalfop'ed"),
 };
 
 static char * const pevt_chandevoice_help[] = {
-	N_("The nick of the person of did the devoice'ing"),
+	N_("The nick of the person who did the devoice'ing"),
 	N_("The nick of the person who has been devoice'ed"),
 };
 
 static char * const pevt_chanunban_help[] = {
-	N_("The nick of the person of did the unban'ing"),
+	N_("The nick of the person who did the unban'ing"),
 	N_("The ban mask"),
 };
 
 static char * const pevt_chanunquiet_help[] = {
-	N_("The nick of the person of did the unquiet'ing"),
+	N_("The nick of the person who did the unquiet'ing"),
 	N_("The quiet mask"),
 };
 
@@ -1292,6 +1292,13 @@ static char * const pevt_sslmessage_help[] = {
 static char * const pevt_invited_help[] = {
 	N_("Channel Name"),
 	N_("Nick of person who invited you"),
+	N_("Server Name"),
+};
+
+static char * const pevt_invitedother_help[] = {
+	N_("Channel Name"),
+	N_("Nick of person who sent the invite"),
+	N_("Nick of person who was invited"),
 	N_("Server Name"),
 };
 
@@ -1505,52 +1512,72 @@ static char * const pevt_discon_help[] = {
 	N_("Error"),
 };
 
+static char * const pevt_stdrpl_help[] = {
+	N_("Error Code"),
+	N_("Error Message"),
+};
+
+static char * const pevt_stdrplcmd_help[] = {
+	N_("Command"),
+	N_("Error Code"),
+	N_("Error Message"),
+};
+
 #include "textevents.h"
 
 static void
-pevent_load_defaults ()
+pevent_load_defaults (void)
 {
 	int i;
 
 	for (i = 0; i < NUM_XP; i++)
 	{
-		if (pntevts_text[i])
-			free (pntevts_text[i]);
+		g_free (pntevts_text[i]);
 
 		/* make-te.c sets this 128 flag (DON'T call gettext() flag) */
 		if (te[i].num_args & 128)
-			pntevts_text[i] = strdup (te[i].def);
+			pntevts_text[i] = g_strdup (te[i].def);
 		else
-			pntevts_text[i] = strdup (_(te[i].def));
+			pntevts_text[i] = g_strdup (_(te[i].def));
 	}
 }
 
 void
-pevent_make_pntevts ()
+pevent_make_pntevts (void)
 {
 	int i, m;
-	char out[1024];
 
 	for (i = 0; i < NUM_XP; i++)
 	{
-		if (pntevts[i] != NULL)
-			free (pntevts[i]);
+		g_free (pntevts[i]);
 		if (pevt_build_string (pntevts_text[i], &(pntevts[i]), &m) != 0)
 		{
-			g_snprintf (out, sizeof (out),
-						 _("Error parsing event %s.\nLoading default."), te[i].name);
-			fe_message (out, FE_MSG_WARN);
-			free (pntevts_text[i]);
 			/* make-te.c sets this 128 flag (DON'T call gettext() flag) */
-			if (te[i].num_args & 128)
-				pntevts_text[i] = strdup (te[i].def);
+			const gboolean translate = !(te[i].num_args & 128);
+
+			g_warning ("Error parsing event %s\nLoading default.", te[i].name);
+			g_free (pntevts_text[i]);
+
+			if (translate)
+				pntevts_text[i] = g_strdup (_(te[i].def));
 			else
-				pntevts_text[i] = strdup (_(te[i].def));
-			if (pevt_build_string (pntevts_text[i], &(pntevts[i]), &m) != 0)
+				pntevts_text[i] = g_strdup (te[i].def);
+
+			if (pevt_build_string (pntevts_text[i], &(pntevts[i]), &m) != 0 && !translate)
 			{
-				fprintf (stderr,
-							"PChat CRITICAL *** default event text failed to build!\n");
-				abort ();
+				g_error ("PChat CRITICAL *** default event text failed to build!");
+			}
+			else
+			{
+				g_warning ("Error parsing translated event %s\nLoading untranslated.", te[i].name);
+				g_free (pntevts_text[i]);
+
+				pntevts_text[i] = g_strdup (te[i].def);
+
+				if (pevt_build_string (pntevts_text[i], &(pntevts[i]), &m) != 0)
+				{
+					g_error ("PChat CRITICAL *** default event text failed to build!");
+				}
 			}
 		}
 	}
@@ -1567,22 +1594,17 @@ pevent_make_pntevts ()
 static void
 pevent_trigger_load (int *i_penum, char **i_text, char **i_snd)
 {
-	int penum = *i_penum, len;
+	int penum = *i_penum;
 	char *text = *i_text, *snd = *i_snd;
 
 	if (penum != -1 && text != NULL)
 	{
-		len = strlen (text) + 1;
-		if (pntevts_text[penum])
-			g_free (pntevts_text[penum]);
-		pntevts_text[penum] = g_malloc (len);
-		memcpy (pntevts_text[penum], text, len);
+		g_free (pntevts_text[penum]);
+		pntevts_text[penum] = g_strdup (text);
 	}
 
-	if (text)
-		free (text);
-	if (snd)
-		free (snd);
+	g_free (text);
+	g_free (snd);
 	*i_text = NULL;
 	*i_snd = NULL;
 	*i_penum = 0;
@@ -1624,14 +1646,17 @@ pevent_load (char *filename)
 	char *ofs;
 
 	if (filename == NULL)
-		fd = xchat_open_file ("pevents.conf", O_RDONLY, 0, 0);
+		fd = pchat_open_file ("pevents.conf", O_RDONLY, 0, 0);
 	else
-		fd = xchat_open_file (filename, O_RDONLY, 0, XOF_FULLPATH);
+		fd = pchat_open_file (filename, O_RDONLY, 0, XOF_FULLPATH);
 
 	if (fd == -1)
 		return 1;
 	if (fstat (fd, &st) != 0)
+	{
+		close (fd);
 		return 1;
+	}
 	ibuf = g_malloc (st.st_size);
 	read (fd, ibuf, st.st_size);
 	close (fd);
@@ -1648,8 +1673,6 @@ pevent_load (char *filename)
 			continue;
 		*ofs = 0;
 		ofs++;
-		/*if (*ofs == 0)
-			continue;*/
 
 		if (strcmp (buf, "event_name") == 0)
 		{
@@ -1659,47 +1682,10 @@ pevent_load (char *filename)
 			continue;
 		} else if (strcmp (buf, "event_text") == 0)
 		{
-			if (text)
-				free (text);
-
-#if 0
-			/* This allows updating of old strings. We don't use new defaults
-				if the user has customized the strings (.e.g a text theme).
-				Hash of the old default is enough to identify and replace it.
-				This only works in English. */
-
-			switch (g_str_hash (ofs))
-			{
-			case 0x526743a4:
-		/* %C08,02 Hostmask                  PRIV NOTI CHAN CTCP INVI UNIG %O */
-				text = strdup (te[XP_TE_IGNOREHEADER].def);
-				break;
-
-			case 0xe91bc9c2:
-		/* %C08,02                                                         %O */
-				text = strdup (te[XP_TE_IGNOREFOOTER].def);
-				break;
-
-			case 0x1fbfdf22:
-		/* -%C10-%C11-%O$tDCC RECV: Cannot open $1 for writing - aborting. */
-				text = strdup (te[XP_TE_DCCFILEERR].def);
-				break;
-
-			default:
-				text = strdup (ofs);
-			}
-#else
-			text = strdup (ofs);
-#endif
-
+			g_free (text);
+			text = g_strdup (ofs);
 			continue;
-		}/* else if (strcmp (buf, "event_sound") == 0)
-		{
-			if (snd)
-				free (snd);
-			snd = strdup (ofs);
-			continue;
-		}*/
+		}
 
 		continue;
 	}
@@ -1710,7 +1696,7 @@ pevent_load (char *filename)
 }
 
 static void
-pevent_check_all_loaded ()
+pevent_check_all_loaded (void)
 {
 	int i;
 
@@ -1723,9 +1709,9 @@ pevent_check_all_loaded ()
 			   gtkutil_simpledialog(out); */
 			/* make-te.c sets this 128 flag (DON'T call gettext() flag) */
 			if (te[i].num_args & 128)
-				pntevts_text[i] = strdup (te[i].def);
+				pntevts_text[i] = g_strdup (te[i].def);
 			else
-				pntevts_text[i] = strdup (_(te[i].def));
+				pntevts_text[i] = g_strdup (_(te[i].def));
 		}
 	}
 }
@@ -1811,9 +1797,9 @@ format_event (session *sess, int index, char **args, char *o, gsize sizeofo, uns
 			done_all = TRUE;
 			continue;
 		case 3:
-		if (prefs.pchat_text_indent)
+			if (prefs.pchat_text_indent)
 				o[oi++] = '\t';
-		else
+			else
 				o[oi++] = ' ';
 			break;
 		}
@@ -1824,7 +1810,7 @@ format_event (session *sess, int index, char **args, char *o, gsize sizeofo, uns
 }
 
 static void
-display_event (session *sess, int event, char **args,
+display_event (session *sess, int event, char **args, 
 					unsigned int stripcolor_args, time_t timestamp)
 {
 	char o[4096];
@@ -1867,7 +1853,7 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 		}
 		if (oi > 0)
 		{
-			s = (struct pevt_stage1 *) g_malloc (sizeof (struct pevt_stage1));
+			s = g_new (struct pevt_stage1, 1);
 			if (base == NULL)
 				base = s;
 			if (last != NULL)
@@ -1885,12 +1871,12 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 		if (ii == len)
 		{
 			fe_message ("String ends with a $", FE_MSG_WARN);
-			return 1;
+			goto err;
 		}
 		d = i[ii++];
 		if (d == 'a')
-		{								  /* Hex value */
-			x = 0;
+		{
+			/* Hex value */
 			if (ii == len)
 				goto a_len_error;
 			d = i[ii++];
@@ -1911,17 +1897,17 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 			o[oi++] = x;
 			continue;
 
-		 a_len_error:
+		a_len_error:
 			fe_message ("String ends in $a", FE_MSG_WARN);
-			return 1;
-		 a_range_error:
+			goto err;
+		a_range_error:
 			fe_message ("$a value is greater than 255", FE_MSG_WARN);
-			return 1;
+			goto err;
 		}
 		if (d == 't')
 		{
 			/* Tab - if tabnicks is set then write '\t' else ' ' */
-			s = (struct pevt_stage1 *) g_malloc (sizeof (struct pevt_stage1));
+			s = g_new (struct pevt_stage1, 1);
 			if (base == NULL)
 				base = s;
 			if (last != NULL)
@@ -1939,16 +1925,16 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 		{
 			g_snprintf (o, sizeof (o), "Error, invalid argument $%c\n", d);
 			fe_message (o, FE_MSG_WARN);
-			return 1;
+			goto err;
 		}
 		d -= '0';
 		if (max < d)
 			max = d;
-		s = (struct pevt_stage1 *) g_malloc (sizeof (struct pevt_stage1));
+		s = g_new (struct pevt_stage1, 1);
 		if (base == NULL)
-				base = s;
+			base = s;
 		if (last != NULL)
-				last->next = s;
+			last->next = s;
 		last = s;
 		s->next = NULL;
 		s->data = g_malloc (2);
@@ -1959,7 +1945,7 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 	}
 	if (oi > 0)
 	{
-		s = (struct pevt_stage1 *) malloc (sizeof (struct pevt_stage1));
+		s = g_new (struct pevt_stage1, 1);
 		if (base == NULL)
 			base = s;
 		if (last != NULL)
@@ -1974,14 +1960,13 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 		memcpy (&(s->data[1 + sizeof (int)]), o, oi);
 		oi = 0;
 	}
-	s = (struct pevt_stage1 *) g_malloc (sizeof (struct pevt_stage1));
+	s = g_new (struct pevt_stage1, 1);
 	if (base == NULL)
 		base = s;
 	if (last != NULL)
 		last->next = s;
-	last = s;
 	s->next = NULL;
-	s->data = malloc (1);
+	s->data = g_malloc (1);
 	s->len = 1;
 	clen += 1;
 	s->data[0] = 2;
@@ -1989,6 +1974,7 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 	oi = 0;
 	s = base;
 	obuf = g_malloc (clen);
+
 	while (s)
 	{
 		next = s->next;
@@ -2005,8 +1991,23 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 		*max_arg = max;
 	if (output)
 		*output = obuf;
+	else
+		g_free (obuf);
 
 	return 0;
+
+err:
+	while (s)
+	{
+		next = s->next;
+		g_free (s->data);
+		g_free (s);
+		s = next;
+	}
+
+	g_free(i);
+
+	return 1;
 }
 
 
@@ -2014,7 +2015,7 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 /* also light/dark gray (14/15) */
 /* 5,7,8 are all shades of yellow which happen to look damn near the same */
 
-static char rcolors[] = { 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+static char rcolors[] = { 19, 20, 22, 24, 25, 26, 27, 28, 29 };
 
 int
 text_color_of (char *name)
@@ -2036,10 +2037,12 @@ text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
 {
 	char *word[PDIWORDS];
 	int i;
+	tab_state_flags current_state = sess->tab_state;
+	tab_state_flags plugin_state = sess->last_tab_state;
 	unsigned int stripcolor_args = (chanopt_is_set (prefs.pchat_text_stripcolor_msg, sess->text_strip) ? 0xFFFFFFFF : 0);
 	char tbuf[NICKLEN + 4];
 
-	if (prefs.pchat_text_color_nicks && (index == XP_TE_CHANACTION || index == XP_TE_CHANMSG))
+	if (a != NULL && prefs.pchat_text_color_nicks && (index == XP_TE_CHANACTION || index == XP_TE_CHANMSG))
 	{
 		g_snprintf (tbuf, sizeof (tbuf), "\003%d%s", text_color_of (a), a);
 		a = tbuf;
@@ -2054,8 +2057,17 @@ text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
 	for (i = 5; i < PDIWORDS; i++)
 		word[i] = "\000";
 
+	/* We want to ignore the tab state if the plugin emits new events
+	 * and restore it if it doesn't eat the current one */
+	sess->tab_state = plugin_state;
 	if (plugin_emit_print (sess, word, timestamp))
 		return;
+
+	/* The plugin may have changed the state which we should respect.
+	 * If the state is NEW_DATA we don't actually know if that was on
+	 * purpose though as print() sets it, so for now we ignore that. FIXME */
+	if (sess->tab_state == plugin_state || sess->tab_state == TAB_STATE_NEW_DATA)
+		sess->tab_state = current_state;
 
 	/* If a plugin's callback executes "/close", 'sess' may be invalid */
 	if (!is_session (sess))
@@ -2107,9 +2119,16 @@ text_emit (int index, session *sess, char *a, char *b, char *c, char *d,
 		if (sess->alert_tray == SET_ON)
 			fe_tray_set_icon (FE_ICON_MESSAGE);
 		break;
+
+	/* ===Nick change message=== */
+	case XP_TE_CHANGENICK:
+		if (prefs.pchat_irc_hide_nickchange)
+			return;
+		break;
 	}
 
-	sound_play_event (index);
+	if (!prefs.pchat_away_omit_alerts || !sess->server->is_away)
+		sound_play_event (index);
 	display_event (sess, index, word, stripcolor_args, timestamp);
 }
 
@@ -2148,15 +2167,15 @@ pevent_save (char *fn)
 	char buf[1024];
 
 	if (!fn)
-		fd = xchat_open_file ("pevents.conf", O_CREAT | O_TRUNC | O_WRONLY,
+		fd = pchat_open_file ("pevents.conf", O_CREAT | O_TRUNC | O_WRONLY,
 									 0x180, XOF_DOMODE);
 	else
-		fd = xchat_open_file (fn, O_CREAT | O_TRUNC | O_WRONLY, 0x180,
+		fd = pchat_open_file (fn, O_CREAT | O_TRUNC | O_WRONLY, 0x180,
 									 XOF_FULLPATH | XOF_DOMODE);
 	if (fd == -1)
 	{
 		/*
-		   fe_message ("Error opening config file\n", FALSE);
+		   fe_message ("Error opening config file\n", FALSE); 
 		   If we get here when X-Chat is closing the fe-message causes a nice & hard crash
 		   so we have to use perror which doesn't rely on GTK
 		 */
@@ -2185,7 +2204,7 @@ char *sound_files[NUM_XP];
 void
 sound_beep (session *sess)
 {
-	if (!prefs.pchat_gui_focus_omitalerts || !fe_gui_info (sess, 0) == 1)
+	if (!prefs.pchat_gui_focus_omitalerts || fe_gui_info (sess, 0) != 1)
 	{
 		if (sound_files[XP_TE_BEEP] && sound_files[XP_TE_BEEP][0])
 			/* user defined beep _file_ */
@@ -2201,7 +2220,7 @@ sound_play (const char *file, gboolean quiet)
 {
 	char *buf;
 	char *wavfile;
-#ifndef _WIN32
+#ifndef WIN32
 	char *cmd;
 #endif
 
@@ -2223,8 +2242,15 @@ sound_play (const char *file, gboolean quiet)
 
 	if (g_access (wavfile, R_OK) == 0)
 	{
-#ifdef _WIN32
-		PlaySound (wavfile, NULL, SND_NODEFAULT|SND_FILENAME|SND_ASYNC);
+#ifdef WIN32
+		gunichar2 *wavfile_utf16 = g_utf8_to_utf16 (wavfile, -1, NULL, NULL, NULL);
+
+		if (wavfile_utf16 != NULL)
+		{
+			PlaySoundW (wavfile_utf16, NULL, SND_NODEFAULT | SND_FILENAME | SND_ASYNC);
+
+			g_free (wavfile_utf16);
+		}
 #else
 #ifdef USE_LIBCANBERRA
 		if (ca_con == NULL)
@@ -2240,11 +2266,11 @@ sound_play (const char *file, gboolean quiet)
 #endif
 		{
 			cmd = g_find_program_in_path ("play");
-
+	
 			if (cmd)
 			{
 				buf = g_strdup_printf ("%s \"%s\"", cmd, wavfile);
-				xchat_exec (buf);
+				pchat_exec (buf);
 				g_free (buf);
 				g_free (cmd);
 			}
@@ -2280,9 +2306,8 @@ sound_load_event (char *evt, char *file)
 
 	if (file[0] && pevent_find (evt, &i) != -1)
 	{
-		if (sound_files[i])
-			free (sound_files[i]);
-		sound_files[i] = strdup (file);
+		g_free (sound_files[i]);
+		sound_files[i] = g_strdup (file);
 	}
 }
 
@@ -2295,7 +2320,7 @@ sound_load ()
 
 	memset (&sound_files, 0, sizeof (char *) * (NUM_XP));
 
-	fd = xchat_open_file ("sound.conf", O_RDONLY, 0, 0);
+	fd = pchat_open_file ("sound.conf", O_RDONLY, 0, 0);
 	if (fd == -1)
 		return;
 
@@ -2325,7 +2350,7 @@ sound_save ()
 	int fd, i;
 	char buf[512];
 
-	fd = xchat_open_file ("sound.conf", O_CREAT | O_TRUNC | O_WRONLY, 0x180,
+	fd = pchat_open_file ("sound.conf", O_CREAT | O_TRUNC | O_WRONLY, 0x180,
 								 XOF_DOMODE);
 	if (fd == -1)
 		return;

@@ -2,12 +2,6 @@
  * Copyright (C) 1998-2010 Peter Zelezny.
  * Copyright (C) 2009-2013 Berke Viktor.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
- * PChat
- * Copyright (C) 2025
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -24,15 +18,19 @@
  */
 
 #include <time.h>
-#include "xchat.h"
+#include "pchat.h"
 
-#ifndef PCHAT_PROTO_H
-#define PCHAT_PROTO_H
+#ifndef pchat_PROTO_H
+#define pchat_PROTO_H
 
 #define MESSAGE_TAGS_DATA_INIT			\
 	{									\
+		NULL, /* account name */		\
+		FALSE, /* identified to nick */ \
 		(time_t)0, /* timestamp */		\
 	}
+
+#define STRIP_COLON(word, word_eol, idx) (word)[(idx)][0] == ':' ? (word_eol)[(idx)]+1 : (word)[(idx)]
 
 /* Message tag information that might be passed along with a server message
  *
@@ -40,8 +38,12 @@
  */
 typedef struct 
 {
+	char *account;
+	gboolean identified;
 	time_t timestamp;
 } message_tags_data;
+
+void message_tags_data_free (message_tags_data *tags_data);
 
 void proto_fill_her_up (server *serv);
 

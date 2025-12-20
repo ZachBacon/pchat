@@ -35,8 +35,8 @@
 #endif
 
 #include "fe-gtk.h"
-#include "../common/xchat.h"
-#include "../common/xchatc.h"
+#include "../common/pchat.h"
+#include "../common/pchatc.h"
 #include "../common/server.h"
 #include "../common/servlist.h"
 #include "../common/fe.h"

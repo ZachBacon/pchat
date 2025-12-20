@@ -2,9 +2,6 @@
  * Copyright (C) 1998-2010 Peter Zelezny.
  * Copyright (C) 2009-2013 Berke Viktor.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -22,10 +19,10 @@
 
 /* cfgfiles.h */
 
-#ifndef XCHAT_CFGFILES_H
-#define XCHAT_CFGFILES_H
+#ifndef pchat_CFGFILES_H
+#define pchat_CFGFILES_H
 
-#include "xchat.h"
+#include "pchat.h"
 
 #define LANGUAGES_LENGTH 53
 
@@ -51,8 +48,8 @@ void list_loadconf (char *file, GSList ** list, char *defaultconf);
 int list_delentry (GSList ** list, char *name);
 void list_addentry (GSList ** list, char *cmd, char *name);
 int cmd_set (session *sess, char *tbuf, char *word[], char *word_eol[]);
-int xchat_open_file (char *file, int flags, int mode, int xof_flags);
-FILE *xchat_fopen_file (const char *file, const char *mode, int xof_flags);
+int pchat_open_file (const char *file, int flags, int mode, int xof_flags);
+FILE *pchat_fopen_file (const char *file, const char *mode, int xof_flags);
 
 #define XOF_DOMODE 1
 #define XOF_FULLPATH 2
@@ -63,10 +60,10 @@ FILE *xchat_fopen_file (const char *file, const char *mode, int xof_flags);
 #define STRUCT_OFFSET_INT(type,field) \
 ( (unsigned int) (((int *) (&(((type *) NULL)->field)))- ((int *) NULL)) )
 
-#define P_OFFSET(field) STRUCT_OFFSET_STR(struct xchatprefs, field),sizeof(prefs.field)
-#define P_OFFSETNL(field) STRUCT_OFFSET_STR(struct xchatprefs, field)
-#define P_OFFINT(field) STRUCT_OFFSET_INT(struct xchatprefs, field),0
-#define P_OFFINTNL(field) STRUCT_OFFSET_INT(struct xchatprefs, field)
+#define P_OFFSET(field) STRUCT_OFFSET_STR(struct pchatprefs, field),sizeof(prefs.field)
+#define P_OFFSETNL(field) STRUCT_OFFSET_STR(struct pchatprefs, field)
+#define P_OFFINT(field) STRUCT_OFFSET_INT(struct pchatprefs, field),0
+#define P_OFFINTNL(field) STRUCT_OFFSET_INT(struct pchatprefs, field)
 
 struct prefs
 {
@@ -74,6 +71,11 @@ struct prefs
 	unsigned short offset;
 	unsigned short len;
 	unsigned short type;
+	/*
+	 * an optional function which will be called after the preference value has
+	 * been updated.
+	 */
+	void (*after_update)(void);
 };
 
 #define TYPE_STR 0

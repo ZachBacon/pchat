@@ -1,9 +1,6 @@
 /* X-Chat
  * Copyright (C) 2002 Peter Zelezny.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -26,16 +23,15 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
-#ifdef _WIN32
+#ifdef WIN32
 #include <io.h>
 #else
 #include <unistd.h>
 #endif
 
-#include "xchat.h"
+#include "pchat.h"
 #include "fe.h"
 #include "util.h"
-#include "pchat-platform-support.h"
 #include "outbound.h"
 #include "cfgfiles.h"
 #include "ignore.h"
@@ -45,30 +41,26 @@
 #include "notify.h"
 #include "text.h"
 #define PLUGIN_C
-typedef struct session xchat_context;
-#include "xchat-plugin.h"
+typedef struct session pchat_context;
+#include "pchat-plugin.h"
 #include "plugin.h"
 #include "typedef.h"
 
 
-#include "xchatc.h"
+#include "pchatc.h"
 
 /* the USE_PLUGIN define only removes libdl stuff */
 
 #ifdef USE_PLUGIN
-#ifdef USE_GMODULE
 #include <gmodule.h>
-#else
-#include <dlfcn.h>
-#endif
 #endif
 
 #define DEBUG(x) {x;}
 
 /* crafted to be an even 32 bytes */
-struct _xchat_hook
+struct _pchat_hook
 {
-	xchat_plugin *pl;	/* the plugin to which it belongs */
+	pchat_plugin *pl;	/* the plugin to which it belongs */
 	char *name;			/* "xdcc" */
 	void *callback;	/* pointer to xdcc_callback */
 	char *help_text;	/* help_text for commands only */
@@ -78,7 +70,7 @@ struct _xchat_hook
 	int pri;	/* fd */	/* priority / fd for HOOK_FD only */
 };
 
-struct _xchat_list
+struct _pchat_list
 {
 	int type;			/* LIST_* */
 	GSList *pos;		/* current pos */
@@ -87,15 +79,15 @@ struct _xchat_list
 	struct notify_per_server *notifyps;	/* notify_per_server * */
 };
 
-typedef int (xchat_cmd_cb) (char *word[], char *word_eol[], void *user_data);
-typedef int (xchat_serv_cb) (char *word[], char *word_eol[], void *user_data);
-typedef int (xchat_print_cb) (char *word[], void *user_data);
-typedef int (xchat_serv_attrs_cb) (char *word[], char *word_eol[], xchat_event_attrs *attrs, void *user_data);
-typedef int (xchat_print_attrs_cb) (char *word[], xchat_event_attrs *attrs, void *user_data);
-typedef int (xchat_fd_cb) (int fd, int flags, void *user_data);
-typedef int (xchat_timer_cb) (void *user_data);
-typedef int (xchat_init_func) (xchat_plugin *, char **, char **, char **, char *);
-typedef int (xchat_deinit_func) (xchat_plugin *);
+typedef int (pchat_cmd_cb) (char *word[], char *word_eol[], void *user_data);
+typedef int (pchat_serv_cb) (char *word[], char *word_eol[], void *user_data);
+typedef int (pchat_print_cb) (char *word[], void *user_data);
+typedef int (pchat_serv_attrs_cb) (char *word[], char *word_eol[], pchat_event_attrs *attrs, void *user_data);
+typedef int (pchat_print_attrs_cb) (char *word[], pchat_event_attrs *attrs, void *user_data);
+typedef int (pchat_fd_cb) (int fd, int flags, void *user_data);
+typedef int (pchat_timer_cb) (void *user_data);
+typedef int (pchat_init_func) (pchat_plugin *, char **, char **, char **, char *);
+typedef int (pchat_deinit_func) (pchat_plugin *);
 
 enum
 {
@@ -123,6 +115,34 @@ enum
 	HOOK_DELETED      = 1 << 7  /* marked for deletion */
 };
 
+enum
+{
+	CHANNEL_FLAG_CONNECTED             = 1 << 0,
+	CHANNEL_FLAG_CONNECING             = 1 << 1,
+	CHANNEL_FLAG_AWAY                  = 1 << 2,
+	CHANNEL_FLAG_END_OF_MOTD           = 1 << 3,
+	CHANNEL_FLAG_HAS_WHOX              = 1 << 4,
+	CHANNEL_FLAG_HAS_IDMSG             = 1 << 5,
+	CHANNEL_FLAG_HIDE_JOIN_PARTS       = 1 << 6,
+	CHANNEL_FLAG_HIDE_JOIN_PARTS_UNSET = 1 << 7,
+	CHANNEL_FLAG_BEEP                  = 1 << 8,
+	CHANNEL_FLAG_BEEP_UNSET            = 1 << 9,
+	CHANNEL_FLAG_UNUSED                = 1 << 10,
+	CHANNEL_FLAG_LOGGING               = 1 << 11,
+	CHANNEL_FLAG_LOGGING_UNSET         = 1 << 12,
+	CHANNEL_FLAG_SCROLLBACK            = 1 << 13,
+	CHANNEL_FLAG_SCROLLBACK_UNSET      = 1 << 14,
+	CHANNEL_FLAG_STRIP_COLORS          = 1 << 15,
+	CHANNEL_FLAG_STRIP_COLORS_UNSET    = 1 << 16,
+	CHANNEL_FLAG_TRAY                  = 1 << 17,
+	CHANNEL_FLAG_TRAY_UNSET            = 1 << 18,
+	CHANNEL_FLAG_TASKBAR               = 1 << 19,
+	CHANNEL_FLAG_TASKBAR_UNSET         = 1 << 20,
+	CHANNEL_FLAG_BALLOON               = 1 << 21,
+	CHANNEL_FLAG_BALLOON_UNSET         = 1 << 22,
+	CHANNEL_FLAG_COUNT                 = 23
+};
+
 GSList *plugin_list = NULL;	/* export for plugingui.c */
 static GSList *hook_list = NULL;
 
@@ -132,13 +152,13 @@ extern const struct prefs vars[];	/* cfgfiles.c */
 /* unload a plugin and remove it from our linked list */
 
 static int
-plugin_free (xchat_plugin *pl, int do_deinit, int allow_refuse)
+plugin_free (pchat_plugin *pl, int do_deinit, int allow_refuse)
 {
 	GSList *list, *next;
-	xchat_hook *hook;
-	xchat_deinit_func *deinit_func;
+	pchat_hook *hook;
+	pchat_deinit_func *deinit_func;
 
-	/* fake plugin added by xchat_plugingui_add() */
+	/* fake plugin added by pchat_plugingui_add() */
 	if (pl->fake)
 		goto xit;
 
@@ -157,32 +177,24 @@ plugin_free (xchat_plugin *pl, int do_deinit, int allow_refuse)
 		hook = list->data;
 		next = list->next;
 		if (hook->pl == pl)
-			xchat_unhook (NULL, hook);
+			pchat_unhook (NULL, hook);
 		list = next;
 	}
 
 #ifdef USE_PLUGIN
 	if (pl->handle)
-#ifdef USE_GMODULE
 		g_module_close (pl->handle);
-#else
-		dlclose (pl->handle);
-#endif
 #endif
 
 xit:
 	if (pl->free_strings)
 	{
-		if (pl->name)
-			free (pl->name);
-		if (pl->desc)
-			free (pl->desc);
-		if (pl->version)
-			free (pl->version);
+		g_free (pl->name);
+		g_free (pl->desc);
+		g_free (pl->version);
 	}
-	if (pl->filename)
-		free ((char *)pl->filename);
-	free (pl);
+	g_free ((char *)pl->filename);
+	g_free (pl);
 
 	plugin_list = g_slist_remove (plugin_list, pl);
 
@@ -193,14 +205,14 @@ xit:
 	return TRUE;
 }
 
-static xchat_plugin *
-plugin_list_add (xchat_context *ctx, char *filename, const char *name,
+static pchat_plugin *
+plugin_list_add (pchat_context *ctx, char *filename, const char *name,
 					  const char *desc, const char *version, void *handle,
 					  void *deinit_func, int fake, int free_strings)
 {
-	xchat_plugin *pl;
+	pchat_plugin *pl;
 
-	pl = g_malloc (sizeof (xchat_plugin));
+	pl = g_new (pchat_plugin, 1);
 	pl->handle = handle;
 	pl->filename = filename;
 	pl->context = ctx;
@@ -216,15 +228,17 @@ plugin_list_add (xchat_context *ctx, char *filename, const char *name,
 	return pl;
 }
 
+#ifndef WIN32
 static void *
-xchat_dummy (xchat_plugin *ph)
+pchat_dummy (pchat_plugin *ph)
 {
 	return NULL;
 }
 
-#ifdef _WIN32
+#else
+
 static int
-xchat_read_fd (xchat_plugin *ph, GIOChannel *source, char *buf, int *len)
+pchat_read_fd (pchat_plugin *ph, GIOChannel *source, char *buf, int *len)
 {
 	GError *error = NULL;
 
@@ -248,12 +262,10 @@ void
 plugin_add (session *sess, char *filename, void *handle, void *init_func,
 				void *deinit_func, char *arg, int fake)
 {
-	xchat_plugin *pl;
+	pchat_plugin *pl;
 	char *file;
 
-	file = NULL;
-	if (filename)
-		file = strdup (filename);
+	file = g_strdup (filename);
 
 	pl = plugin_list_add (sess, file, file, NULL, NULL, handle, deinit_func,
 								 fake, FALSE);
@@ -261,55 +273,55 @@ plugin_add (session *sess, char *filename, void *handle, void *init_func,
 	if (!fake)
 	{
 		/* win32 uses these because it doesn't have --export-dynamic! */
-		pl->xchat_hook_command = xchat_hook_command;
-		pl->xchat_hook_server = xchat_hook_server;
-		pl->xchat_hook_print = xchat_hook_print;
-		pl->xchat_hook_timer = xchat_hook_timer;
-		pl->xchat_hook_fd = xchat_hook_fd;
-		pl->xchat_unhook = xchat_unhook;
-		pl->xchat_print = xchat_print;
-		pl->xchat_printf = xchat_printf;
-		pl->xchat_command = xchat_command;
-		pl->xchat_commandf = xchat_commandf;
-		pl->xchat_nickcmp = xchat_nickcmp;
-		pl->xchat_set_context = xchat_set_context;
-		pl->xchat_find_context = xchat_find_context;
-		pl->xchat_get_context = xchat_get_context;
-		pl->xchat_get_info = xchat_get_info;
-		pl->xchat_get_prefs = xchat_get_prefs;
-		pl->xchat_list_get = xchat_list_get;
-		pl->xchat_list_free = xchat_list_free;
-		pl->xchat_list_fields = xchat_list_fields;
-		pl->xchat_list_str = xchat_list_str;
-		pl->xchat_list_next = xchat_list_next;
-		pl->xchat_list_int = xchat_list_int;
-		pl->xchat_plugingui_add = xchat_plugingui_add;
-		pl->xchat_plugingui_remove = xchat_plugingui_remove;
-		pl->xchat_emit_print = xchat_emit_print;
-#ifdef _WIN32
-		pl->xchat_read_fd = (void *) xchat_read_fd;
+		pl->pchat_hook_command = pchat_hook_command;
+		pl->pchat_hook_server = pchat_hook_server;
+		pl->pchat_hook_print = pchat_hook_print;
+		pl->pchat_hook_timer = pchat_hook_timer;
+		pl->pchat_hook_fd = pchat_hook_fd;
+		pl->pchat_unhook = pchat_unhook;
+		pl->pchat_print = pchat_print;
+		pl->pchat_printf = pchat_printf;
+		pl->pchat_command = pchat_command;
+		pl->pchat_commandf = pchat_commandf;
+		pl->pchat_nickcmp = pchat_nickcmp;
+		pl->pchat_set_context = pchat_set_context;
+		pl->pchat_find_context = pchat_find_context;
+		pl->pchat_get_context = pchat_get_context;
+		pl->pchat_get_info = pchat_get_info;
+		pl->pchat_get_prefs = pchat_get_prefs;
+		pl->pchat_list_get = pchat_list_get;
+		pl->pchat_list_free = pchat_list_free;
+		pl->pchat_list_fields = pchat_list_fields;
+		pl->pchat_list_str = pchat_list_str;
+		pl->pchat_list_next = pchat_list_next;
+		pl->pchat_list_int = pchat_list_int;
+		pl->pchat_plugingui_add = pchat_plugingui_add;
+		pl->pchat_plugingui_remove = pchat_plugingui_remove;
+		pl->pchat_emit_print = pchat_emit_print;
+#ifdef WIN32
+		pl->pchat_read_fd = (void *) pchat_read_fd;
 #else
-		pl->xchat_read_fd = xchat_dummy;
+		pl->pchat_read_fd = pchat_dummy;
 #endif
-		pl->xchat_list_time = xchat_list_time;
-		pl->xchat_gettext = xchat_gettext;
-		pl->xchat_send_modes = xchat_send_modes;
-		pl->xchat_strip = xchat_strip;
-		pl->xchat_free = xchat_free;
-		pl->xchat_pluginpref_set_str = xchat_pluginpref_set_str;
-		pl->xchat_pluginpref_get_str = xchat_pluginpref_get_str;
-		pl->xchat_pluginpref_set_int = xchat_pluginpref_set_int;
-		pl->xchat_pluginpref_get_int = xchat_pluginpref_get_int;
-		pl->xchat_pluginpref_delete = xchat_pluginpref_delete;
-		pl->xchat_pluginpref_list = xchat_pluginpref_list;
-		pl->xchat_hook_server_attrs = xchat_hook_server_attrs;
-		pl->xchat_hook_print_attrs = xchat_hook_print_attrs;
-		pl->xchat_emit_print_attrs = xchat_emit_print_attrs;
-		pl->xchat_event_attrs_create = xchat_event_attrs_create;
-		pl->xchat_event_attrs_free = xchat_event_attrs_free;
+		pl->pchat_list_time = pchat_list_time;
+		pl->pchat_gettext = pchat_gettext;
+		pl->pchat_send_modes = pchat_send_modes;
+		pl->pchat_strip = pchat_strip;
+		pl->pchat_free = pchat_free;
+		pl->pchat_pluginpref_set_str = pchat_pluginpref_set_str;
+		pl->pchat_pluginpref_get_str = pchat_pluginpref_get_str;
+		pl->pchat_pluginpref_set_int = pchat_pluginpref_set_int;
+		pl->pchat_pluginpref_get_int = pchat_pluginpref_get_int;
+		pl->pchat_pluginpref_delete = pchat_pluginpref_delete;
+		pl->pchat_pluginpref_list = pchat_pluginpref_list;
+		pl->pchat_hook_server_attrs = pchat_hook_server_attrs;
+		pl->pchat_hook_print_attrs = pchat_hook_print_attrs;
+		pl->pchat_emit_print_attrs = pchat_emit_print_attrs;
+		pl->pchat_event_attrs_create = pchat_event_attrs_create;
+		pl->pchat_event_attrs_free = pchat_event_attrs_free;
 
-		/* run xchat_plugin_init, if it returns 0, close the plugin */
-		if (((xchat_init_func *)init_func) (pl, &pl->name, &pl->desc, &pl->version, arg) == 0)
+		/* run pchat_plugin_init, if it returns 0, close the plugin */
+		if (((pchat_init_func *)init_func) (pl, &pl->name, &pl->desc, &pl->version, arg) == 0)
 		{
 			plugin_free (pl, FALSE, FALSE);
 			return;
@@ -327,10 +339,11 @@ int
 plugin_kill (char *name, int by_filename)
 {
 	GSList *list;
+	pchat_plugin *pl;
+
 	list = plugin_list;
 	while (list)
 	{
-		xchat_plugin *pl;
 		pl = list->data;
 		/* static-plugins (plugin-timer.c) have a NULL filename */
 		if ((by_filename && pl->filename && g_ascii_strcasecmp (name, pl->filename) == 0) ||
@@ -357,7 +370,7 @@ void
 plugin_kill_all (void)
 {
 	GSList *list, *next;
-	xchat_plugin *pl;
+	pchat_plugin *pl;
 
 	list = plugin_list;
 	while (list)
@@ -370,32 +383,24 @@ plugin_kill_all (void)
 	}
 }
 
-#ifdef USE_PLUGIN
+#if defined(USE_PLUGIN) || defined(WIN32)
+/* used for loading plugins, and in fe-gtk/notifications/notification-windows.c */
 
-/* load a plugin from a filename. Returns: NULL-success or an error string */
-
-char *
-plugin_load (session *sess, char *filename, char *arg)
+GModule *
+module_load (char *filename)
 {
 	void *handle;
 	char *filepart;
-	xchat_init_func *init_func;
-	xchat_deinit_func *deinit_func;
-#ifndef USE_GMODULE
-	char *error;
-#else
 	char *pluginpath;
-#endif
 
 	/* get the filename without path */
 	filepart = file_part (filename);
 
-#ifdef USE_GMODULE
 	/* load the plugin */
 	if (!g_ascii_strcasecmp (filepart, filename))
 	{
 		/* no path specified, it's just the filename, try to load from config dir */
-		pluginpath = g_build_filename (get_xdir (), filename, NULL);
+		pluginpath = g_build_filename (get_xdir (), "addons", filename, NULL);
 		handle = g_module_open (pluginpath, 0);
 		g_free (pluginpath);
 	}
@@ -405,56 +410,35 @@ plugin_load (session *sess, char *filename, char *arg)
 		handle = g_module_open (filename, 0);
 	}
 
+	return handle;
+}
+
+#endif
+
+#ifdef USE_PLUGIN
+
+/* load a plugin from a filename. Returns: NULL-success or an error string */
+
+char *
+plugin_load (session *sess, char *filename, char *arg)
+{
+	GModule *handle = module_load (filename);
+	pchat_init_func *init_func;
+	pchat_deinit_func *deinit_func;
+
 	if (handle == NULL)
 		return (char *)g_module_error ();
 
-	/* find the init routine xchat_plugin_init */
-	if (!g_module_symbol (handle, "xchat_plugin_init", (gpointer *)&init_func))
+	/* find the init routine pchat_plugin_init */
+	if (!g_module_symbol (handle, "pchat_plugin_init", (gpointer *)&init_func))
 	{
 		g_module_close (handle);
-		return _("No xchat_plugin_init symbol; is this really a PChat plugin?");
+		return _("No pchat_plugin_init symbol; is this really a PChat plugin?");
 	}
 
 	/* find the plugin's deinit routine, if any */
-	if (!g_module_symbol (handle, "xchat_plugin_deinit", (gpointer *)&deinit_func))
+	if (!g_module_symbol (handle, "pchat_plugin_deinit", (gpointer *)&deinit_func))
 		deinit_func = NULL;
-
-#else
-
-/* OpenBSD lacks this! */
-#ifndef RTLD_GLOBAL
-#define RTLD_GLOBAL 0
-#endif
-
-#ifndef RTLD_NOW
-#define RTLD_NOW 0
-#endif
-
-	/* load the plugin */
-	if (filepart &&
-		 /* xsys draws in libgtk-1.2, causing crashes, so force RTLD_LOCAL */
-		 (strstr (filepart, "local") || strncmp (filepart, "libxsys-1", 9) == 0)
-		)
-		handle = dlopen (filename, RTLD_NOW);
-	else
-		handle = dlopen (filename, RTLD_GLOBAL | RTLD_NOW);
-	if (handle == NULL)
-		return (char *)dlerror ();
-	dlerror ();		/* Clear any existing error */
-
-	/* find the init routine xchat_plugin_init */
-	init_func = dlsym (handle, "xchat_plugin_init");
-	error = (char *)dlerror ();
-	if (error != NULL)
-	{
-		dlclose (handle);
-		return _("No xchat_plugin_init symbol; is this really a PChat plugin?");
-	}
-
-	/* find the plugin's deinit routine, if any */
-	deinit_func = dlsym (handle, "xchat_plugin_deinit");
-	error = (char *)dlerror ();
-#endif
 
 	/* add it to our linked list */
 	plugin_add (sess, filename, handle, init_func, deinit_func, arg, FALSE);
@@ -469,11 +453,6 @@ plugin_auto_load_cb (char *filename)
 {
 	char *pMsg;
 
-#ifndef _WIN32	/* black listed */
-	if (!strcmp (file_part (filename), "dbus.so"))
-		return;
-#endif
-
 	pMsg = plugin_load (ps, filename, NULL);
 	if (pMsg)
 	{
@@ -482,53 +461,45 @@ plugin_auto_load_cb (char *filename)
 	}
 }
 
-static char *
-plugin_get_libdir ()
+static const char *
+plugin_get_libdir (void)
 {
 	const char *libdir;
 
-	libdir = pchat_platform_support_get_lib_dir();
+	libdir = g_getenv ("PCHAT_LIBDIR");
 	if (libdir && *libdir)
-		return (char*)libdir;
+		return libdir;
 	else
-		return XCHATLIBDIR;
+		return PCHATLIBDIR;
 }
 
 void
 plugin_auto_load (session *sess)
 {
-	char *lib_dir;
+	const char *lib_dir;
 	char *sub_dir;
 	ps = sess;
 
 	lib_dir = plugin_get_libdir ();
 	sub_dir = g_build_filename (get_xdir (), "addons", NULL);
 
-#ifdef _WIN32
+#ifdef WIN32
 	/* a long list of bundled plugins that should be loaded automatically,
 	 * user plugins should go to <config>, leave Program Files alone! */
-	for_files (lib_dir, "hcchecksum.dll", plugin_auto_load_cb);
-	for_files (lib_dir, "hcdoat.dll", plugin_auto_load_cb);
-	for_files (lib_dir, "hcexec.dll", plugin_auto_load_cb);
-	for_files (lib_dir, "hcfishlim.dll", plugin_auto_load_cb);
-	for_files (lib_dir, "hcmpcinfo.dll", plugin_auto_load_cb);
-	for_files (lib_dir, "hcperl.dll", plugin_auto_load_cb);
-	for_files (lib_dir, "hcpython2.dll", plugin_auto_load_cb);
-	for_files (lib_dir, "hcpython3.dll", plugin_auto_load_cb);
-	for_files (lib_dir, "hcupd.dll", plugin_auto_load_cb);
-	for_files (lib_dir, "hcwinamp.dll", plugin_auto_load_cb);
-	for_files (lib_dir, "hcsysinfo.dll", plugin_auto_load_cb);
+	for_files (lib_dir, "pcchecksum.dll", plugin_auto_load_cb);
+	for_files (lib_dir, "pcexec.dll", plugin_auto_load_cb);
+	for_files (lib_dir, "pcfishlim.dll", plugin_auto_load_cb);
+	for_files(lib_dir, "pclua.dll", plugin_auto_load_cb);
+	for_files (lib_dir, "pcperl.dll", plugin_auto_load_cb);
+	for_files (lib_dir, "pcpython3.dll", plugin_auto_load_cb);
+	for_files (lib_dir, "pcupd.dll", plugin_auto_load_cb);
+	for_files (lib_dir, "pcwinamp.dll", plugin_auto_load_cb);
+	for_files (lib_dir, "pcsysinfo.dll", plugin_auto_load_cb);
+#else
+	for_files (lib_dir, "*."PLUGIN_SUFFIX, plugin_auto_load_cb);
+#endif
 
-	for_files (sub_dir, "*.dll", plugin_auto_load_cb);
-#else
-#if defined(__hpux)
-	for_files (lib_dir, "*.sl", plugin_auto_load_cb);
-	for_files (sub_dir, "*.sl", plugin_auto_load_cb);
-#else
-	for_files (lib_dir, "*.so", plugin_auto_load_cb);
-	for_files (sub_dir, "*.so", plugin_auto_load_cb);
-#endif
-#endif
+	for_files (sub_dir, "*."PLUGIN_SUFFIX, plugin_auto_load_cb);
 
 	g_free (sub_dir);
 }
@@ -539,7 +510,7 @@ plugin_reload (session *sess, char *name, int by_filename)
 	GSList *list;
 	char *filename;
 	char *ret;
-	xchat_plugin *pl;
+	pchat_plugin *pl;
 
 	list = plugin_list;
 	while (list)
@@ -576,7 +547,7 @@ plugin_reload (session *sess, char *name, int by_filename)
 static GSList *
 plugin_hook_find (GSList *list, int type, char *name)
 {
-	xchat_hook *hook;
+	pchat_hook *hook;
 
 	while (list)
 	{
@@ -600,10 +571,10 @@ plugin_hook_find (GSList *list, int type, char *name)
 
 static int
 plugin_hook_run (session *sess, char *name, char *word[], char *word_eol[],
-				 xchat_event_attrs *attrs, int type)
+				 pchat_event_attrs *attrs, int type)
 {
 	GSList *list, *next;
-	xchat_hook *hook;
+	pchat_hook *hook;
 	int ret, eat = 0;
 
 	list = hook_list;
@@ -621,30 +592,30 @@ plugin_hook_run (session *sess, char *name, char *word[], char *word_eol[],
 		switch (hook->type)
 		{
 		case HOOK_COMMAND:
-			ret = ((xchat_cmd_cb *)hook->callback) (word, word_eol, hook->userdata);
+			ret = ((pchat_cmd_cb *)hook->callback) (word, word_eol, hook->userdata);
 			break;
 		case HOOK_PRINT_ATTRS:
-			ret = ((xchat_print_attrs_cb *)hook->callback) (word, attrs, hook->userdata);
+			ret = ((pchat_print_attrs_cb *)hook->callback) (word, attrs, hook->userdata);
 			break;
 		case HOOK_SERVER:
-			ret = ((xchat_serv_cb *)hook->callback) (word, word_eol, hook->userdata);
+			ret = ((pchat_serv_cb *)hook->callback) (word, word_eol, hook->userdata);
 			break;
 		case HOOK_SERVER_ATTRS:
-			ret = ((xchat_serv_attrs_cb *)hook->callback) (word, word_eol, attrs, hook->userdata);
+			ret = ((pchat_serv_attrs_cb *)hook->callback) (word, word_eol, attrs, hook->userdata);
 			break;
 		default: /*case HOOK_PRINT:*/
-			ret = ((xchat_print_cb *)hook->callback) (word, hook->userdata);
+			ret = ((pchat_print_cb *)hook->callback) (word, hook->userdata);
 			break;
 		}
 
-		if ((ret & XCHAT_EAT_XCHAT) && (ret & XCHAT_EAT_PLUGIN))
+		if ((ret & PCHAT_EAT_PCHAT) && (ret & PCHAT_EAT_PLUGIN))
 		{
 			eat = 1;
 			goto xit;
 		}
-		if (ret & XCHAT_EAT_PLUGIN)
+		if (ret & PCHAT_EAT_PLUGIN)
 			goto xit;	/* stop running plugins */
-		if (ret & XCHAT_EAT_XCHAT)
+		if (ret & PCHAT_EAT_PCHAT)
 			eat = 1;	/* eventually we'll return 1, but continue running plugins */
 
 		list = next;
@@ -660,7 +631,7 @@ xit:
 		if (!hook || hook->type == HOOK_DELETED)
 		{
 			hook_list = g_slist_remove (hook_list, hook);
-			free (hook);
+			g_free (hook);
 		}
 		list = next;
 	}
@@ -676,20 +647,14 @@ plugin_emit_command (session *sess, char *name, char *word[], char *word_eol[])
 	return plugin_hook_run (sess, name, word, word_eol, NULL, HOOK_COMMAND);
 }
 
-xchat_event_attrs *
-xchat_event_attrs_create (xchat_plugin *ph)
+pchat_event_attrs *
+pchat_event_attrs_create (pchat_plugin *ph)
 {
-	xchat_event_attrs *attrs;
-
-	attrs = g_malloc (sizeof (*attrs));
-
-	attrs->server_time_utc = (time_t) 0;
-
-	return attrs;
+	return g_new0 (pchat_event_attrs, 1);
 }
 
 void
-xchat_event_attrs_free (xchat_plugin *ph, xchat_event_attrs *attrs)
+pchat_event_attrs_free (pchat_plugin *ph, pchat_event_attrs *attrs)
 {
 	g_free (attrs);
 }
@@ -700,11 +665,11 @@ int
 plugin_emit_server (session *sess, char *name, char *word[], char *word_eol[],
 					time_t server_time)
 {
-	xchat_event_attrs attrs;
+	pchat_event_attrs attrs;
 
 	attrs.server_time_utc = server_time;
 
-	return plugin_hook_run (sess, name, word, word_eol, &attrs,
+	return plugin_hook_run (sess, name, word, word_eol, &attrs, 
 							HOOK_SERVER | HOOK_SERVER_ATTRS);
 }
 
@@ -713,7 +678,7 @@ plugin_emit_server (session *sess, char *name, char *word[], char *word_eol[],
 int
 plugin_emit_print (session *sess, char *word[], time_t server_time)
 {
-	xchat_event_attrs attrs;
+	pchat_event_attrs attrs;
 
 	attrs.server_time_utc = server_time;
 
@@ -724,37 +689,42 @@ plugin_emit_print (session *sess, char *word[], time_t server_time)
 int
 plugin_emit_dummy_print (session *sess, char *name)
 {
-	char *word[32];
+	char *word[PDIWORDS];
 	int i;
 
 	word[0] = name;
-	for (i = 1; i < 32; i++)
+	for (i = 1; i < PDIWORDS; i++)
 		word[i] = "\000";
 
 	return plugin_hook_run (sess, name, word, NULL, NULL, HOOK_PRINT);
 }
 
 int
-plugin_emit_keypress (session *sess, unsigned int state, unsigned int keyval,
-							 int len, char *string)
+plugin_emit_keypress (session *sess, unsigned int state, unsigned int keyval, gunichar key)
 {
 	char *word[PDIWORDS];
 	char keyval_str[16];
 	char state_str[16];
 	char len_str[16];
-	int i;
+	char key_str[7];
+	int i, len;
 
 	if (!hook_list)
 		return 0;
 
-	g_sprintf (keyval_str, "%u", keyval);
-	g_sprintf (state_str, "%u", state);
-	g_sprintf (len_str, "%d", len);
+	sprintf (keyval_str, "%u", keyval);
+	sprintf (state_str, "%u", state);
+	if (!key)
+		len = 0;
+	else
+		len = g_unichar_to_utf8 (key, key_str);
+	key_str[len] = '\0';
+	sprintf (len_str, "%d", len);
 
 	word[0] = "Key Press";
 	word[1] = keyval_str;
 	word[2] = state_str;
-	word[3] = string;
+	word[3] = key_str;
 	word[4] = len_str;
 	for (i = 5; i < PDIWORDS; i++)
 		word[i] = "\000";
@@ -763,7 +733,7 @@ plugin_emit_keypress (session *sess, unsigned int state, unsigned int keyval,
 }
 
 static int
-plugin_timeout_cb (xchat_hook *hook)
+plugin_timeout_cb (pchat_hook *hook)
 {
 	int ret;
 
@@ -771,7 +741,7 @@ plugin_timeout_cb (xchat_hook *hook)
 	hook->pl->context = current_sess;
 
 	/* call the plugin's timeout function */
-	ret = ((xchat_timer_cb *)hook->callback) (hook->userdata);
+	ret = ((pchat_timer_cb *)hook->callback) (hook->userdata);
 
 	/* the callback might have already unhooked it! */
 	if (!g_slist_find (hook_list, hook) || hook->type == HOOK_DELETED)
@@ -780,7 +750,7 @@ plugin_timeout_cb (xchat_hook *hook)
 	if (ret == 0)
 	{
 		hook->tag = 0;	/* avoid fe_timeout_remove, returning 0 is enough! */
-		xchat_unhook (hook->pl, hook);
+		pchat_unhook (hook->pl, hook);
 	}
 
 	return ret;
@@ -789,12 +759,12 @@ plugin_timeout_cb (xchat_hook *hook)
 /* insert a hook into hook_list according to its priority */
 
 static void
-plugin_insert_hook (xchat_hook *new_hook)
+plugin_insert_hook (pchat_hook *new_hook)
 {
 	GSList *list;
-	xchat_hook *hook;
+	pchat_hook *hook;
 	int new_hook_type;
-
+ 
 	switch (new_hook->type)
 	{
 		case HOOK_PRINT:
@@ -825,19 +795,19 @@ plugin_insert_hook (xchat_hook *new_hook)
 }
 
 static gboolean
-plugin_fd_cb (GIOChannel *source, GIOCondition condition, xchat_hook *hook)
+plugin_fd_cb (GIOChannel *source, GIOCondition condition, pchat_hook *hook)
 {
 	int flags = 0, ret;
-	typedef int (xchat_fd_cb2) (int fd, int flags, void *user_data, GIOChannel *);
+	typedef int (pchat_fd_cb2) (int fd, int flags, void *user_data, GIOChannel *);
 
 	if (condition & G_IO_IN)
-		flags |= XCHAT_FD_READ;
+		flags |= PCHAT_FD_READ;
 	if (condition & G_IO_OUT)
-		flags |= XCHAT_FD_WRITE;
+		flags |= PCHAT_FD_WRITE;
 	if (condition & G_IO_PRI)
-		flags |= XCHAT_FD_EXCEPTION;
+		flags |= PCHAT_FD_EXCEPTION;
 
-	ret = ((xchat_fd_cb2 *)hook->callback) (hook->pri, flags, hook->userdata, source);
+	ret = ((pchat_fd_cb2 *)hook->callback) (hook->pri, flags, hook->userdata, source);
 
 	/* the callback might have already unhooked it! */
 	if (!g_slist_find (hook_list, hook) || hook->type == HOOK_DELETED)
@@ -846,7 +816,7 @@ plugin_fd_cb (GIOChannel *source, GIOCondition condition, xchat_hook *hook)
 	if (ret == 0)
 	{
 		hook->tag = 0; /* avoid fe_input_remove, returning 0 is enough! */
-		xchat_unhook (hook->pl, hook);
+		pchat_unhook (hook->pl, hook);
 	}
 
 	return ret;
@@ -854,20 +824,17 @@ plugin_fd_cb (GIOChannel *source, GIOCondition condition, xchat_hook *hook)
 
 /* allocate and add a hook to our list. Used for all 4 types */
 
-static xchat_hook *
-plugin_add_hook (xchat_plugin *pl, int type, int pri, const char *name,
+static pchat_hook *
+plugin_add_hook (pchat_plugin *pl, int type, int pri, const char *name,
 					  const  char *help_text, void *callb, int timeout, void *userdata)
 {
-	xchat_hook *hook;
+	pchat_hook *hook;
 
-	hook = g_malloc0 (sizeof (xchat_hook));
-
+	hook = g_new0 (pchat_hook, 1);
 	hook->type = type;
 	hook->pri = pri;
-	if (name)
-		hook->name = strdup (name);
-	if (help_text)
-		hook->help_text = strdup (help_text);
+	hook->name = g_strdup (name);
+	hook->help_text = g_strdup (help_text);
 	hook->callback = callb;
 	hook->pl = pl;
 	hook->userdata = userdata;
@@ -884,7 +851,7 @@ plugin_add_hook (xchat_plugin *pl, int type, int pri, const char *name,
 GList *
 plugin_command_list(GList *tmp_list)
 {
-	xchat_hook *hook;
+	pchat_hook *hook;
 	GSList *list = hook_list;
 
 	while (list)
@@ -902,7 +869,7 @@ plugin_command_foreach (session *sess, void *userdata,
 			void (*cb) (session *sess, void *userdata, char *name, char *help))
 {
 	GSList *list;
-	xchat_hook *hook;
+	pchat_hook *hook;
 
 	list = hook_list;
 	while (list)
@@ -920,7 +887,7 @@ int
 plugin_show_help (session *sess, char *cmd)
 {
 	GSList *list;
-	xchat_hook *hook;
+	pchat_hook *hook;
 
 	list = plugin_hook_find (hook_list, HOOK_COMMAND, cmd);
 	if (list)
@@ -936,175 +903,8 @@ plugin_show_help (session *sess, char *cmd)
 	return 0;
 }
 
-/* ========================================================= */
-/* ===== these are the functions plugins actually call ===== */
-/* ========================================================= */
-
-void *
-xchat_unhook (xchat_plugin *ph, xchat_hook *hook)
-{
-	/* perl.c trips this */
-	if (!g_slist_find (hook_list, hook) || hook->type == HOOK_DELETED)
-		return NULL;
-
-	if (hook->type == HOOK_TIMER && hook->tag != 0)
-		fe_timeout_remove (hook->tag);
-
-	if (hook->type == HOOK_FD && hook->tag != 0)
-		fe_input_remove (hook->tag);
-
-	hook->type = HOOK_DELETED;	/* expunge later */
-
-	if (hook->name)
-		free (hook->name);	/* NULL for timers & fds */
-	if (hook->help_text)
-		free (hook->help_text);	/* NULL for non-commands */
-
-	return hook->userdata;
-}
-
-xchat_hook *
-xchat_hook_command (xchat_plugin *ph, const char *name, int pri,
-						  xchat_cmd_cb *callb, const char *help_text, void *userdata)
-{
-	return plugin_add_hook (ph, HOOK_COMMAND, pri, name, help_text, callb, 0,
-									userdata);
-}
-
-xchat_hook *
-xchat_hook_server (xchat_plugin *ph, const char *name, int pri,
-						 xchat_serv_cb *callb, void *userdata)
-{
-	return plugin_add_hook (ph, HOOK_SERVER, pri, name, 0, callb, 0, userdata);
-}
-
-xchat_hook *
-xchat_hook_server_attrs (xchat_plugin *ph, const char *name, int pri,
-						   xchat_serv_attrs_cb *callb, void *userdata)
-{
-	return plugin_add_hook (ph, HOOK_SERVER_ATTRS, pri, name, 0, callb, 0,
-							userdata);
-}
-
-xchat_hook *
-xchat_hook_print (xchat_plugin *ph, const char *name, int pri,
-						xchat_print_cb *callb, void *userdata)
-{
-	return plugin_add_hook (ph, HOOK_PRINT, pri, name, 0, callb, 0, userdata);
-}
-
-xchat_hook *
-xchat_hook_print_attrs (xchat_plugin *ph, const char *name, int pri,
-						  xchat_print_attrs_cb *callb, void *userdata)
-{
-	return plugin_add_hook (ph, HOOK_PRINT_ATTRS, pri, name, 0, callb, 0,
-							userdata);
-}
-
-xchat_hook *
-xchat_hook_timer (xchat_plugin *ph, int timeout, xchat_timer_cb *callb,
-					   void *userdata)
-{
-	return plugin_add_hook (ph, HOOK_TIMER, 0, 0, 0, callb, timeout, userdata);
-}
-
-xchat_hook *
-xchat_hook_fd (xchat_plugin *ph, int fd, int flags,
-					xchat_fd_cb *callb, void *userdata)
-{
-	xchat_hook *hook;
-
-	hook = plugin_add_hook (ph, HOOK_FD, 0, 0, 0, callb, 0, userdata);
-	hook->pri = fd;
-	/* plugin hook_fd flags correspond exactly to FIA_* flags (fe.h) */
-	hook->tag = fe_input_add (fd, flags, plugin_fd_cb, hook);
-
-	return hook;
-}
-
-void
-xchat_print (xchat_plugin *ph, const char *text)
-{
-	if (!is_session (ph->context))
-	{
-		DEBUG(PrintTextf(0, "%s\txchat_print called without a valid context.\n", ph->name));
-		return;
-	}
-
-	PrintText (ph->context, (char *)text);
-}
-
-void
-xchat_printf (xchat_plugin *ph, const char *format, ...)
-{
-	va_list args;
-	char *buf;
-
-	va_start (args, format);
-	buf = g_strdup_vprintf (format, args);
-	va_end (args);
-
-	xchat_print (ph, buf);
-	g_free (buf);
-}
-
-void
-xchat_command (xchat_plugin *ph, const char *command)
-{
-	char *conv;
-	gssize len = -1;
-
-	if (!is_session (ph->context))
-	{
-		DEBUG(PrintTextf(0, "%s\txchat_command called without a valid context.\n", ph->name));
-		return;
-	}
-
-	/* scripts/plugins continue to send non-UTF8... *sigh* */
-	conv = text_validate ((char **)&command, &len);
-	handle_command (ph->context, (char *)command, FALSE);
-	g_free (conv);
-}
-
-void
-xchat_commandf (xchat_plugin *ph, const char *format, ...)
-{
-	va_list args;
-	char *buf;
-
-	va_start (args, format);
-	buf = g_strdup_vprintf (format, args);
-	va_end (args);
-
-	xchat_command (ph, buf);
-	g_free (buf);
-}
-
-int
-xchat_nickcmp (xchat_plugin *ph, const char *s1, const char *s2)
-{
-	return ((session *)ph->context)->server->p_cmp (s1, s2);
-}
-
-xchat_context *
-xchat_get_context (xchat_plugin *ph)
-{
-	return ph->context;
-}
-
-int
-xchat_set_context (xchat_plugin *ph, xchat_context *context)
-{
-	if (is_session (context))
-	{
-		ph->context = context;
-		return 1;
-	}
-	return 0;
-}
-
-xchat_context *
-xchat_find_context (xchat_plugin *ph, const char *servname, const char *channel)
+session *
+plugin_find_context (const char *servname, const char *channel, server *current_server)
 {
 	GSList *slist, *clist, *sessions = NULL;
 	server *serv;
@@ -1136,7 +936,7 @@ xchat_find_context (xchat_plugin *ph, const char *servname, const char *channel)
 				{
 					if (rfc_casecmp (channel, sess->channel) == 0)
 					{
-						if (sess->server == ph->context->server)
+						if (sess->server == current_server)
 						{
 							g_slist_free (sessions);
 							return sess;
@@ -1163,8 +963,179 @@ xchat_find_context (xchat_plugin *ph, const char *servname, const char *channel)
 	return NULL;
 }
 
+
+/* ========================================================= */
+/* ===== these are the functions plugins actually call ===== */
+/* ========================================================= */
+
+void *
+pchat_unhook (pchat_plugin *ph, pchat_hook *hook)
+{
+	/* perl.c trips this */
+	if (!g_slist_find (hook_list, hook) || hook->type == HOOK_DELETED)
+		return NULL;
+
+	if (hook->type == HOOK_TIMER && hook->tag != 0)
+		fe_timeout_remove (hook->tag);
+
+	if (hook->type == HOOK_FD && hook->tag != 0)
+		fe_input_remove (hook->tag);
+
+	hook->type = HOOK_DELETED;	/* expunge later */
+
+	g_free (hook->name);	/* NULL for timers & fds */
+	g_free (hook->help_text);	/* NULL for non-commands */
+
+	return hook->userdata;
+}
+
+pchat_hook *
+pchat_hook_command (pchat_plugin *ph, const char *name, int pri,
+						  pchat_cmd_cb *callb, const char *help_text, void *userdata)
+{
+	return plugin_add_hook (ph, HOOK_COMMAND, pri, name, help_text, callb, 0,
+									userdata);
+}
+
+pchat_hook *
+pchat_hook_server (pchat_plugin *ph, const char *name, int pri,
+						 pchat_serv_cb *callb, void *userdata)
+{
+	return plugin_add_hook (ph, HOOK_SERVER, pri, name, 0, callb, 0, userdata);
+}
+
+pchat_hook *
+pchat_hook_server_attrs (pchat_plugin *ph, const char *name, int pri,
+						   pchat_serv_attrs_cb *callb, void *userdata)
+{
+	return plugin_add_hook (ph, HOOK_SERVER_ATTRS, pri, name, 0, callb, 0,
+							userdata);
+}
+
+pchat_hook *
+pchat_hook_print (pchat_plugin *ph, const char *name, int pri,
+						pchat_print_cb *callb, void *userdata)
+{
+	return plugin_add_hook (ph, HOOK_PRINT, pri, name, 0, callb, 0, userdata);
+}
+
+pchat_hook *
+pchat_hook_print_attrs (pchat_plugin *ph, const char *name, int pri,
+						  pchat_print_attrs_cb *callb, void *userdata)
+{
+	return plugin_add_hook (ph, HOOK_PRINT_ATTRS, pri, name, 0, callb, 0,
+							userdata);
+}
+
+pchat_hook *
+pchat_hook_timer (pchat_plugin *ph, int timeout, pchat_timer_cb *callb,
+					   void *userdata)
+{
+	return plugin_add_hook (ph, HOOK_TIMER, 0, 0, 0, callb, timeout, userdata);
+}
+
+pchat_hook *
+pchat_hook_fd (pchat_plugin *ph, int fd, int flags,
+					pchat_fd_cb *callb, void *userdata)
+{
+	pchat_hook *hook;
+
+	hook = plugin_add_hook (ph, HOOK_FD, 0, 0, 0, callb, 0, userdata);
+	hook->pri = fd;
+	/* plugin hook_fd flags correspond exactly to FIA_* flags (fe.h) */
+	hook->tag = fe_input_add (fd, flags, plugin_fd_cb, hook);
+
+	return hook;
+}
+
+void
+pchat_print (pchat_plugin *ph, const char *text)
+{
+	if (!is_session (ph->context))
+	{
+		DEBUG(PrintTextf(0, "%s\tpchat_print called without a valid context.\n", ph->name));
+		return;
+	}
+
+	PrintText (ph->context, (char *)text);
+}
+
+void
+pchat_printf (pchat_plugin *ph, const char *format, ...)
+{
+	va_list args;
+	char *buf;
+
+	va_start (args, format);
+	buf = g_strdup_vprintf (format, args);
+	va_end (args);
+
+	pchat_print (ph, buf);
+	g_free (buf);
+}
+
+void
+pchat_command (pchat_plugin *ph, const char *command)
+{
+	char *command_utf8;
+
+	if (!is_session (ph->context))
+	{
+		DEBUG(PrintTextf(0, "%s\tpchat_command called without a valid context.\n", ph->name));
+		return;
+	}
+
+	/* scripts/plugins continue to send non-UTF8... *sigh* */
+	command_utf8 = text_fixup_invalid_utf8 (command, -1, NULL);
+	handle_command (ph->context, command_utf8, FALSE);
+	g_free (command_utf8);
+}
+
+void
+pchat_commandf (pchat_plugin *ph, const char *format, ...)
+{
+	va_list args;
+	char *buf;
+
+	va_start (args, format);
+	buf = g_strdup_vprintf (format, args);
+	va_end (args);
+
+	pchat_command (ph, buf);
+	g_free (buf);
+}
+
+int
+pchat_nickcmp (pchat_plugin *ph, const char *s1, const char *s2)
+{
+	return ((session *)ph->context)->server->p_cmp (s1, s2);
+}
+
+pchat_context *
+pchat_get_context (pchat_plugin *ph)
+{
+	return ph->context;
+}
+
+int
+pchat_set_context (pchat_plugin *ph, pchat_context *context)
+{
+	if (is_session (context))
+	{
+		ph->context = context;
+		return 1;
+	}
+	return 0;
+}
+
+pchat_context *
+pchat_find_context (pchat_plugin *ph, const char *servname, const char *channel)
+{
+	return plugin_find_context (servname, channel, ph->context->server);
+}
+
 const char *
-xchat_get_info (xchat_plugin *ph, const char *id)
+pchat_get_info (pchat_plugin *ph, const char *id)
 {
 	session *sess;
 	guint32 hash;
@@ -1182,7 +1153,11 @@ xchat_get_info (xchat_plugin *ph, const char *id)
 	switch (hash)
 	{
 		case 0x325acab5:	/* libdirfs */
+#ifdef USE_PLUGIN
 			return plugin_get_libdir ();
+#else
+			return NULL;
+#endif
 
 		case 0x14f51cd8: /* version */
 			return PACKAGE_VERSION;
@@ -1196,7 +1171,7 @@ xchat_get_info (xchat_plugin *ph, const char *id)
 	sess = ph->context;
 	if (!is_session (sess))
 	{
-		DEBUG(PrintTextf(0, "%s\txchat_get_info called without a valid context.\n", ph->name));
+		DEBUG(PrintTextf(0, "%s\tpchat_get_info called without a valid context.\n", ph->name));
 		return NULL;
 	}
 
@@ -1271,7 +1246,7 @@ xchat_get_info (xchat_plugin *ph, const char *id)
 }
 
 int
-xchat_get_prefs (xchat_plugin *ph, const char *name, const char **string, int *integer)
+pchat_get_prefs (pchat_plugin *ph, const char *name, const char **string, int *integer)
 {
 	int i = 0;
 
@@ -1286,7 +1261,7 @@ xchat_get_prefs (xchat_plugin *ph, const char *name, const char **string, int *i
 			*integer = ph->context->server->id;
 			return 2;
 	}
-
+	
 	do
 	{
 		if (!g_ascii_strcasecmp (name, vars[i].name))
@@ -1317,13 +1292,12 @@ xchat_get_prefs (xchat_plugin *ph, const char *name, const char **string, int *i
 	return 0;
 }
 
-xchat_list *
-xchat_list_get (xchat_plugin *ph, const char *name)
+pchat_list *
+pchat_list_get (pchat_plugin *ph, const char *name)
 {
-	xchat_list *list;
+	pchat_list *list;
 
-	list = g_malloc (sizeof (xchat_list));
-	list->pos = NULL;
+	list = g_new0 (pchat_list, 1);
 
 	switch (str_hash (name))
 	{
@@ -1358,7 +1332,7 @@ xchat_list_get (xchat_plugin *ph, const char *name)
 		}	/* fall through */
 
 	default:
-		free (list);
+		g_free (list);
 		return NULL;
 	}
 
@@ -1366,15 +1340,15 @@ xchat_list_get (xchat_plugin *ph, const char *name)
 }
 
 void
-xchat_list_free (xchat_plugin *ph, xchat_list *xlist)
+pchat_list_free (pchat_plugin *ph, pchat_list *xlist)
 {
 	if (xlist->type == LIST_USERS)
 		g_slist_free (xlist->head);
-	free (xlist);
+	g_free (xlist);
 }
 
 int
-xchat_list_next (xchat_plugin *ph, xchat_list *xlist)
+pchat_list_next (pchat_plugin *ph, pchat_list *xlist)
 {
 	if (xlist->next == NULL)
 		return 0;
@@ -1396,7 +1370,7 @@ xchat_list_next (xchat_plugin *ph, xchat_list *xlist)
 }
 
 const char * const *
-xchat_list_fields (xchat_plugin *ph, const char *name)
+pchat_list_fields (pchat_plugin *ph, const char *name)
 {
 	static const char * const dcc_fields[] =
 	{
@@ -1405,7 +1379,7 @@ xchat_list_fields (xchat_plugin *ph, const char *name)
 	};
 	static const char * const channels_fields[] =
 	{
-		"schannel",	"schannelkey", "schantypes", "pcontext", "iflags", "iid", "ilag", "imaxmodes",
+		"schannel", "schannelkey", "schanmodes", "schantypes", "pcontext", "iflags", "iid", "ilag", "imaxmodes",
 		"snetwork", "snickmodes", "snickprefixes", "iqueue", "sserver", "itype", "iusers",
 		NULL
 	};
@@ -1446,7 +1420,7 @@ xchat_list_fields (xchat_plugin *ph, const char *name)
 }
 
 time_t
-xchat_list_time (xchat_plugin *ph, xchat_list *xlist, const char *name)
+pchat_list_time (pchat_plugin *ph, pchat_list *xlist, const char *name)
 {
 	guint32 hash = str_hash (name);
 	gpointer data;
@@ -1480,7 +1454,7 @@ xchat_list_time (xchat_plugin *ph, xchat_list *xlist, const char *name)
 }
 
 const char *
-xchat_list_str (xchat_plugin *ph, xchat_list *xlist, const char *name)
+pchat_list_str (pchat_plugin *ph, pchat_list *xlist, const char *name)
 {
 	guint32 hash = str_hash (name);
 	gpointer data = ph->context;
@@ -1502,6 +1476,8 @@ xchat_list_str (xchat_plugin *ph, xchat_list *xlist, const char *name)
 			return ((session *)data)->channel;
 		case 0x8cea5e7c: /* channelkey */
 			return ((session *)data)->channelkey;
+		case 0x5716ab1e: /* chanmodes */
+			return ((session*)data)->server->chanmodes;
 		case 0x577e0867: /* chantypes */
 			return ((session *)data)->server->chantypes;
 		case 0x38b735af: /* context */
@@ -1568,11 +1544,15 @@ xchat_list_str (xchat_plugin *ph, xchat_list *xlist, const char *name)
 }
 
 int
-xchat_list_int (xchat_plugin *ph, xchat_list *xlist, const char *name)
+pchat_list_int (pchat_plugin *ph, pchat_list *xlist, const char *name)
 {
 	guint32 hash = str_hash (name);
 	gpointer data = ph->context;
-	int tmp = 0;
+
+	int channel_flag;
+	int channel_flags[CHANNEL_FLAG_COUNT];
+	int channel_flags_used = 0;
+
 	int type = LIST_CHANNELS;
 
 	/* a NULL xlist is a shortcut to current "channels" context */
@@ -1590,21 +1570,28 @@ xchat_list_int (xchat_plugin *ph, xchat_list *xlist, const char *name)
 		case 0x34207553: /* address32 */
 			return ((struct DCC *)data)->addr;
 		case 0x181a6: /* cps */
-			return ((struct DCC *)data)->cps;
+		{
+			gint64 cps = ((struct DCC *)data)->cps;
+			if (cps <= INT_MAX)
+			{
+				return (int) cps;
+			}
+			return INT_MAX;
+		}
 		case 0x349881: /* port */
 			return ((struct DCC *)data)->port;
 		case 0x1b254: /* pos */
 			return ((struct DCC *)data)->pos & 0xffffffff;
 		case 0xe8a945f6: /* poshigh */
-			return ((uint64_t)(((struct DCC *)data)->pos) >> 32) & 0xffffffff;
+			return (((struct DCC *)data)->pos >> 32) & 0xffffffff;
 		case 0xc84dc82d: /* resume */
 			return ((struct DCC *)data)->resumable & 0xffffffff;
 		case 0xded4c74f: /* resumehigh */
-			return ((uint64_t)(((struct DCC *)data)->resumable) >> 32) & 0xffffffff;
+			return (((struct DCC *)data)->resumable >> 32) & 0xffffffff;
 		case 0x35e001: /* size */
 			return ((struct DCC *)data)->size & 0xffffffff;
 		case 0x3284d523: /* sizehigh */
-			return ((uint64_t)(((struct DCC *)data)->size) >> 32) & 0xffffffff;
+			return (((struct DCC *)data)->size >> 32) & 0xffffffff;
 		case 0xcacdcff2: /* status */
 			return ((struct DCC *)data)->dccstat;
 		case 0x368f3a: /* type */
@@ -1626,40 +1613,38 @@ xchat_list_int (xchat_plugin *ph, xchat_list *xlist, const char *name)
 		case 0xd1b:	/* id */
 			return ((struct session *)data)->server->id;
 		case 0x5cfee87:	/* flags */
-			/* used if text_strip is unset */                    /* 16 */
-			tmp <<= 1;
-			tmp = ((struct session *)data)->text_strip;          /* 15 */
-			tmp <<= 1;
-			/* used if text_scrollback is unset */               /* 14 */
-			tmp <<= 1;
-			tmp |= ((struct session *)data)->text_scrollback;    /* 13 */
-			tmp <<= 1;
-			/* used if text_logging is unset */                  /* 12 */
-			tmp <<= 1;
-			tmp |= ((struct session *)data)->text_logging;       /* 11 */
-			tmp <<= 1;
-			tmp |= ((struct session *)data)->alert_taskbar;      /* 10 */
-			tmp <<= 1;
-			tmp |= ((struct session *)data)->alert_tray;         /* 9 */
-			tmp <<= 1;
-			tmp |= ((struct session *)data)->alert_beep;         /* 8 */
-			tmp <<= 1;
-			/* used if text_hidejoinpart is unset */              /* 7 */
-			tmp <<= 1;
-			tmp |= ((struct session *)data)->text_hidejoinpart;   /* 6 */
-			tmp <<= 1;
-			tmp |= ((struct session *)data)->server->have_idmsg; /* 5 */
-			tmp <<= 1;
-			tmp |= ((struct session *)data)->server->have_whox;  /* 4 */
-			tmp <<= 1;
-			tmp |= ((struct session *)data)->server->end_of_motd;/* 3 */
-			tmp <<= 1;
-			tmp |= ((struct session *)data)->server->is_away;    /* 2 */
-			tmp <<= 1;
-			tmp |= ((struct session *)data)->server->connecting; /* 1 */
-			tmp <<= 1;
-			tmp |= ((struct session *)data)->server->connected;  /* 0 */
-			return tmp;
+			channel_flags[0] = ((struct session *)data)->server->connected;
+			channel_flags[1] = ((struct session *)data)->server->connecting;
+			channel_flags[2] = ((struct session *)data)->server->is_away;
+			channel_flags[3] = ((struct session *)data)->server->end_of_motd;
+			channel_flags[4] = ((struct session *)data)->server->have_whox;
+			channel_flags[5] = ((struct session *)data)->server->have_idmsg;
+			channel_flags[6] = ((struct session *)data)->text_hidejoinpart;
+			channel_flags[7] = ((struct session *)data)->text_hidejoinpart == SET_DEFAULT;
+			channel_flags[8] = ((struct session *)data)->alert_beep;
+			channel_flags[9] = ((struct session *)data)->alert_beep == SET_DEFAULT;
+			channel_flags[10] = 0; /* unused for historical reasons */
+			channel_flags[11] = ((struct session *)data)->text_logging;
+			channel_flags[12] = ((struct session *)data)->text_logging == SET_DEFAULT;
+			channel_flags[13] = ((struct session *)data)->text_scrollback;
+			channel_flags[14] = ((struct session *)data)->text_scrollback == SET_DEFAULT;
+			channel_flags[15] = ((struct session *)data)->text_strip;
+			channel_flags[16] = ((struct session *)data)->text_strip == SET_DEFAULT;
+			channel_flags[17] = ((struct session *)data)->alert_tray;
+			channel_flags[18] = ((struct session *)data)->alert_tray == SET_DEFAULT;
+			channel_flags[19] = ((struct session *)data)->alert_taskbar;
+			channel_flags[20] = ((struct session *)data)->alert_taskbar == SET_DEFAULT;
+			channel_flags[21] = ((struct session *)data)->alert_balloon;
+			channel_flags[22] = ((struct session *)data)->alert_balloon == SET_DEFAULT;
+
+			/* Set flags */
+			for (channel_flag = 0; channel_flag < CHANNEL_FLAG_COUNT; ++channel_flag) {
+				if (channel_flags[channel_flag]) {
+					channel_flags_used |= 1 << channel_flag;
+				}
+			}
+
+			return channel_flags_used;
 		case 0x1a192: /* lag */
 			return ((struct session *)data)->server->lag;
 		case 0x1916144c: /* maxmodes */
@@ -1698,13 +1683,13 @@ xchat_list_int (xchat_plugin *ph, xchat_list *xlist, const char *name)
 }
 
 void *
-xchat_plugingui_add (xchat_plugin *ph, const char *filename,
+pchat_plugingui_add (pchat_plugin *ph, const char *filename,
 							const char *name, const char *desc,
 							const char *version, char *reserved)
 {
 #ifdef USE_PLUGIN
-	ph = plugin_list_add (NULL, strdup (filename), strdup (name), strdup (desc),
-								 strdup (version), NULL, NULL, TRUE, TRUE);
+	ph = plugin_list_add (NULL, g_strdup (filename), g_strdup (name), g_strdup (desc),
+								 g_strdup (version), NULL, NULL, TRUE, TRUE);
 	fe_pluginlist_update ();
 #endif
 
@@ -1712,7 +1697,7 @@ xchat_plugingui_add (xchat_plugin *ph, const char *filename,
 }
 
 void
-xchat_plugingui_remove (xchat_plugin *ph, void *handle)
+pchat_plugingui_remove (pchat_plugin *ph, void *handle)
 {
 #ifdef USE_PLUGIN
 	plugin_free (handle, FALSE, FALSE);
@@ -1720,7 +1705,7 @@ xchat_plugingui_remove (xchat_plugin *ph, void *handle)
 }
 
 int
-xchat_emit_print (xchat_plugin *ph, const char *event_name, ...)
+pchat_emit_print (pchat_plugin *ph, const char *event_name, ...)
 {
 	va_list args;
 	/* currently only 4 because no events use more than 4.
@@ -1747,7 +1732,7 @@ xchat_emit_print (xchat_plugin *ph, const char *event_name, ...)
 }
 
 int
-xchat_emit_print_attrs (xchat_plugin *ph, xchat_event_attrs *attrs,
+pchat_emit_print_attrs (pchat_plugin *ph, pchat_event_attrs *attrs,
 						  const char *event_name, ...)
 {
 	va_list args;
@@ -1775,15 +1760,15 @@ xchat_emit_print_attrs (xchat_plugin *ph, xchat_event_attrs *attrs,
 }
 
 char *
-xchat_gettext (xchat_plugin *ph, const char *msgid)
+pchat_gettext (pchat_plugin *ph, const char *msgid)
 {
 	/* so that plugins can use PChat's internal gettext strings. */
 	/* e.g. The EXEC plugin uses this on Windows. */
-	return (char *)_(msgid);
+	return _(msgid);
 }
 
 void
-xchat_send_modes (xchat_plugin *ph, const char **targets, int ntargets, int modes_per_line, char sign, char mode)
+pchat_send_modes (pchat_plugin *ph, const char **targets, int ntargets, int modes_per_line, char sign, char mode)
 {
 	char tbuf[514];	/* modes.c needs 512 + null */
 
@@ -1791,25 +1776,26 @@ xchat_send_modes (xchat_plugin *ph, const char **targets, int ntargets, int mode
 }
 
 char *
-xchat_strip (xchat_plugin *ph, const char *str, int len, int flags)
+pchat_strip (pchat_plugin *ph, const char *str, int len, int flags)
 {
 	return strip_color ((char *)str, len, flags);
 }
 
 void
-xchat_free (xchat_plugin *ph, void *ptr)
+pchat_free (pchat_plugin *ph, void *ptr)
 {
 	g_free (ptr);
 }
 
 static int
-xchat_pluginpref_set_str_real (xchat_plugin *pl, const char *var, const char *value, int mode) /* mode: 0 = delete, 1 = save */
+pchat_pluginpref_set_str_real (pchat_plugin *pl, const char *var, const char *value, int mode) /* mode: 0 = delete, 1 = save */
 {
 	FILE *fpIn;
 	int fhOut;
 	int prevSetting;
 	char *confname;
 	char *confname_tmp;
+	char *escaped_value;
 	char *buffer;
 	char *buffer_tmp;
 	char line_buffer[512];		/* the same as in cfg_put_str */
@@ -1822,20 +1808,24 @@ xchat_pluginpref_set_str_real (xchat_plugin *pl, const char *var, const char *va
 	g_free (canon);
 	confname_tmp = g_strdup_printf ("%s.new", confname);
 
-	fhOut = xchat_open_file (confname_tmp, O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
-	fpIn = xchat_fopen_file (confname, "r", 0);
+	fhOut = pchat_open_file (confname_tmp, O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
+	fpIn = pchat_fopen_file (confname, "r", 0);
 
 	if (fhOut == -1)		/* unable to save, abort */
 	{
 		g_free (confname);
 		g_free (confname_tmp);
+		if (fpIn)
+			fclose (fpIn);
 		return 0;
 	}
 	else if (fpIn == NULL)	/* no previous config file, no parsing */
 	{
 		if (mode)
 		{
-			buffer = g_strdup_printf ("%s = %s\n", var, value);
+			escaped_value = g_strescape (value, NULL);
+			buffer = g_strdup_printf ("%s = %s\n", var, escaped_value);
+			g_free (escaped_value);
 			write (fhOut, buffer, strlen (buffer));
 			g_free (buffer);
 			close (fhOut);
@@ -1845,7 +1835,7 @@ xchat_pluginpref_set_str_real (xchat_plugin *pl, const char *var, const char *va
 			buffer_tmp = g_build_filename (get_xdir (), confname_tmp, NULL);
 			g_free (confname_tmp);
 
-#ifdef _WIN32
+#ifdef WIN32
 			g_unlink (buffer);
 #endif
 
@@ -1875,7 +1865,7 @@ xchat_pluginpref_set_str_real (xchat_plugin *pl, const char *var, const char *va
 	{
 		prevSetting = 0;
 
-		while (fscanf (fpIn, " %[^\n]", line_bufp) != EOF)	/* read whole lines including whitespaces */
+		while (fscanf (fpIn, " %511[^\n]", line_bufp) != EOF)	/* read whole lines including whitespaces */
 		{
 			buffer_tmp = g_strdup_printf ("%s ", var);	/* add one space, this way it works against var - var2 checks too */
 
@@ -1883,7 +1873,9 @@ xchat_pluginpref_set_str_real (xchat_plugin *pl, const char *var, const char *va
 			{
 				if (mode)									/* overwrite the existing matching setting if we are in save mode */
 				{
-					buffer = g_strdup_printf ("%s = %s\n", var, value);
+					escaped_value = g_strescape (value, NULL);
+					buffer = g_strdup_printf ("%s = %s\n", var, escaped_value);
+					g_free (escaped_value);
 				}
 				else										/* erase the setting in delete mode */
 				{
@@ -1907,7 +1899,9 @@ xchat_pluginpref_set_str_real (xchat_plugin *pl, const char *var, const char *va
 
 		if (!prevSetting && mode)	/* var doesn't exist currently, append if we're in save mode */
 		{
-			buffer = g_strdup_printf ("%s = %s\n", var, value);
+			escaped_value = g_strescape (value, NULL);
+			buffer = g_strdup_printf ("%s = %s\n", var, escaped_value);
+			g_free (escaped_value);
 			write (fhOut, buffer, strlen (buffer));
 			g_free (buffer);
 		}
@@ -1919,7 +1913,7 @@ xchat_pluginpref_set_str_real (xchat_plugin *pl, const char *var, const char *va
 		buffer_tmp = g_build_filename (get_xdir (), confname_tmp, NULL);
 		g_free (confname_tmp);
 
-#ifdef _WIN32
+#ifdef WIN32
 		g_unlink (buffer);
 #endif
 
@@ -1939,80 +1933,73 @@ xchat_pluginpref_set_str_real (xchat_plugin *pl, const char *var, const char *va
 }
 
 int
-xchat_pluginpref_set_str (xchat_plugin *pl, const char *var, const char *value)
+pchat_pluginpref_set_str (pchat_plugin *pl, const char *var, const char *value)
 {
-	return xchat_pluginpref_set_str_real (pl, var, value, 1);
+	return pchat_pluginpref_set_str_real (pl, var, value, 1);
 }
 
-int
-xchat_pluginpref_get_str (xchat_plugin *pl, const char *var, char *dest)
+static int
+pchat_pluginpref_get_str_real (pchat_plugin *pl, const char *var, char *dest, int dest_len)
 {
-	int fh;
-	int l;
-	char confname[64];
-	char *canon;
-	char *cfg;
-	struct stat st;
+	char *confname, *canon, *cfg, *unescaped_value;
+	char buf[512];
 
 	canon = g_strdup (pl->name);
 	canonalize_key (canon);
-	g_sprintf (confname, "addon_%s.conf", canon);
+	confname = g_strdup_printf ("%s%caddon_%s.conf", get_xdir(), G_DIR_SEPARATOR, canon);
 	g_free (canon);
 
-	/* partly borrowed from palette.c */
-	fh = xchat_open_file (confname, O_RDONLY, 0, 0);
-
-	if (fh == -1)
+	if (!g_file_get_contents (confname, &cfg, NULL, NULL))
 	{
+		g_free (confname);
+		return 0;
+	}
+	g_free (confname);
+
+	if (!cfg_get_str (cfg, var, buf, sizeof(buf)))
+	{
+		g_free (cfg);
 		return 0;
 	}
 
-	fstat (fh, &st);
-	cfg = g_malloc (st.st_size + 1);
+	unescaped_value = g_strcompress (buf);
+	g_strlcpy (dest, unescaped_value, dest_len);
 
-	if (!cfg)
-	{
-		close (fh);
-		return 0;
-	}
-
-	cfg[0] = '\0';
-	l = read (fh, cfg, st.st_size);
-
-	if (l >= 0)
-	{
-		cfg[l] = '\0';
-	}
-
-	if (!cfg_get_str (cfg, var, dest, 512)) /* dest_len is the same as buffer size in set */
-	{
-		free (cfg);
-		close (fh);
-		return 0;
-	}
-
-	free (cfg);
-	close (fh);
+	g_free (unescaped_value);
+	g_free (cfg);
 	return 1;
 }
 
 int
-xchat_pluginpref_set_int (xchat_plugin *pl, const char *var, int value)
+pchat_pluginpref_get_str (pchat_plugin *pl, const char *var, char *dest)
 {
-	char buffer[12];
-
-	snprintf (buffer, sizeof (buffer), "%d", value);
-	return xchat_pluginpref_set_str_real (pl, var, buffer, 1);
+	/* All users of this must ensure dest is >= 512... */
+	return pchat_pluginpref_get_str_real (pl, var, dest, 512);
 }
 
 int
-xchat_pluginpref_get_int (xchat_plugin *pl, const char *var)
+pchat_pluginpref_set_int (pchat_plugin *pl, const char *var, int value)
 {
 	char buffer[12];
 
-	if (xchat_pluginpref_get_str (pl, var, buffer))
+	g_snprintf (buffer, sizeof (buffer), "%d", value);
+	return pchat_pluginpref_set_str_real (pl, var, buffer, 1);
+}
+
+int
+pchat_pluginpref_get_int (pchat_plugin *pl, const char *var)
+{
+	char buffer[12];
+
+	if (pchat_pluginpref_get_str_real (pl, var, buffer, sizeof(buffer)))
 	{
-		return atoi (buffer);
+		int ret = atoi (buffer);
+
+		/* 0 could be success or failure, who knows */
+		if (ret == 0 && *buffer != '0')
+			return -1;
+
+		return ret;
 	}
 	else
 	{
@@ -2021,13 +2008,13 @@ xchat_pluginpref_get_int (xchat_plugin *pl, const char *var)
 }
 
 int
-xchat_pluginpref_delete (xchat_plugin *pl, const char *var)
+pchat_pluginpref_delete (pchat_plugin *pl, const char *var)
 {
-	return xchat_pluginpref_set_str_real (pl, var, 0, 0);
+	return pchat_pluginpref_set_str_real (pl, var, 0, 0);
 }
 
 int
-xchat_pluginpref_list (xchat_plugin *pl, char* dest)
+pchat_pluginpref_list (pchat_plugin *pl, char* dest)
 {
 	FILE *fpIn;
 	char confname[64];
@@ -2037,10 +2024,10 @@ xchat_pluginpref_list (xchat_plugin *pl, char* dest)
 
 	token = g_strdup (pl->name);
 	canonalize_key (token);
-	g_sprintf (confname, "addon_%s.conf", token);
+	sprintf (confname, "addon_%s.conf", token);
 	g_free (token);
 
-	fpIn = xchat_fopen_file (confname, "r", 0);
+	fpIn = pchat_fopen_file (confname, "r", 0);
 
 	if (fpIn == NULL)										/* no existing config file, no parsing */
 	{
@@ -2049,7 +2036,7 @@ xchat_pluginpref_list (xchat_plugin *pl, char* dest)
 	else													/* existing config file, get list of settings */
 	{
 		strcpy (dest, "");									/* clean up garbage */
-		while (fscanf (fpIn, " %[^\n]", bufp) != EOF)	/* read whole lines including whitespaces */
+		while (fscanf (fpIn, " %511[^\n]", bufp) != EOF)	/* read whole lines including whitespaces */
 		{
 			token = strtok (buffer, "=");
 			g_strlcat (dest, g_strchomp (token), 4096); /* Dest must not be smaller than this */

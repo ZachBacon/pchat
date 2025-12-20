@@ -2,10 +2,6 @@
  * Copyright (C) 1998-2010 Peter Zelezny.
  * Copyright (C) 2009-2013 Berke Viktor.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -24,8 +20,8 @@
 #include "userlist.h"
 #include "dcc.h"
 
-#ifndef PCHAT_FE_H
-#define PCHAT_FE_H
+#ifndef pchat_FE_H
+#define pchat_FE_H
 
 /* for storage of /menu entries */
 typedef struct
@@ -54,6 +50,7 @@ void fe_main (void);
 void fe_cleanup (void);
 void fe_exit (void);
 int fe_timeout_add (int interval, void *callback, void *userdata);
+int fe_timeout_add_seconds (int interval, void *callback, void *userdata);
 void fe_timeout_remove (int tag);
 void fe_new_window (struct session *sess, int focus);
 void fe_new_server (struct server *serv);
@@ -72,8 +69,16 @@ int fe_input_add (int sok, int flags, void *func, void *data);
 void fe_input_remove (int tag);
 void fe_idle_add (void *func, void *data);
 void fe_set_topic (struct session *sess, char *topic, char *stripped_topic);
-void fe_set_hilight (struct session *sess);
-void fe_set_tab_color (struct session *sess, int col);
+typedef enum
+{
+	FE_COLOR_NONE = 0,
+	FE_COLOR_NEW_DATA = 1,
+	FE_COLOR_NEW_MSG = 2,
+	FE_COLOR_NEW_HILIGHT = 3,
+	FE_COLOR_FLAG_NOOVERRIDE = 8,
+} tabcolor;
+#define FE_COLOR_ALLFLAGS (FE_COLOR_FLAG_NOOVERRIDE)
+void fe_set_tab_color (struct session *sess, tabcolor col);
 void fe_flash_window (struct session *sess);
 void fe_update_mode_buttons (struct session *sess, char mode, char sign);
 void fe_update_channel_key (struct session *sess);
@@ -92,11 +97,10 @@ void fe_progressbar_start (struct session *sess);
 void fe_progressbar_end (struct server *serv);
 void fe_print_text (struct session *sess, char *text, time_t stamp,
 					gboolean no_activity);
-void fe_userlist_insert (struct session *sess, struct User *newuser, int row, int sel);
+void fe_userlist_insert (struct session *sess, struct User *newuser, gboolean sel);
 int fe_userlist_remove (struct session *sess, struct User *user);
 void fe_userlist_rehash (struct session *sess, struct User *user);
 void fe_userlist_update (struct session *sess, struct User *user);
-void fe_userlist_move (struct session *sess, struct User *user, int new_row);
 void fe_userlist_numbers (struct session *sess);
 void fe_userlist_clear (struct session *sess);
 void fe_userlist_set_selected (struct session *sess);
@@ -137,6 +141,7 @@ void fe_get_int (char *prompt, int def, void *callback, void *ud);
 #define FRF_NOASKOVERWRITE 32	/* don't ask to overwrite existing files */
 #define FRF_EXTENSIONS 64		/* specify file extensions to be displayed */
 #define FRF_MIMETYPES 128		/* specify file mimetypes to be displayed */
+#define FRF_MODAL 256           /* dialog should be modal to parent */
 void fe_get_file (const char *title, char *initial,
 				 void (*callback) (void *userdata, char *file), void *userdata,
 				 int flags);
@@ -183,7 +188,6 @@ typedef enum
 } feicon;
 void fe_tray_set_icon (feicon icon);
 void fe_tray_set_tooltip (const char *text);
-void fe_tray_set_balloon (const char *title, const char *text);
 void fe_open_chan_list (server *serv, char *filter, int do_refresh);
 const char *fe_get_default_font (void);
 

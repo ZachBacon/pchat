@@ -25,8 +25,8 @@
 
 #include "fe-gtk.h"
 
-#include "../common/xchat.h"
-#include "../common/xchatc.h"
+#include "../common/pchat.h"
+#include "../common/pchatc.h"
 #include "../common/cfgfiles.h"
 #include "../common/fe.h"
 #include "../common/url.h"

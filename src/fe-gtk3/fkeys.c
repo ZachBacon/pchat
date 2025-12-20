@@ -37,8 +37,8 @@
 #include "fe-gtk.h"
 #include "css-helpers.h"
 
-#include "../common/xchat.h"
-#include "../common/xchatc.h"
+#include "../common/pchat.h"
+#include "../common/pchatc.h"
 #include "../common/cfgfiles.h"
 #include "../common/fe.h"
 #include "../common/userlist.h"
@@ -324,7 +324,7 @@ key_handle_key_press (GtkWidget *wid, GdkEventKey *evt, session *sess)
 		return FALSE;
 	current_sess = sess;
 
-	if (plugin_emit_keypress (sess, evt->state, evt->keyval, evt->length, evt->string))
+	if (plugin_emit_keypress (sess, evt->state, evt->keyval, g_utf8_get_char(evt->string)))
 		return 1;
 
 	/* maybe the plugin closed this tab? */
@@ -803,7 +803,7 @@ key_save_kbs (void)
 	GSList *list = keybind_list;
 	struct key_binding *kb;
 
-	fd = xchat_open_file ("keybindings.conf", O_CREAT | O_TRUNC | O_WRONLY,
+	fd = pchat_open_file ("keybindings.conf", O_CREAT | O_TRUNC | O_WRONLY,
 									 0x180, XOF_DOMODE);
 	if (fd < 0)
 		return 1;
@@ -896,7 +896,7 @@ key_load_kbs (void)
 	GdkModifierType mod = 0;
 	off_t size;
 
-	fd = xchat_open_file ("keybindings.conf", O_RDONLY, 0, 0);
+	fd = pchat_open_file ("keybindings.conf", O_RDONLY, 0, 0);
 	if (fd < 0)
 	{
 		ibuf = g_strdup (default_kb_cfg);

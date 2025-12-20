@@ -1,10 +1,6 @@
 /* X-Chat
  * Copyright (C) 1998 Peter Zelezny.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -27,7 +23,7 @@
 #include <sys/types.h>
 #include <time.h>
 
-#ifdef _WIN32
+#ifdef WIN32
 #include <io.h>
 #else
 #include <unistd.h>
@@ -37,9 +33,7 @@
 #define WANTDNS
 #include "inet.h"
 
-#include <gio/gio.h>
-
-#include "xchat.h"
+#include "pchat.h"
 #include "util.h"
 #include "ignore.h"
 #include "fe.h"
@@ -51,7 +45,8 @@
 #include "servlist.h"
 #include "text.h"
 #include "ctcp.h"
-#include "xchatc.h"
+#include "pchatc.h"
+#include "chanopt.h"
 
 
 void
@@ -67,7 +62,7 @@ clear_channel (session *sess)
 
 	if (sess->current_modes)
 	{
-		free (sess->current_modes);
+		g_free (sess->current_modes);
 		sess->current_modes = NULL;
 	}
 
@@ -86,8 +81,16 @@ clear_channel (session *sess)
 void
 set_topic (session *sess, char *topic, char *stripped_topic)
 {
-	if (sess->topic)
-		free (sess->topic);
+	/* The topic of dialogs are the users hostname which is logged is new */
+	if (sess->type == SESS_DIALOG && (!sess->topic || strcmp(sess->topic, stripped_topic))
+		&& sess->logfd != -1)
+	{
+		char tbuf[1024];
+		g_snprintf (tbuf, sizeof (tbuf), "[%s has address %s]\n", sess->channel, stripped_topic);
+		write (sess->logfd, tbuf, strlen (tbuf));
+	}
+
+	g_free (sess->topic);
 	sess->topic = g_strdup (stripped_topic);
 	fe_set_topic (sess, topic, stripped_topic);
 }
@@ -104,7 +107,8 @@ find_session_from_nick (char *nick, server *serv)
 
 	if (serv->front_session)
 	{
-		if (userlist_find (serv->front_session, nick))
+		// If we are here for ChanServ, then it is usually a reply for the user
+		if (!g_ascii_strcasecmp(nick, "ChanServ") || userlist_find (serv->front_session, nick))
 			return serv->front_session;
 	}
 
@@ -124,7 +128,7 @@ find_session_from_nick (char *nick, server *serv)
 		}
 		list = list->next;
 	}
-	return 0;
+	return NULL;
 }
 
 static session *
@@ -185,17 +189,8 @@ inbound_privmsg (server *serv, char *from, char *ip, char *text, int id,
 		}
 
 		if (ip && ip[0])
-		{
-			if (prefs.pchat_irc_logging && sess->logfd != -1 &&
-				(!sess->topic || strcmp(sess->topic, ip)))
-			{
-				char tbuf[1024];
-				g_snprintf (tbuf, sizeof (tbuf), "[%s has address %s]\n", from, ip);
-				write (sess->logfd, tbuf, strlen (tbuf));
-			}
 			set_topic (sess, ip, ip);
-		}
-		inbound_chanmsg (serv, NULL, NULL, from, text, FALSE, id, tags_data);
+		inbound_chanmsg (serv, NULL, NULL, from, text, FALSE, tags_data->identified, tags_data);
 		return;
 	}
 
@@ -213,14 +208,14 @@ inbound_privmsg (server *serv, char *from, char *ip, char *text, int id,
 		if (user->account)
 			id = TRUE;
 	}
-
+	
 	inbound_make_idtext (serv, idtext, sizeof (idtext), id);
 
 	if (sess->type == SESS_DIALOG && !nodiag)
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_DPRIVMSG, sess, from, text, idtext, NULL, 0,
 									  tags_data->timestamp);
 	else
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_PRIVMSG, sess, from, text, idtext, NULL, 0,
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_PRIVMSG, sess, from, text, idtext, NULL, 0, 
 									  tags_data->timestamp);
 }
 
@@ -243,7 +238,7 @@ alert_match_word (char *word, char *masks)
 		{
 			endchar = *p;
 			*p = 0;
-			res = match (masks, word);
+			res = match (g_strchug (masks), word);
 			*p = endchar;
 
 			if (res)
@@ -322,10 +317,9 @@ is_hilight (char *from, char *text, session *sess, server *serv)
 		g_free (text);
 		if (sess != current_tab)
 		{
-			sess->nick_said = TRUE;
+			sess->tab_state |= TAB_STATE_NEW_HILIGHT;
 			lastact_update (sess);
 		}
-		fe_set_hilight (sess);
 		return 1;
 	}
 
@@ -380,14 +374,9 @@ inbound_action (session *sess, char *chan, char *from, char *ip, char *text,
 	if (sess != current_tab)
 	{
 		if (fromme)
-		{
-			sess->msg_said = FALSE;
-			sess->new_data = TRUE;
-		} else
-		{
-			sess->msg_said = TRUE;
-			sess->new_data = FALSE;
-		}
+			sess->tab_state |= TAB_STATE_NEW_DATA;
+		else
+			sess->tab_state |= TAB_STATE_NEW_MSG;
 		lastact_update (sess);
 	}
 
@@ -429,8 +418,8 @@ inbound_action (session *sess, char *chan, char *from, char *ip, char *text,
 }
 
 void
-inbound_chanmsg (server *serv, session *sess, char *chan, char *from,
-					  char *text, char fromme, int id,
+inbound_chanmsg (server *serv, session *sess, char *chan, char *from, 
+					  char *text, char fromme, int id, 
 					  const message_tags_data *tags_data)
 {
 	struct User *user;
@@ -455,8 +444,7 @@ inbound_chanmsg (server *serv, session *sess, char *chan, char *from,
 
 	if (sess != current_tab)
 	{
-		sess->msg_said = TRUE;
-		sess->new_data = FALSE;
+		sess->tab_state |= TAB_STATE_NEW_MSG;
 		lastact_update (sess);
 	}
 
@@ -520,7 +508,7 @@ inbound_newnick (server *serv, char *nick, char *newnick, int quiet,
 				if (!quiet)
 				{
 					if (me)
-						EMIT_SIGNAL_TIMESTAMP (XP_TE_UCHANGENICK, sess, nick,
+						EMIT_SIGNAL_TIMESTAMP (XP_TE_UCHANGENICK, sess, nick, 
 													  newnick, NULL, NULL, 0,
 													  tags_data->timestamp);
 					else
@@ -561,7 +549,7 @@ find_unused_session (server *serv)
 		}
 		list = list->next;
 	}
-	return 0;
+	return NULL;
 }
 
 static session *
@@ -579,7 +567,7 @@ find_session_from_waitchannel (char *chan, struct server *serv)
 		}
 		list = list->next;
 	}
-	return 0;
+	return NULL;
 }
 
 void
@@ -587,6 +575,7 @@ inbound_ujoin (server *serv, char *chan, char *nick, char *ip,
 					const message_tags_data *tags_data)
 {
 	session *sess;
+	int found_unused = FALSE;
 
 	/* already joined? probably a bnc */
 	sess = find_channel (serv, chan);
@@ -598,6 +587,7 @@ inbound_ujoin (server *serv, char *chan, char *nick, char *ip,
 		{
 			/* find a "<none>" tab and use that */
 			sess = find_unused_session (serv);
+			found_unused = sess != NULL;
 			if (!sess)
 				/* last resort, open a new tab/window */
 				sess = new_ircwindow (serv, chan, SESS_CHANNEL, 1);
@@ -605,6 +595,13 @@ inbound_ujoin (server *serv, char *chan, char *nick, char *ip,
 	}
 
 	safe_strcpy (sess->channel, chan, CHANLEN);
+	if (found_unused)
+	{
+		chanopt_load (sess);
+		scrollback_load (sess);
+		if (sess->scrollwritten && sess->scrollback_replay_marklast)
+			sess->scrollback_replay_marklast (sess);
+	}
 
 	fe_set_channel (sess);
 	fe_set_title (sess);
@@ -640,7 +637,7 @@ inbound_ukick (server *serv, char *chan, char *kicker, char *reason,
 	session *sess = find_channel (serv, chan);
 	if (sess)
 	{
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_UKICK, sess, serv->nick, chan, kicker,
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_UKICK, sess, serv->nick, chan, kicker, 
 									  reason, 0, tags_data->timestamp);
 		clear_channel (sess);
 		if (prefs.pchat_irc_auto_rejoin)
@@ -676,7 +673,8 @@ inbound_nameslist (server *serv, char *chan, char *names,
 	char **name_list;
 	char *host, *nopre_name;
 	char name[NICKLEN];
-	int i, offset;
+	int i;
+	size_t offset;
 
 	sess = find_channel (serv, chan);
 	if (!sess)
@@ -772,7 +770,7 @@ inbound_join (server *serv, char *chan, char *user, char *ip, char *account,
 	session *sess = find_channel (serv, chan);
 	if (sess)
 	{
-		EMIT_SIGNAL_TIMESTAMP (XP_TE_JOIN, sess, user, chan, ip, NULL, 0,
+		EMIT_SIGNAL_TIMESTAMP (XP_TE_JOIN, sess, user, chan, ip, account, 0,
 									  tags_data->timestamp);
 		userlist_add (sess, user, ip, account, realname, tags_data);
 	}
@@ -818,7 +816,9 @@ inbound_topictime (server *serv, char *chan, char *nick, time_t stamp,
 	if (!sess)
 		sess = serv->server_session;
 
-	tim[24] = 0;	/* get rid of the \n */
+	if (tim != NULL)
+		tim[24] = 0;	/* get rid of the \n */
+
 	EMIT_SIGNAL_TIMESTAMP (XP_TE_TOPICDATE, sess, chan, nick, tim, NULL, 0,
 								  tags_data->timestamp);
 }
@@ -928,33 +928,22 @@ find_session_from_type (int type, server *serv)
 			return sess;
 		list = list->next;
 	}
-	return 0;
+	return NULL;
 }
 
 void
 inbound_notice (server *serv, char *to, char *nick, char *msg, char *ip, int id,
 					 const message_tags_data *tags_data)
 {
-	char *po,*ptr=to;
+	char *ptr = to;
 	session *sess = 0;
 	int server_notice = FALSE;
 
 	if (is_channel (serv, ptr))
 		sess = find_channel (serv, ptr);
 
-	if (!sess && ptr[0] == '@')
-	{
-		ptr++;
-		sess = find_channel (serv, ptr);
-	}
-
-	if (!sess && ptr[0] == '%')
-	{
-		ptr++;
-		sess = find_channel (serv, ptr);
-	}
-
-	if (!sess && ptr[0] == '+')
+	/* /notice [mode-prefix]#channel should end up in that channel */
+	if (!sess && ptr[0] && strchr(serv->nick_prefixes, ptr[0]) != NULL)
 	{
 		ptr++;
 		sess = find_channel (serv, ptr);
@@ -981,7 +970,7 @@ inbound_notice (server *serv, char *to, char *nick, char *msg, char *ip, int id,
 						*end = 0;
 						sess = find_channel (serv, dest);
 					}
-					free (dest);
+					g_free (dest);
 				}
 			}
 			if (!sess)
@@ -1012,25 +1001,28 @@ inbound_notice (server *serv, char *to, char *nick, char *msg, char *ip, int id,
 
 		if (!sess)
 		{
-			if (server_notice)
+			if (server_notice)	
 				sess = serv->server_session;
 			else
 				sess = serv->front_session;
 		}
 	}
 
-	if (msg[0] == 1)
+	if (msg[0] == '\001')
 	{
+		size_t len;
+
 		msg++;
 		if (!strncmp (msg, "PING", 4))
 		{
 			inbound_ping_reply (sess, msg + 5, nick, tags_data);
 			return;
 		}
+
+		len = strlen(msg);
+		if (msg[len - 1] == '\001')
+			msg[len - 1] = '\000';
 	}
-	po = strchr (msg, '\001');
-	if (po)
-		po[0] = 0;
 
 	if (server_notice)
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_SERVNOTICE, sess, msg, nick, NULL, NULL, 0,
@@ -1105,7 +1097,7 @@ inbound_away_notify (server *serv, char *nick, char *reason,
 					EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYAWAY, sess, nick, reason, NULL,
 												  NULL, 0, tags_data->timestamp);
 				else
-					EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYBACK, sess, nick, NULL, NULL,
+					EMIT_SIGNAL_TIMESTAMP (XP_TE_NOTIFYBACK, sess, nick, NULL, NULL, 
 												  NULL, 0, tags_data->timestamp);
 			}
 		}
@@ -1130,6 +1122,7 @@ inbound_nameslist_end (server *serv, char *chan,
 			{
 				sess->end_of_names = TRUE;
 				sess->ignore_names = FALSE;
+				fe_userlist_numbers (sess);
 			}
 			list = list->next;
 		}
@@ -1140,6 +1133,7 @@ inbound_nameslist_end (server *serv, char *chan,
 	{
 		sess->end_of_names = TRUE;
 		sess->ignore_names = FALSE;
+		fe_userlist_numbers (sess);
 		return TRUE;
 	}
 	return FALSE;
@@ -1429,7 +1423,7 @@ inbound_foundip (session *sess, char *ip, const message_tags_data *tags_data)
 	HostAddr = gethostbyname (ip);
 	if (HostAddr)
 	{
-		prefs.dcc_ip = ((struct in_addr *) HostAddr->h_addr)->s_addr;
+		sess->server->dcc_ip = ((struct in_addr *) HostAddr->h_addr)->s_addr;
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_FOUNDIP, sess->server->server_session,
 									  inet_ntoa (*((struct in_addr *) HostAddr->h_addr)),
 									  NULL, NULL, NULL, 0, tags_data->timestamp);
@@ -1460,8 +1454,7 @@ inbound_user_info (session *sess, char *chan, char *user, char *host,
 
 	if (user && host)
 	{
-		uhost = g_malloc (strlen (user) + strlen (host) + 2);
-		sprintf (uhost, "%s@%s", user, host);
+		uhost = g_strdup_printf ("%s@%s", user, host);
 	}
 
 	if (chan)
@@ -1481,9 +1474,16 @@ inbound_user_info (session *sess, char *chan, char *user, char *host,
 		for (list = sess_list; list; list = list->next)
 		{
 			sess = list->data;
-			if (sess->type == SESS_CHANNEL && sess->server == serv)
+			if (sess->server != serv)
+				continue;
+
+			if (sess->type == SESS_CHANNEL)
 			{
 				userlist_add_hostname (sess, nick, uhost, realname, servname, account, away);
+			}
+			else if (sess->type == SESS_DIALOG && uhost && !serv->p_cmp (sess->channel, nick))
+			{
+				set_topic (sess, uhost, uhost);
 			}
 		}
 	}
@@ -1492,14 +1492,14 @@ inbound_user_info (session *sess, char *chan, char *user, char *host,
 }
 
 int
-inbound_banlist (session *sess, time_t stamp, char *chan, char *mask,
+inbound_banlist (session *sess, time_t stamp, char *chan, char *mask, 
 					  char *banner, int rplcode, const message_tags_data *tags_data)
 {
 	char *time_str = ctime (&stamp);
 	server *serv = sess->server;
 	char *nl;
 
-	if (stamp <= 0)
+	if (stamp <= 0 || time_str == NULL)
 	{
 		time_str = "";
 	}
@@ -1568,6 +1568,7 @@ inbound_login_end (session *sess, char *text, const message_tags_data *tags_data
 	GSList *cmdlist;
 	commandentry *cmd;
 	server *serv = sess->server;
+	ircnet *net = serv->network;
 
 	if (!serv->end_of_motd)
 	{
@@ -1578,31 +1579,34 @@ inbound_login_end (session *sess, char *text, const message_tags_data *tags_data
 		}
 		set_default_modes (serv);
 
-		if (serv->network)
+		if (net)
 		{
 			/* there may be more than 1, separated by \n */
 
-			cmdlist = ((ircnet *)serv->network)->commandlist;
+			cmdlist = net->commandlist;
 			while (cmdlist)
 			{
 				cmd = cmdlist->data;
 				inbound_exec_eom_cmd (cmd->command, sess);
 				cmdlist = cmdlist->next;
 			}
+		}
+		/* The previously ran commands can alter the state of the server */
+		if (serv->network != net)
+			return;
 
-			/* send nickserv password */
-			if (((ircnet *)serv->network)->pass && inbound_nickserv_login (serv))
-			{
-				serv->p_ns_identify (serv, ((ircnet *)serv->network)->pass);
-			}
+		/* send nickserv password */
+		if (net && net->pass && inbound_nickserv_login (serv))
+		{
+			serv->p_ns_identify (serv, net->pass);
 		}
 
 		/* wait for join if command or nickserv set */
-		if (serv->network && prefs.pchat_irc_join_delay
-			&& ((((ircnet *)serv->network)->pass && inbound_nickserv_login (serv))
-				|| ((ircnet *)serv->network)->commandlist))
+		if (net && prefs.pchat_irc_join_delay
+			&& ((net->pass && inbound_nickserv_login (serv))
+				|| net->commandlist))
 		{
-			serv->joindelay_tag = fe_timeout_add (prefs.pchat_irc_join_delay * 1000, check_autojoin_channels, serv);
+			serv->joindelay_tag = fe_timeout_add_seconds (prefs.pchat_irc_join_delay, check_autojoin_channels, serv);
 		}
 		else
 		{
@@ -1641,6 +1645,69 @@ inbound_identified (server *serv)	/* 'MODE +e MYSELF' on freenode */
 	}
 }
 
+static const char *sasl_mechanisms[] =
+{
+	"PLAIN",
+	"EXTERNAL",
+	"SCRAM-SHA-1",
+	"SCRAM-SHA-256",
+	"SCRAM-SHA-512"
+};
+
+static void
+inbound_toggle_caps (server *serv, const char *extensions_str, gboolean enable)
+{
+	char **extensions;
+	gsize i;
+
+	extensions = g_strsplit (extensions_str, " ", 0);
+
+	for (i = 0; extensions[i]; i++)
+	{
+		const char *extension = extensions[i];
+
+		if (!strcmp (extension, "solanum.chat/identify-msg"))
+			serv->have_idmsg = enable;
+		else if (!strcmp (extension, "multi-prefix"))
+			serv->have_namesx = enable;
+		else if (!strcmp (extension, "account-notify"))
+			serv->have_accnotify = enable;
+		else if (!strcmp (extension, "extended-join"))
+			serv->have_extjoin = enable;
+		else if (!strcmp (extension, "userhost-in-names"))
+			serv->have_uhnames = enable;
+		else if (!strcmp (extension, "server-time")
+				|| !strcmp (extension, "znc.in/server-time")
+				|| !strcmp (extension, "znc.in/server-time-iso"))
+			serv->have_server_time = enable;
+		else if (!strcmp (extension, "away-notify"))
+			serv->have_awaynotify = enable;
+		else if (!strcmp (extension, "account-tag"))
+			serv->have_account_tag = enable;
+		else if (!strcmp (extension, "sasl"))
+		{
+			serv->have_sasl = enable;
+			if (enable)
+			{
+#ifdef USE_OPENSSL
+				if (serv->loginmethod == LOGIN_SASLEXTERNAL)
+					serv->sasl_mech = MECH_EXTERNAL;
+				else if (serv->loginmethod == LOGIN_SASL_SCRAM_SHA_1)
+					serv->sasl_mech = MECH_SCRAM_SHA_1;
+				else if (serv->loginmethod == LOGIN_SASL_SCRAM_SHA_256)
+					serv->sasl_mech = MECH_SCRAM_SHA_256;
+				else if (serv->loginmethod == LOGIN_SASL_SCRAM_SHA_512)
+					serv->sasl_mech = MECH_SCRAM_SHA_512;
+#endif
+				/* Mechanism either defaulted to PLAIN or server gave us list */
+				tcp_sendf (serv, "AUTHENTICATE %s\r\n", sasl_mechanisms[serv->sasl_mech]);
+			}
+		}
+	}
+
+	g_strfreev (extensions);
+}
+
 void
 inbound_cap_ack (server *serv, char *nick, char *extensions,
 					  const message_tags_data *tags_data)
@@ -1648,79 +1715,125 @@ inbound_cap_ack (server *serv, char *nick, char *extensions,
 	EMIT_SIGNAL_TIMESTAMP (XP_TE_CAPACK, serv->server_session, nick, extensions,
 								  NULL, NULL, 0, tags_data->timestamp);
 
-	if (strstr (extensions, "identify-msg") != NULL)
-	{
-		serv->have_idmsg = TRUE;
-	}
+	inbound_toggle_caps (serv, extensions, TRUE);
+}
 
-	if (strstr (extensions, "multi-prefix") != NULL)
-	{
-		serv->have_namesx = TRUE;
-	}
+void
+inbound_cap_del (server *serv, char *nick, char *extensions,
+					 const message_tags_data *tags_data)
+{
+	EMIT_SIGNAL_TIMESTAMP (XP_TE_CAPDEL, serv->server_session, nick, extensions,
+								  NULL, NULL, 0, tags_data->timestamp);
 
-	if (strstr (extensions, "away-notify") != NULL)
-	{
-		serv->have_awaynotify = TRUE;
-	}
+	inbound_toggle_caps (serv, extensions, FALSE);
+}
 
-	if (strstr (extensions, "account-notify") != NULL)
-	{
-		serv->have_accnotify = TRUE;
-	}
+static const char * const supported_caps[] = {
+	/* IRCv3.1 */
+	"multi-prefix",
+	"away-notify",
+	"account-notify",
+	"extended-join",
+	/* "sasl", Handled manually */
 
-	if (strstr (extensions, "extended-join") != NULL)
-	{
-		serv->have_extjoin = TRUE;
-	}
+	/* IRCv3.2 */
+	"server-time",
+	"userhost-in-names",
+	"cap-notify",
+	"chghost",
+	"setname",
+	"invite-notify",
+	"account-tag",
+	"extended-monitor",
 
-	if (strstr (extensions, "userhost-in-names") != NULL)
-	{
-		serv->have_uhnames = TRUE;
-	}
+	/* ZNC */
+	"znc.in/server-time-iso",
+	"znc.in/server-time",
 
-	if (strstr (extensions, "server-time") != NULL)
-	{
-		serv->have_server_time = TRUE;
-	}
+	/* Twitch */
+	"twitch.tv/membership",
 
-	if (strstr (extensions, "sasl") != NULL)
-	{
-		serv->have_sasl = TRUE;
-		serv->sent_saslauth = FALSE;
+	/* Solanum */
+	"solanum.chat/identify-msg",
+};
 
+static int
+get_supported_mech (server *serv, const char *list)
+{
+	char **mechs = g_strsplit (list, ",", 0);
+	gsize i;
+	int ret = -1;
+
+	for (i = 0; mechs[i]; ++i)
+	{
 #ifdef USE_OPENSSL
 		if (serv->loginmethod == LOGIN_SASLEXTERNAL)
 		{
-			serv->sasl_mech = MECH_EXTERNAL;
-			tcp_send_len (serv, "AUTHENTICATE EXTERNAL\r\n", 23);
+			if (!strcmp (mechs[i], "EXTERNAL"))
+			{
+				ret = MECH_EXTERNAL;
+				break;
+			}
 		}
-		else
+		else if (serv->loginmethod == LOGIN_SASL_SCRAM_SHA_1)
 		{
-			/* default to most secure, it will fallback if not supported */
-			serv->sasl_mech = MECH_AES;
-			tcp_send_len (serv, "AUTHENTICATE DH-AES\r\n", 21);
+			if (!strcmp(mechs[i], "SCRAM-SHA-1"))
+			{
+				ret = MECH_SCRAM_SHA_1;
+				break;
+			}
 		}
-#else
-		serv->sasl_mech = MECH_PLAIN;
-		tcp_send_len (serv, "AUTHENTICATE PLAIN\r\n", 20);
+		else if (serv->loginmethod == LOGIN_SASL_SCRAM_SHA_256)
+		{
+			if (!strcmp(mechs[i], "SCRAM-SHA-256"))
+			{
+				ret = MECH_SCRAM_SHA_256;
+				break;
+			}
+		}
+		else if (serv->loginmethod == LOGIN_SASL_SCRAM_SHA_512)
+		{
+			if (!strcmp(mechs[i], "SCRAM-SHA-512"))
+			{
+				ret = MECH_SCRAM_SHA_512;
+				break;
+			}
+        }
+		else
 #endif
+		if (!strcmp (mechs[i], "PLAIN"))
+		{
+			ret = MECH_PLAIN;
+			break;
+		}
 	}
+
+	g_strfreev (mechs);
+	return ret;
 }
 
 void
 inbound_cap_ls (server *serv, char *nick, char *extensions_str,
 					 const message_tags_data *tags_data)
 {
-	char buffer[256];	/* buffer for requesting capabilities and emitting the signal */
-	guint32 want_cap; /* format the CAP REQ string based on previous capabilities being requested or not */
-	guint32 want_sasl; /* CAP END shouldn't be sent when SASL is requested, it needs further responses */
+	char buffer[500];	/* buffer for requesting capabilities and emitting the signal */
+	gboolean want_cap = FALSE; /* format the CAP REQ string based on previous capabilities being requested or not */
 	char **extensions;
 	int i;
 
+	if (g_str_has_prefix (extensions_str, "* "))
+	{
+		serv->waiting_on_cap = TRUE;
+		extensions_str += 2;
+		extensions_str += extensions_str[0] == ':' ? 1 : 0;
+	}
+	else
+	{
+		serv->waiting_on_cap = FALSE;
+	}
+
 	EMIT_SIGNAL_TIMESTAMP (XP_TE_CAPLIST, serv->server_session, nick,
 								  extensions_str, NULL, NULL, 0, tags_data->timestamp);
-	want_cap = 0;
-	want_sasl = 0;
 
 	extensions = g_strsplit (extensions_str, " ", 0);
 
@@ -1728,67 +1841,47 @@ inbound_cap_ls (server *serv, char *nick, char *extensions_str,
 
 	for (i=0; extensions[i]; i++)
 	{
-		const char *extension = extensions[i];
+		char *extension = extensions[i];
+		char *value;
+		gsize x;
 
-		if (!strcmp (extension, "identify-msg"))
+		/* CAP 3.2 can provide values */
+		if ((value = strchr (extension, '=')))
 		{
-			strcat (buffer, "identify-msg ");
-			want_cap = 1;
-		}
-		if (!strcmp (extension, "multi-prefix"))
-		{
-			strcat (buffer, "multi-prefix ");
-			want_cap = 1;
-		}
-		if (!strcmp (extension, "away-notify"))
-		{
-			strcat (buffer, "away-notify ");
-			want_cap = 1;
-		}
-		if (!strcmp (extension, "account-notify"))
-		{
-			strcat (buffer, "account-notify ");
-			want_cap = 1;
-		}
-		if (!strcmp (extension, "extended-join"))
-		{
-			strcat (buffer, "extended-join ");
-			want_cap = 1;
-		}
-		if (!strcmp (extension, "userhost-in-names"))
-		{
-			strcat (buffer, "userhost-in-names ");
-			want_cap = 1;
-		}
-
-		/* bouncers can prefix a name space to the extension so we should use.
-		 * znc <= 1.0 uses "znc.in/server-time" and newer use "znc.in/server-time-iso".
-		 */
-		if (!strcmp (extension, "znc.in/server-time-iso"))
-		{
-			strcat (buffer, "znc.in/server-time-iso ");
-			want_cap = 1;
-		}
-		if (!strcmp (extension, "znc.in/server-time"))
-		{
-			strcat (buffer, "znc.in/server-time ");
-			want_cap = 1;
-		}
-		if (prefs.pchat_irc_cap_server_time
-			 && !strcmp (extension, "server-time"))
-		{
-			strcat (buffer, "server-time ");
-			want_cap = 1;
+			*value = '\0';
+			value++;
 		}
 
 		/* if the SASL password is set AND auth mode is set to SASL, request SASL auth */
-		if (!strcmp (extension, "sasl")
-			&& ((serv->loginmethod == LOGIN_SASL && strlen (serv->password) != 0)
-			|| (serv->loginmethod == LOGIN_SASLEXTERNAL && serv->have_cert)))
+		if (!g_strcmp0 (extension, "sasl") &&
+			(((serv->loginmethod == LOGIN_SASL
+				|| serv->loginmethod == LOGIN_SASL_SCRAM_SHA_1
+				|| serv->loginmethod == LOGIN_SASL_SCRAM_SHA_256
+				|| serv->loginmethod == LOGIN_SASL_SCRAM_SHA_512)
+					&& strlen (serv->password) != 0)
+				|| serv->loginmethod == LOGIN_SASLEXTERNAL))
 		{
-			strcat (buffer, "sasl ");
-			want_cap = 1;
-			want_sasl = 1;
+			if (value)
+			{
+				int sasl_mech = get_supported_mech (serv, value);
+				if (sasl_mech == -1) /* No supported mech */
+					continue;
+				serv->sasl_mech = sasl_mech;
+			}
+			want_cap = TRUE;
+			serv->waiting_on_sasl = TRUE;
+			g_strlcat (buffer, "sasl ", sizeof(buffer));
+			continue;
+		}
+
+		for (x = 0; x < G_N_ELEMENTS(supported_caps); ++x)
+		{
+			if (!g_strcmp0 (extension, supported_caps[x]))
+			{
+				g_strlcat (buffer, extension, sizeof(buffer));
+				g_strlcat (buffer, " ", sizeof(buffer));
+				want_cap = TRUE;
+			}
 		}
 	}
 
@@ -1802,7 +1895,7 @@ inbound_cap_ls (server *serv, char *nick, char *extensions_str,
 									  tags_data->timestamp);
 		tcp_sendf (serv, "%s\r\n", g_strchomp (buffer));
 	}
-	if (!want_sasl)
+	if (!serv->waiting_on_sasl && !serv->waiting_on_cap)
 	{
 		/* if we use SASL, CAP END is dealt via raw numerics */
 		serv->sent_capend = TRUE;
@@ -1811,67 +1904,143 @@ inbound_cap_ls (server *serv, char *nick, char *extensions_str,
 }
 
 void
-inbound_cap_nak (server *serv, const message_tags_data *tags_data)
+inbound_cap_nak (server *serv, char *extensions_str, const message_tags_data *tags_data)
 {
-	serv->sent_capend = TRUE;
-	tcp_send_len (serv, "CAP END\r\n", 9);
+	char **extensions;
+	int i;
+
+	extensions = g_strsplit (extensions_str, " ", 0);
+	for (i=0; extensions[i]; i++)
+	{
+		if (!g_strcmp0 (extensions[i], "sasl"))
+			serv->waiting_on_sasl = FALSE;
+	}
+
+	if (!serv->waiting_on_cap && !serv->waiting_on_sasl && !serv->sent_capend)
+	{
+		serv->sent_capend = TRUE;
+		tcp_send_len (serv, "CAP END\r\n", 9);
+	}
+
+	g_strfreev (extensions);
 }
 
 void
 inbound_cap_list (server *serv, char *nick, char *extensions,
 						const message_tags_data *tags_data)
 {
+	if (g_str_has_prefix (extensions, "* "))
+	{
+		extensions += 2;
+		extensions += extensions[0] == ':' ? 1 : 0;
+	}
 	EMIT_SIGNAL_TIMESTAMP (XP_TE_CAPACK, serv->server_session, nick, extensions,
 								  NULL, NULL, 0, tags_data->timestamp);
 }
 
-static const char *sasl_mechanisms[] =
+static void
+plain_authenticate (server *serv, char *user, char *password)
 {
-	"PLAIN",
-	"DH-BLOWFISH",
-	"DH-AES",
-	"EXTERNAL"
-};
+	char *pass = encode_sasl_pass_plain (user, password);
 
-void
-inbound_sasl_supportedmechs (server *serv, char *list)
-{
-	int i;
-
-	if (serv->sasl_mech != MECH_EXTERNAL)
+	if (pass == NULL)
 	{
-		/* Use most secure one supported */
-		for (i = MECH_AES; i >= MECH_PLAIN; i--)
+		/* something went wrong abort */
+		tcp_sendf (serv, "AUTHENTICATE *\r\n");
+		return;
+	}
+
+	/* long SASL passwords must be split into 400-byte chunks
+	   https://ircv3.net/specs/extensions/sasl-3.1#the-authenticate-command */
+	size_t pass_len = strlen (pass);
+	if (pass_len <= 400)
+		tcp_sendf (serv, "AUTHENTICATE %s\r\n", pass);
+	else
+	{
+		size_t sent = 0;
+		while (sent < pass_len)
 		{
-			if (strstr (list, sasl_mechanisms[i]) != NULL)
-			{
-				serv->sasl_mech = i;
-				serv->retry_sasl = TRUE;
-				tcp_sendf (serv, "AUTHENTICATE %s\r\n", sasl_mechanisms[i]);
-				return;
-			}
+			char *pass_chunk = g_strndup (pass + sent, 400);
+			tcp_sendf (serv, "AUTHENTICATE %s\r\n", pass_chunk);
+			sent += 400;
+			g_free (pass_chunk);
+		}
+	}
+	if (pass_len % 400 == 0)
+		tcp_sendf (serv, "AUTHENTICATE +\r\n");
+}
+
+#ifdef USE_OPENSSL
+/*
+ * Sends AUTHENTICATE messages to log in via SCRAM.
+ */
+static void
+scram_authenticate (server *serv, const char *data, const char *digest,
+					const char *user, const char *password)
+{
+	char *encoded, *decoded, *output;
+	scram_status status;
+	size_t output_len;
+	gsize decoded_len;
+
+	if (serv->scram_session == NULL)
+	{
+		serv->scram_session = scram_session_create (digest, user, password);
+
+		if (serv->scram_session == NULL)
+		{
+			PrintTextf (serv->server_session, _("Could not create SCRAM session with digest %s"), digest);
+			g_warning ("Could not create SCRAM session with digest %s", digest);
+			tcp_sendf (serv, "AUTHENTICATE *\r\n");
+			return;
 		}
 	}
 
-	/* Abort, none supported */
-	serv->sent_saslauth = TRUE;
-	tcp_sendf (serv, "AUTHENTICATE *\r\n");
-	return;
+	decoded = g_base64_decode (data, &decoded_len);
+	status = scram_process (serv->scram_session, decoded, &output, &output_len);
+	g_free (decoded);
+
+	if (status == SCRAM_IN_PROGRESS)
+	{
+		// Authentication is still in progress
+		encoded = g_base64_encode ((guchar *) output, output_len);
+		tcp_sendf (serv, "AUTHENTICATE %s\r\n", encoded);
+		g_free (encoded);
+		g_free (output);
+	}
+	else if (status == SCRAM_SUCCESS)
+	{
+		// Authentication succeeded
+		tcp_sendf (serv, "AUTHENTICATE +\r\n");
+		g_clear_pointer (&serv->scram_session, scram_session_free);
+	}
+	else if (status == SCRAM_ERROR)
+	{
+		// Authentication failed
+		tcp_sendf (serv, "AUTHENTICATE *\r\n");
+
+		if (serv->scram_session->error != NULL)
+		{
+			PrintTextf (serv->server_session, _("SASL SCRAM authentication failed: %s"), serv->scram_session->error);
+			g_info ("SASL SCRAM authentication failed: %s", serv->scram_session->error);
+		}
+
+		g_clear_pointer (&serv->scram_session, scram_session_free);
+	}
 }
+#endif
 
 void
 inbound_sasl_authenticate (server *serv, char *data)
 {
 		ircnet *net = (ircnet*)serv->network;
-		char *user, *pass = NULL;
+		char *user;
 		const char *mech = sasl_mechanisms[serv->sasl_mech];
 
-		/* Got a list of supported mechanisms from inspircd */
+		/* Got a list of supported mechanisms from outdated inspircd
+		 * just ignore it as it goes against spec */
 		if (strchr (data, ',') != NULL)
-		{
-			inbound_sasl_supportedmechs (serv, data);
 			return;
-		}
 
 		if (net->user && !(net->flags & FLAG_USE_GLOBAL))
 			user = net->user;
@@ -1881,51 +2050,34 @@ inbound_sasl_authenticate (server *serv, char *data)
 		switch (serv->sasl_mech)
 		{
 		case MECH_PLAIN:
-			pass = encode_sasl_pass_plain (user, serv->password);
+			plain_authenticate(serv, user, serv->password);
 			break;
 #ifdef USE_OPENSSL
-		case MECH_BLOWFISH:
-			pass = encode_sasl_pass_blowfish (user, serv->password, data);
-			break;
-		case MECH_AES:
-			pass = encode_sasl_pass_aes (user, serv->password, data);
-			break;
 		case MECH_EXTERNAL:
-			pass = g_strdup ("+");
+			tcp_sendf (serv, "AUTHENTICATE +\r\n");
 			break;
+		case MECH_SCRAM_SHA_1:
+			scram_authenticate(serv, data, "SHA1", user, serv->password);
+			return;
+		case MECH_SCRAM_SHA_256:
+			scram_authenticate(serv, data, "SHA256", user, serv->password);
+			return;
+		case MECH_SCRAM_SHA_512:
+			scram_authenticate(serv, data, "SHA512", user, serv->password);
+			return;
 #endif
 		}
-
-		if (pass == NULL)
-		{
-			/* something went wrong abort */
-			serv->sent_saslauth = TRUE; /* prevent trying PLAIN */
-			tcp_sendf (serv, "AUTHENTICATE *\r\n");
-			return;
-		}
-
-		serv->sent_saslauth = TRUE;
-		tcp_sendf (serv, "AUTHENTICATE %s\r\n", pass);
-		g_free (pass);
-
 
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_SASLAUTH, serv->server_session, user, (char*)mech,
 								NULL,	NULL,	0,	0);
 }
 
-int
+void
 inbound_sasl_error (server *serv)
 {
-	if (serv->retry_sasl && !serv->sent_saslauth)
-		return 1;
-
-	/* If server sent 904 before we sent password,
-		* mech not support so fallback to next mech */
-	if (!serv->sent_saslauth && serv->sasl_mech != MECH_EXTERNAL && serv->sasl_mech != MECH_PLAIN)
-	{
-		serv->sasl_mech -= 1;
-		tcp_sendf (serv, "AUTHENTICATE %s\r\n", sasl_mechanisms[serv->sasl_mech]);
-		return 1;
-	}
-	return 0;
+#ifdef USE_OPENSSL
+    g_clear_pointer (&serv->scram_session, scram_session_free);
+#endif
+	/* Just abort, not much we can do */
+	tcp_sendf (serv, "AUTHENTICATE *\r\n");
 }

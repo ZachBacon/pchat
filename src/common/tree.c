@@ -2,9 +2,6 @@
  * Copyright (C) 1998-2010 Peter Zelezny.
  * Copyright (C) 2009-2013 Berke Viktor.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -28,7 +25,6 @@ a tree, but it could be :)
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <glib.h>
 
 #include "tree.h"
 
@@ -46,7 +42,7 @@ struct _tree
 tree *
 tree_new (tree_cmp_func *cmp, void *data)
 {
-	tree *t = g_malloc0 (sizeof (tree));
+	tree *t = g_new0 (tree, 1);
 	t->cmp = cmp;
 	t->data = data;
 	return t;
@@ -57,9 +53,8 @@ tree_destroy (tree *t)
 {
 	if (t)
 	{
-		if (t->array)
-			free (t->array);
-		free (t);
+		g_free (t->array);
+		g_free (t);
 	}
 }
 

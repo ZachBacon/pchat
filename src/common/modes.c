@@ -1,10 +1,6 @@
 /* X-Chat
  * Copyright (C) 1998 Peter Zelezny.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -24,8 +20,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "xchat.h"
-#include "xchatc.h"
+#include "pchat.h"
+#include "pchatc.h"
 #include "modes.h"
 #include "server.h"
 #include "text.h"
@@ -71,8 +67,8 @@ send_channel_modes (session *sess, char *tbuf, char *word[], int wpos,
 	int usable_modes, orig_len, len, wlen, i, max;
 	server *serv = sess->server;
 
-	/* sanity check. IRC RFC says three per line. */
-	if (serv->modes_per_line < 3)
+	/* sanity check. IRC RFC says three per line but some servers may support less. */
+	if (serv->modes_per_line < 1)
 		serv->modes_per_line = 3;
 	if (modes_per_line < 1)
 		modes_per_line = serv->modes_per_line;
@@ -335,7 +331,7 @@ record_chan_mode (session *sess, char sign, char mode, char *arg)
 				current = g_string_erase(current, argument_offset+1, argument_length-1);
 				current = g_string_insert(current, argument_offset+1, arg);
 
-				free(sess->current_modes);
+				g_free(sess->current_modes);
 				sess->current_modes = g_string_free(current, FALSE);
 			}
 		}
@@ -352,7 +348,7 @@ record_chan_mode (session *sess, char sign, char mode, char *arg)
 				current = g_string_append(current, arg);
 			}
 
-			free(sess->current_modes);
+			g_free(sess->current_modes);
 			sess->current_modes = g_string_free(current, FALSE);
 		}
 	}
@@ -365,7 +361,7 @@ record_chan_mode (session *sess, char sign, char mode, char *arg)
 		/* remove the mode character */
 		current = g_string_erase(current, mode_pos, 1);
 
-		free(sess->current_modes);
+		g_free(sess->current_modes);
 		sess->current_modes = g_string_free(current, FALSE);
 	}
 }
@@ -378,10 +374,11 @@ mode_cat (char *str, char *addition)
 	if (str)
 	{
 		len = strlen (str) + strlen (addition) + 2;
-		str = realloc (str, len);
+		str = g_realloc (str, len);
 		strcat (str, " ");
 		strcat (str, addition);
-	} else
+	}
+	else
 	{
 		str = g_strdup (addition);
 	}
@@ -564,12 +561,12 @@ handle_single_mode (mode_run *mr, char sign, char mode, char *nick,
 	{
 		if (*arg)
 		{
-			char *buf = malloc (strlen (chan) + strlen (arg) + 2);
-			sprintf (buf, "%s %s", chan, arg);
+			char *buf = g_strdup_printf ("%s %s", chan, arg);
 			EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANMODEGEN, sess, nick, outbuf,
 										  outbuf + 2, buf, 0, tags_data->timestamp);
-			free (buf);
-		} else
+			g_free (buf);
+		}
+		else
 			EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANMODEGEN, sess, nick, outbuf,
 										  outbuf + 2, chan, 0, tags_data->timestamp);
 	}
@@ -639,7 +636,7 @@ mode_print_grouped (session *sess, char *nick, mode_run *mr,
 	{
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANOP, sess, nick, mr->op, NULL, NULL, 0,
 									  tags_data->timestamp);
-		free (mr->op);
+		g_free(mr->op);
 		mr->op = NULL;
 	}
 
@@ -647,7 +644,7 @@ mode_print_grouped (session *sess, char *nick, mode_run *mr,
 	{
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANDEOP, sess, nick, mr->deop, NULL, NULL,
 									  0, tags_data->timestamp);
-		free (mr->deop);
+		g_free(mr->deop);
 		mr->deop = NULL;
 	}
 
@@ -655,7 +652,7 @@ mode_print_grouped (session *sess, char *nick, mode_run *mr,
 	{
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANVOICE, sess, nick, mr->voice, NULL, NULL,
 									  0, tags_data->timestamp);
-		free (mr->voice);
+		g_free(mr->voice);
 		mr->voice = NULL;
 	}
 
@@ -663,7 +660,7 @@ mode_print_grouped (session *sess, char *nick, mode_run *mr,
 	{
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANDEVOICE, sess, nick, mr->devoice, NULL,
 									  NULL, 0, tags_data->timestamp);
-		free (mr->devoice);
+		g_free(mr->devoice);
 		mr->devoice = NULL;
 	}
 }
@@ -681,10 +678,10 @@ handle_mode (server * serv, char *word[], char *word_eol[],
 	char *argstr;
 	char sign;
 	int len;
-	int arg;
-	int i, num_args;
-	int num_modes;
-	int offset = 3;
+	size_t arg;
+	size_t i, num_args;
+	size_t num_modes;
+	size_t offset = 3;
 	int all_modes_have_args = FALSE;
 	int using_front_tab = FALSE;
 	mode_run mr;
@@ -721,8 +718,7 @@ handle_mode (server * serv, char *word[], char *word_eol[],
 
 	if (numeric_324 && !using_front_tab)
 	{
-		if (sess->current_modes)
-			free (sess->current_modes);
+		g_free (sess->current_modes);
 		sess->current_modes = g_strdup (word_eol[offset+1]);
 	}
 
@@ -739,6 +735,8 @@ handle_mode (server * serv, char *word[], char *word_eol[],
 		if (!(*word[i + offset]))
 			break;
 		num_args++;
+		if (word[i + offset][0] == ':')
+			break;
 	}
 
 	/* count the number of modes (without the -/+ chars */
@@ -766,10 +764,10 @@ handle_mode (server * serv, char *word[], char *word_eol[],
 			break;
 		default:
 			argstr = "";
-			if ((all_modes_have_args || mode_has_arg (serv, sign, *modes)) && arg < (num_args+1))
+			if ((all_modes_have_args || mode_has_arg (serv, sign, *modes)) && arg < (num_args + 1))
 			{
 				arg++;
-				argstr = word[arg + offset];
+				argstr = STRIP_COLON(word, word_eol, arg+offset);
 			}
 			handle_single_mode (&mr, sign, *modes, nick, chan,
 									  argstr, numeric_324 || prefs.pchat_irc_raw_modes,
@@ -787,6 +785,64 @@ handle_mode (server * serv, char *word[], char *word_eol[],
 	mode_print_grouped (sess, nick, &mr, tags_data);
 }
 
+static char
+pchat_to_chr(char chr)
+{
+	return g_ascii_isdigit (chr) ? chr - '0' : g_ascii_tolower (chr) - 'a' + 10;
+}
+
+static void
+parse_005_token (const char *token, char **name, char **value, gboolean *adding)
+{
+	char *toksplit, *valuecurr;
+	size_t idx;
+
+	if (token[0] == '-')
+	{
+		*adding = FALSE;
+		token++;
+	} else
+	{
+		*adding = TRUE;
+	}
+
+	toksplit = strchr (token, '=');
+	if (toksplit && *toksplit++)
+	{
+		/* The token has a value; parse any escape codes. */
+		*name = g_strndup (token, toksplit - token - 1);
+		*value = g_malloc (strlen (toksplit) + 1);
+		valuecurr = *value;
+
+		while (*toksplit)
+		{
+			if (toksplit[0] == '\\')
+			{
+				/** If it's a malformed escape then just skip it. */
+				if (toksplit[1] == 'x' && g_ascii_isxdigit (toksplit[2]) && g_ascii_isxdigit (toksplit[3]))
+					*valuecurr++ = pchat_to_chr (toksplit[2]) << 4 | pchat_to_chr (toksplit[3]);
+
+				for (idx = 0; idx < 4; ++idx)
+				{
+					/* We need to do this to avoid jumping past the end of the array. */
+					if (*toksplit)
+						toksplit++;
+				}
+			} else
+			{
+				/** Non-escape characters can be copied as is. */
+				*valuecurr++ = *toksplit++;
+			}
+		}
+		*valuecurr++ = 0;
+	} else
+	{
+		/* The token has no value; store a dummy value instead. */
+		*name = g_strdup (token);
+		*value = g_strdup ("");
+	}
+}
+
 /* handle the 005 numeric */
 
 void
@@ -794,91 +850,99 @@ inbound_005 (server * serv, char *word[], const message_tags_data *tags_data)
 {
 	int w;
 	char *pre;
+	char *tokname, *tokvalue;
+	gboolean tokadding;
 
 	w = 4;							  /* start at the 4th word */
 	while (w < PDIWORDS && *word[w])
 	{
-		if (strncmp (word[w], "MODES=", 6) == 0)
+		if (word[w][0] == ':')
+			break; // :are supported by this server
+
+		parse_005_token(word[w], &tokname, &tokvalue, &tokadding);
+		if (g_strcmp0 (tokname, "MODES") == 0)
 		{
-			serv->modes_per_line = atoi (word[w] + 6);
-		} else if (strncmp (word[w], "CHANTYPES=", 10) == 0)
+			serv->modes_per_line = atoi (tokvalue);
+		} else if (g_strcmp0 (tokname, "CHANTYPES") == 0)
 		{
-			free (serv->chantypes);
-			serv->chantypes = g_strdup (word[w] + 10);
-		} else if (strncmp (word[w], "CHANMODES=", 10) == 0)
+			g_free (serv->chantypes);
+			serv->chantypes = g_strdup (tokvalue);
+		} else if (g_strcmp0 (tokname, "CHANMODES") == 0)
 		{
-			free (serv->chanmodes);
-			serv->chanmodes = g_strdup (word[w] + 10);
-		} else if (strncmp (word[w], "PREFIX=", 7) == 0)
+			g_free (serv->chanmodes);
+			serv->chanmodes = g_strdup (tokvalue);
+		} else if (g_strcmp0 (tokname, "PREFIX") == 0)
 		{
-			pre = strchr (word[w] + 7, ')');
+			pre = strchr (tokvalue, ')');
 			if (pre)
 			{
 				pre[0] = 0;			  /* NULL out the ')' */
-				free (serv->nick_prefixes);
-				free (serv->nick_modes);
+				g_free (serv->nick_prefixes);
+				g_free (serv->nick_modes);
 				serv->nick_prefixes = g_strdup (pre + 1);
-				serv->nick_modes = g_strdup (word[w] + 8);
+				serv->nick_modes = g_strdup (tokvalue + 1);
 			} else
 			{
 				/* bad! some ircds don't give us the modes. */
 				/* in this case, we use it only to strip /NAMES */
 				serv->bad_prefix = TRUE;
-				if (serv->bad_nick_prefixes)
-					free (serv->bad_nick_prefixes);
-				serv->bad_nick_prefixes = g_strdup (word[w] + 7);
+				g_free (serv->bad_nick_prefixes);
+				serv->bad_nick_prefixes = g_strdup (tokvalue);
 			}
-		} else if (strncmp (word[w], "WATCH=", 6) == 0)
+		} else if (g_strcmp0 (tokname, "WATCH") == 0)
 		{
-			serv->supports_watch = TRUE;
-		} else if (strncmp (word[w], "MONITOR=", 8) == 0)
+			serv->supports_watch = tokadding;
+		} else if (g_strcmp0 (tokname, "MONITOR") == 0)
 		{
-			serv->supports_monitor = TRUE;
-		} else if (strncmp (word[w], "NETWORK=", 8) == 0)
+			serv->supports_monitor = tokadding;
+		} else if (g_strcmp0 (tokname, "NETWORK") == 0)
 		{
-/*			if (serv->networkname)
-				free (serv->networkname);
-			serv->networkname = strdup (word[w] + 8);*/
-
-			if (serv->server_session->type == SESS_SERVER)
+			if (serv->server_session->type == SESS_SERVER && strlen (tokvalue))
 			{
-				safe_strcpy (serv->server_session->channel, word[w] + 8, CHANLEN);
+				safe_strcpy (serv->server_session->channel, tokvalue, CHANLEN);
 				fe_set_channel (serv->server_session);
 			}
 
-		} else if (strncmp (word[w], "CASEMAPPING=", 12) == 0)
+		} else if (g_strcmp0 (tokname, "CASEMAPPING") == 0)
 		{
-			if (strcmp (word[w] + 12, "ascii") == 0)	/* bahamut */
+			if (g_strcmp0 (tokvalue, "ascii") == 0)
 				serv->p_cmp = (void *)g_ascii_strcasecmp;
-		} else if (strncmp (word[w], "CHARSET=", 8) == 0)
+		} else if (g_strcmp0 (tokname, "CHARSET") == 0)
 		{
-			if (g_ascii_strncasecmp (word[w] + 8, "UTF-8", 5) == 0)
+			if (g_ascii_strcasecmp (tokvalue, "UTF-8") == 0)
 			{
 				server_set_encoding (serv, "UTF-8");
 			}
-		} else if (strcmp (word[w], "NAMESX") == 0)
+		} else if (g_strcmp0 (tokname, "UTF8ONLY") == 0)
 		{
-									/* 12345678901234567 */
-			tcp_send_len (serv, "PROTOCTL NAMESX\r\n", 17);
-		} else if (strcmp (word[w], "WHOX") == 0)
+			server_set_encoding (serv, "UTF-8");
+		} else if (g_strcmp0 (tokname, "NAMESX") == 0)
 		{
-			serv->have_whox = TRUE;
-		} else if (strcmp (word[w], "EXCEPTS") == 0)
+			if (tokadding && !serv->have_namesx)
+			{
+				/* only use protoctl if the server doesn't have the equivalent cap */
+				tcp_send_len (serv, "PROTOCTL NAMESX\r\n", 17);
+				serv->have_namesx = TRUE;
+			}
+		} else if (g_strcmp0 (tokname, "WHOX") == 0)
 		{
-#ifndef _WIN32
-			serv->have_except = TRUE;
-#endif
-		} else if (strcmp (word[w], "INVEX") == 0)
+			serv->have_whox = tokadding;
+		} else if (g_strcmp0 (tokname, "EXCEPTS") == 0)
+		{
+			serv->have_except = tokadding;
+		} else if (g_strcmp0 (tokname, "INVEX") == 0)
 		{
 			/* supports mode letter +I, default channel invite */
-			serv->have_invite = TRUE;
-		} else if (strncmp (word[w], "ELIST=", 6) == 0)
+			serv->have_invite = tokadding;
+		} else if (g_strcmp0 (tokname, "ELIST") == 0)
 		{
 			/* supports LIST >< min/max user counts? */
-			if (strchr (word[w] + 6, 'U') || strchr (word[w] + 6, 'u'))
+			if (strchr (tokvalue, 'U') || strchr (tokvalue, 'u'))
 				serv->use_listargs = TRUE;
 		}
 
+		g_free (tokname);
+		g_free (tokvalue);
 		w++;
 	}
 }

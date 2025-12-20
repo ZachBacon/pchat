@@ -33,7 +33,7 @@ guint command_id;
 guint server_id;
 
 static void
-write_error (char *message,
+write_error (const char *message,
 	     GError **error)
 {
 	if (error == NULL || *error == NULL) {
@@ -73,7 +73,7 @@ test_command_cb (DBusGProxy *proxy,
 					G_TYPE_INVALID, G_TYPE_INVALID)) {
 			write_error ("Failed to complete unhook", &error);
 		}
-		/* Now if you write "/test blah" again in the PChat window
+		/* Now if you write "/test blah" again in the HexChat window
 		 * you'll get a "Unknown command" error message */
 		g_print ("test command received: %s\n", word_eol[1]);
 		if (!dbus_g_proxy_call (proxy, "Print",

@@ -1,10 +1,6 @@
 /* X-Chat
  * Copyright (C) 1998 Peter Zelezny.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -28,20 +24,20 @@
 #include <fcntl.h>
 #include <time.h>
 
-#ifdef _WIN32
+#ifdef WIN32
 #include <io.h>
 #else
 #include <unistd.h>
 #endif
 
-#include "xchat.h"
+#include "pchat.h"
 #include "notify.h"
 #include "cfgfiles.h"
 #include "fe.h"
 #include "server.h"
 #include "text.h"
 #include "util.h"
-#include "xchatc.h"
+#include "pchatc.h"
 
 
 GSList *notify_list = 0;
@@ -115,13 +111,10 @@ notify_find_server_entry (struct notify *notify, struct server *serv)
 	if (!notify_do_network (notify, serv))
 		return NULL;
 
-	servnot = g_malloc0 (sizeof (struct notify_per_server));
-	if (servnot)
-	{
-		servnot->server = serv;
-		servnot->notify = notify;
-		notify->server_list = g_slist_prepend (notify->server_list, servnot);
-	}
+	servnot = g_new0 (struct notify_per_server, 1);
+	servnot->server = serv;
+	servnot->notify = notify;
+	notify->server_list = g_slist_prepend (notify->server_list, servnot);
 	return servnot;
 }
 
@@ -130,9 +123,13 @@ notify_save (void)
 {
 	int fh;
 	struct notify *notify;
-	GSList *list = notify_list;
+        // while reading the notify.conf file, elements are added by prepending to the
+        // list. reverse the list before writing to disk to keep the original
+        // order of the list
+        GSList *list = g_slist_copy(notify_list);
+        list = g_slist_reverse(list);
 
-	fh = xchat_open_file ("notify.conf", O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
+	fh = pchat_open_file ("notify.conf", O_TRUNC | O_WRONLY | O_CREAT, 0600, XOF_DOMODE);
 	if (fh != -1)
 	{
 		while (list)
@@ -149,6 +146,7 @@ notify_save (void)
 		}
 		close (fh);
 	}
+        g_slist_free(list);
 }
 
 void
@@ -158,7 +156,7 @@ notify_load (void)
 	char buf[256];
 	char *sep;
 
-	fh = xchat_open_file ("notify.conf", O_RDONLY, 0, 0);
+	fh = pchat_open_file ("notify.conf", O_RDONLY, 0, 0);
 	if (fh != -1)
 	{
 		while (waitline (fh, buf, sizeof buf, FALSE) != -1)
@@ -169,7 +167,7 @@ notify_load (void)
 				if (sep)
 				{
 					sep[0] = 0;
-					notify_adduser (buf, sep + 1);
+					notify_adduser (buf, sep + 1);					
 				}
 				else
 					notify_adduser (buf, NULL);
@@ -203,12 +201,12 @@ notify_find (server *serv, char *nick)
 		list = list->next;
 	}
 
-	return 0;
+	return NULL;
 }
 
 static void
 notify_announce_offline (server * serv, struct notify_per_server *servnot,
-								 char *nick, int quiet,
+								 char *nick, int quiet, 
 								 const message_tags_data *tags_data)
 {
 	session *sess;
@@ -250,13 +248,9 @@ notify_announce_online (server * serv, struct notify_per_server *servnot,
 
 	    /* Let's do whois with idle time (like in /quote WHOIS %s %s) */
 
-	    char *wii_str = g_malloc (strlen (nick) * 2 + 2);
-	    if (wii_str)
-	    {
-	        g_snprintf (wii_str, strlen (nick) * 2 + 2, "%s %s", nick, nick);
-	        serv->p_whois (serv, wii_str);
-	        g_free (wii_str);
-	    }
+	    char *wii_str = g_strdup_printf ("%s %s", nick, nick);
+	    serv->p_whois (serv, wii_str);
+	    g_free (wii_str);
 	}
 }
 
@@ -299,26 +293,20 @@ notify_set_offline_list (server * serv, char *users, int quiet,
 	struct notify_per_server *servnot;
 	char nick[NICKLEN];
 	char *token, *chr;
-	int pos;
 
 	token = strtok (users, ",");
 	while (token != NULL)
 	{
 		chr = strchr (token, '!');
-		if (!chr)
-			goto end;
+		if (chr != NULL)
+			*chr = '\0';
 
-		pos = chr - token;
-		if (pos + 1 >= sizeof(nick))
-			goto end;
-
-		memset (nick, 0, sizeof(nick));
-		strncpy (nick, token, pos);
+		g_strlcpy (nick, token, sizeof(nick));
 
 		servnot = notify_find (serv, nick);
 		if (servnot)
 			notify_announce_offline (serv, servnot, nick, quiet, tags_data);
-end:
+
 		token = strtok (NULL, ",");
 	}
 }
@@ -330,26 +318,20 @@ notify_set_online_list (server * serv, char *users,
 	struct notify_per_server *servnot;
 	char nick[NICKLEN];
 	char *token, *chr;
-	int pos;
 
 	token = strtok (users, ",");
 	while (token != NULL)
 	{
 		chr = strchr (token, '!');
-		if (!chr)
-			goto end;
+		if (chr != NULL)
+			*chr = '\0';
 
-		pos = chr - token;
-		if (pos + 1 >= sizeof(nick))
-			goto end;
-
-		memset (nick, 0, sizeof(nick));
-		strncpy (nick, token, pos);
+		g_strlcpy (nick, token, sizeof(nick));
 
 		servnot = notify_find (serv, nick);
 		if (servnot)
 			notify_announce_online (serv, servnot, nick, tags_data);
-end:
+
 		token = strtok (NULL, ",");
 	}
 }
@@ -416,32 +398,50 @@ void
 notify_send_watches (server * serv)
 {
 	struct notify *notify;
+	const int format_len = serv->supports_monitor ? 1 : 2; /* just , for monitor or + and space for watch */
 	GSList *list;
 	GSList *point;
-	int len;
+	GSList *send_list = NULL;
+	int len = 0;
 
-	len = 0;
-	point = list = notify_list;
+	/* Only get the list for this network */
+	list = notify_list;
 	while (list)
 	{
 		notify = list->data;
 
 		if (notify_do_network (notify, serv))
 		{
-			len += strlen (notify->name) + serv->supports_monitor ? 1 : 2; /* just , for monitor or + and space for watch */;
-			if (len > 500)
-			{
-				notify_flush_watches (serv, point, list);
-				len = strlen (notify->name) + serv->supports_monitor ? 1 : 2;
-				point = list;
-			}
+			send_list = g_slist_append (send_list, notify);
 		}
 
 		list = list->next;
 	}
 
-	if (point)
+	/* Now send that list in batches */
+	point = list = send_list;
+	while (list)
+	{
+		notify = list->data;
+
+		len += strlen (notify->name) + format_len;
+		if (len > 500)
+		{
+			/* Too long send existing list */
+			notify_flush_watches (serv, point, list);
+			len = strlen (notify->name) + format_len;
+			point = list; /* We left off here */
+		}
+
+		list = g_slist_next (list);
+	}
+
+	if (len) /* We had leftovers under 500, send them all */
+	{
 		notify_flush_watches (serv, point, NULL);
+	}
+
+	g_slist_free (send_list);
 }
 
 /* called when receiving a ISON 303 - should this func go? */
@@ -600,8 +600,7 @@ notify_deluser (char *name)
 			}
 			notify_list = g_slist_remove (notify_list, notify);
 			notify_watch_all (notify, FALSE);
-			if (notify->networks)
-				g_free (notify->networks);
+			g_free (notify->networks);
 			g_free (notify->name);
 			g_free (notify);
 			fe_notify_update (0);
@@ -615,26 +614,18 @@ notify_deluser (char *name)
 void
 notify_adduser (char *name, char *networks)
 {
-	struct notify *notify = g_malloc0 (sizeof (struct notify));
-	if (notify)
-	{
-		if (strlen (name) >= NICKLEN)
-		{
-			notify->name = g_malloc (NICKLEN);
-			safe_strcpy (notify->name, name, NICKLEN);
-		} else
-		{
-			notify->name = strdup (name);
-		}
-		if (networks)
-			notify->networks = despacify_dup (networks);
-		notify->server_list = 0;
-		notify_list = g_slist_prepend (notify_list, notify);
-		notify_checklist ();
-		fe_notify_update (notify->name);
-		fe_notify_update (0);
-		notify_watch_all (notify, TRUE);
-	}
+	struct notify *notify = g_new0 (struct notify, 1);
+
+	notify->name = g_strndup (name, NICKLEN - 1);
+
+	if (networks != NULL)
+		notify->networks = despacify_dup (networks);
+	notify->server_list = 0;
+	notify_list = g_slist_prepend (notify_list, notify);
+	notify_checklist ();
+	fe_notify_update (notify->name);
+	fe_notify_update (0);
+	notify_watch_all (notify, TRUE);
 }
 
 gboolean
@@ -713,7 +704,7 @@ notify_cleanup ()
 			{
 				notify->server_list =
 					g_slist_remove (notify->server_list, servnot);
-				free (servnot);
+				g_free (servnot);
 				nslist = notify->server_list;
 			} else
 			{

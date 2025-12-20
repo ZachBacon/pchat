@@ -35,8 +35,8 @@
 
 #include <gdk/gdkkeysyms.h>
 
-#include "../common/xchat.h"
-#include "../common/xchatc.h"
+#include "../common/pchat.h"
+#include "../common/pchatc.h"
 #include "../common/cfgfiles.h"
 #include "../common/outbound.h"
 #include "../common/ignore.h"
@@ -103,7 +103,7 @@ static void
 nick_command (session * sess, char *cmd)
 {
 	if (*cmd == '!')
-		xchat_exec (cmd + 1);
+		pchat_exec (cmd + 1);
 	else
 		handle_command (sess, cmd, TRUE);
 }
@@ -1298,7 +1298,7 @@ savebuffer_req_done (session *sess, char *file)
 	fh = g_open (file, O_TRUNC | O_WRONLY | O_CREAT, 0600);
 	if (fh != -1)
 	{
-		pchat_textview_chat_save (PCHAT_TEXTVIEW_CHAT (sess->gui->xtext), fh);
+		pchat_textview_chat_save (PCHAT_TEXTVIEW_CHAT (sess->gui->textview), fh);
 		close (fh);
 	}
 }
@@ -1681,10 +1681,10 @@ menu_about (GtkWidget *wid, gpointer sess)
 	gtk_about_dialog_set_program_name (dialog, DISPLAY_NAME);
 	gtk_about_dialog_set_version (dialog, PACKAGE_VERSION);
 	gtk_about_dialog_set_license (dialog, license); /* gtk3 can use GTK_LICENSE_GPL_2_0 */
-	gtk_about_dialog_set_website (dialog, "http://pchat.in");
+	gtk_about_dialog_set_website (dialog, "https://thatzachbacon/pchat");
 	gtk_about_dialog_set_website_label (dialog, "Website");
 	gtk_about_dialog_set_logo (dialog, pix_xchat);
-	gtk_about_dialog_set_copyright (dialog, "\302\251 1998-2010 Peter \305\275elezn\303\275\n\302\251 2009-2013 Berke Viktor");
+	gtk_about_dialog_set_copyright (dialog, "\302\251 1998-2010 Peter \305\275elezn\303\275\n\302\251 2009-2013 Berke Viktor\n\302\251 2024-2025 Zach Bacon");
 	gtk_about_dialog_set_comments (dialog, comment);
 
 	gtk_window_set_transient_for (GTK_WINDOW(dialog), GTK_WINDOW(parent_window));

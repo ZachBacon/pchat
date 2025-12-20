@@ -22,15 +22,15 @@
 
 #include "fe-gtk.h"
 
-#include "../common/xchat.h"
+#include "../common/pchat.h"
 #define PLUGIN_C
-typedef struct session xchat_context;
-#include "../common/xchat-plugin.h"
+typedef struct session pchat_context;
+#include "../common/pchat-plugin.h"
 #include "../common/plugin.h"
 #include "../common/util.h"
 #include "../common/outbound.h"
 #include "../common/fe.h"
-#include "../common/xchatc.h"
+#include "../common/pchatc.h"
 #include "../common/cfgfiles.h"
 #include "gtkutil.h"
 #include "maingui.h"
@@ -108,7 +108,7 @@ extern GSList *plugin_list;
 void
 fe_pluginlist_update (void)
 {
-	xchat_plugin *pl;
+	pchat_plugin *pl;
 	GSList *list;
 	GtkTreeView *view;
 	GtkListStore *store;

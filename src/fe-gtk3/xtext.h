@@ -25,7 +25,7 @@
 
 #include <cairo.h>
 #include <glib-object.h>
-#include <gtk/gtk.h>
+#include <gtk/gtk.h>\n\n/* Forward compatibility with textview-chat search flags */\n#include \"textview-chat.h\"\ntypedef PchatSearchFlags gtk_xtext_search_flags;
 
 #define GTK_TYPE_XTEXT              (gtk_xtext_get_type ())
 #define GTK_XTEXT(object)           (G_TYPE_CHECK_INSTANCE_CAST ((object), GTK_TYPE_XTEXT, GtkXText))

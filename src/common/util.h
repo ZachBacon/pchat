@@ -2,9 +2,6 @@
  * Copyright (C) 1998-2010 Peter Zelezny.
  * Copyright (C) 2009-2013 Berke Viktor.
  *
- * PChat
- * Copyright (C) 2025 Zach Bacon
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -21,33 +18,32 @@
  */
 
 /************************************************************************
- *    This technique was borrowed in part from the source code to
+ *    This technique was borrowed in part from the source code to 
  *    ircd-hybrid-5.3 to implement case-insensitive string matches which
  *    are fully compliant with Section 2.2 of RFC 1459, the copyright
  *    of that code being (C) 1990 Jarkko Oikarinen and under the GPL.
- *
+ *    
  *    A special thanks goes to Mr. Okarinen for being the one person who
  *    seems to have ever noticed this section in the original RFC and
  *    written code for it.  Shame on all the rest of you (myself included).
- *
+ *    
  *        --+ Dagmar d'Surreal
  */
 
-#ifndef PCHAT_UTIL_H
-#define PCHAT_UTIL_H
-
-#include <glib.h>
+#ifndef pchat_UTIL_H
+#define pchat_UTIL_H
 
 #define rfc_tolower(c) (rfc_tolowertab[(unsigned char)(c)])
 
+#define ELLIPSIS "\xe2\x80\xa6"
+
 extern const unsigned char rfc_tolowertab[];
 
-int my_poptParseArgvString(const char * s, int * argcPtr, char *** argvPtr);
 char *expand_homedir (char *file);
 void path_part (char *file, char *path, int pathlen);
 int match (const char *mask, const char *string);
 char *file_part (char *file);
-void for_files (char *dirname, char *mask, void callback (char *file));
+void for_files (const char *dirname, const char *mask, void callback (char *file));
 int rfc_casecmp (const char *, const char *);
 int rfc_ncasecmp (char *, char *, int);
 int buf_get_line (char *, char **, int *, int len);
@@ -55,8 +51,7 @@ char *nocasestrstr (const char *text, const char *tofind);
 char *country (char *);
 void country_search (char *pattern, void *ud, void (*print)(void *, char *, ...));
 char *get_sys_str (int with_cpu);
-int util_exec (const char *cmd);
-int util_execv (char * const argv[]);
+void util_exec (const char *cmd);
 #define STRIP_COLOR 1
 #define STRIP_ATTRIB 2
 #define STRIP_HIDDEN 4
@@ -67,7 +62,7 @@ int strip_color2 (const char *src, int len, char *dst, int flags);
 int strip_hidden_attribute (char *src, char *dst);
 char *errorstring (int err);
 int waitline (int sok, char *buf, int bufsize, int);
-#ifdef _WIN32
+#ifdef WIN32
 int waitline2 (GIOChannel *source, char *buf, int bufsize);
 int get_cpu_arch (void);
 #else
@@ -81,12 +76,8 @@ guint32 str_ihash (const unsigned char *key);
 void safe_strcpy (char *dest, const char *src, int bytes_left);
 void canonalize_key (char *key);
 int portable_mode (void);
-int unity_mode (void);
-GSList *get_subdirs (const char *path);
 char *encode_sasl_pass_plain (char *user, char *pass);
-char *encode_sasl_pass_blowfish (char *user, char *pass, char *data);
-char *encode_sasl_pass_aes (char *user, char *pass, char *data);
-char *challengeauth_response (char *username, char *password, char *challenge);
+char *challengeauth_response (const char *username, const char *password, const char *challenge);
 size_t strftime_validated (char *dest, size_t destsize, const char *format, const struct tm *time);
+gsize strftime_utf8 (char *dest, gsize destsize, const char *format, time_t time);
 #endif
-

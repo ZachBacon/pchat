@@ -41,7 +41,7 @@
 #endif
 
 #include "../common/cfgfiles.h"
-#include "../common/xchatc.h"
+#include "../common/pchatc.h"
 #include "palette.h"
 
 /* Text attribute constants - previously from xtext.h */

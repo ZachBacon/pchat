@@ -32,12 +32,13 @@
 #include <unistd.h>
 #endif
 
-#include "../common/xchat.h"
+#include "../common/pchat.h"
 #include "../common/fe.h"
 #include "../common/util.h"
 #include "../common/text.h"
 #include "../common/cfgfiles.h"
-#include "../common/xchatc.h"
+#include "../common/pchatc.h"
+#include "textview-chat.h"
 #include "../common/plugin.h"
 #include "../common/server.h"
 #include "../common/url.h"
@@ -368,6 +369,12 @@ fe_timeout_add (int interval, void *callback, void *userdata)
 	return g_timeout_add (interval, (GSourceFunc) callback, userdata);
 }
 
+int
+fe_timeout_add_seconds (int interval, void *callback, void *userdata)
+{
+	return g_timeout_add_seconds (interval, (GSourceFunc) callback, userdata);
+}
+
 void
 fe_timeout_remove (int tag)
 {
@@ -615,7 +622,7 @@ fe_notify_update (char *name)
 void
 fe_text_clear (struct session *sess, int lines)
 {
-	PchatTextViewChat *chat = PCHAT_TEXTVIEW_CHAT (sess->gui->xtext);
+	PchatTextViewChat *chat = PCHAT_TEXTVIEW_CHAT (sess->gui->textview);
 	pchat_textview_chat_clear (chat, lines);
 }
 
@@ -665,15 +672,10 @@ fe_print_text (struct session *sess, char *text, time_t stamp,
 {
 	PrintTextRaw (sess->res->buffer, (unsigned char *)text, prefs.pchat_text_indent, stamp);
 
-	if (!no_activity && !sess->new_data && sess != current_tab &&
-		sess->gui->is_tab && !sess->nick_said)
+	if (!no_activity && sess != current_tab && sess->gui->is_tab)
 	{
-		sess->new_data = TRUE;
 		lastact_update (sess);
-		if (sess->msg_said)
-			fe_set_tab_color (sess, 2);
-		else
-			fe_set_tab_color (sess, 1);
+		fe_set_tab_color (sess, 1);
 	}
 }
 
@@ -712,8 +714,8 @@ fe_lastlog (session *sess, session *lastlog_sess, char *sstr, int flags)
 	PchatChatBuffer *buf, *lbuf;
 	PchatTextViewChat *chat, *lastlog_chat;
 	
-	chat = PCHAT_TEXTVIEW_CHAT (sess->gui->xtext);
-	lastlog_chat = PCHAT_TEXTVIEW_CHAT (lastlog_sess->gui->xtext);
+	chat = PCHAT_TEXTVIEW_CHAT (sess->gui->textview);
+	lastlog_chat = PCHAT_TEXTVIEW_CHAT (lastlog_sess->gui->textview);
 	
 	buf = pchat_textview_chat_get_buffer (chat);
 	lbuf = pchat_textview_chat_get_buffer (lastlog_chat);
@@ -1066,7 +1068,7 @@ fe_open_url (const char *url)
 {
 	char *loc;
 
-	if (prefs.utf8_locale)
+	/* UTF-8 locale handling - always enabled in modern systems */
 	{
 		fe_open_url_locale (url);
 		return;
