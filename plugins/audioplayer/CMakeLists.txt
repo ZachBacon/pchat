@@ -38,14 +38,18 @@ set_target_properties(audioplayer PROPERTIES
 )
 
 # Set appropriate suffix based on platform
-if(APPLE)
+if(WIN32)
+    set_target_properties(audioplayer PROPERTIES SUFFIX ".dll")
+elseif(APPLE)
     set_target_properties(audioplayer PROPERTIES SUFFIX ".dylib")
 else()
     set_target_properties(audioplayer PROPERTIES SUFFIX ".so")
 endif()
 
 # Allow undefined symbols - they'll be resolved when PChat loads the plugin
-if(APPLE)
+if(WIN32)
+    # Windows DLLs don't need special flags for plugin symbols
+elseif(APPLE)
     target_link_options(audioplayer PRIVATE 
         "-Wl,-undefined,dynamic_lookup"
     )

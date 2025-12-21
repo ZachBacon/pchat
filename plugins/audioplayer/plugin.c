@@ -9,7 +9,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <strings.h>
-#include "../../src/common/pchat-plugin.h"
+#include "pchat-plugin.h"
 #include "audioplayer.h"
 #include "gui.h"
 
