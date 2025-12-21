@@ -39,74 +39,88 @@
 #include "../common/cfgfiles.h"
 #include "../common/typedef.h"
 
+/* Linear RGB values from GTK2 - will be converted to sRGB at runtime */
+static const guint16 default_colors[][3] = {
+	/* colors for xtext */
+	{0xd3d3, 0xd7d7, 0xcfcf}, /* 0 white */
+	{0x2e2e, 0x3434, 0x3636}, /* 1 black */
+	{0x3434, 0x6565, 0xa4a4}, /* 2 blue */
+	{0x4e4e, 0x9a9a, 0x0606}, /* 3 green */
+	{0xcccc, 0x0000, 0x0000}, /* 4 red */
+	{0x8f8f, 0x3939, 0x0202}, /* 5 light red */
+	{0x5c5c, 0x3535, 0x6666}, /* 6 purple */
+	{0xcece, 0x5c5c, 0x0000}, /* 7 orange */
+	{0xc4c4, 0xa0a0, 0x0000}, /* 8 yellow */
+	{0x7373, 0xd2d2, 0x1616}, /* 9 green */
+	{0x1111, 0xa8a8, 0x7979}, /* 10 aqua */
+	{0x5858, 0xa1a1, 0x9d9d}, /* 11 light aqua */
+	{0x5757, 0x7979, 0x9e9e}, /* 12 blue */
+	{0xa0d0, 0x42d4, 0x6562}, /* 13 light purple */
+	{0x5555, 0x5757, 0x5353}, /* 14 grey */
+	{0x8888, 0x8a8a, 0x8585}, /* 15 light grey */
 
-GdkRGBA colors[] = {
-	/* colors for xtext - converted from GdkColor (16-bit) to GdkRGBA (double) */
-	{0xd3d3/65535.0, 0xd7d7/65535.0, 0xcfcf/65535.0, 1.0}, /* 0 white */
-	{0x2e2e/65535.0, 0x3434/65535.0, 0x3636/65535.0, 1.0}, /* 1 black */
-	{0x3434/65535.0, 0x6565/65535.0, 0xa4a4/65535.0, 1.0}, /* 2 blue */
-	{0x4e4e/65535.0, 0x9a9a/65535.0, 0x0606/65535.0, 1.0}, /* 3 green */
-	{0xcccc/65535.0, 0x0000/65535.0, 0x0000/65535.0, 1.0}, /* 4 red */
-	{0x8f8f/65535.0, 0x3939/65535.0, 0x0202/65535.0, 1.0}, /* 5 light red */
-	{0x5c5c/65535.0, 0x3535/65535.0, 0x6666/65535.0, 1.0}, /* 6 purple */
-	{0xcece/65535.0, 0x5c5c/65535.0, 0x0000/65535.0, 1.0}, /* 7 orange */
-	{0xc4c4/65535.0, 0xa0a0/65535.0, 0x0000/65535.0, 1.0}, /* 8 yellow */
-	{0x7373/65535.0, 0xd2d2/65535.0, 0x1616/65535.0, 1.0}, /* 9 green */
-	{0x1111/65535.0, 0xa8a8/65535.0, 0x7979/65535.0, 1.0}, /* 10 aqua */
-	{0x5858/65535.0, 0xa1a1/65535.0, 0x9d9d/65535.0, 1.0}, /* 11 light aqua */
-	{0x5757/65535.0, 0x7979/65535.0, 0x9e9e/65535.0, 1.0}, /* 12 blue */
-	{0xa0d0/65535.0, 0x42d4/65535.0, 0x6562/65535.0, 1.0}, /* 13 light purple */
-	{0x5555/65535.0, 0x5757/65535.0, 0x5353/65535.0, 1.0}, /* 14 grey */
-	{0x8888/65535.0, 0x8a8a/65535.0, 0x8585/65535.0, 1.0}, /* 15 light grey */
+	{0xd3d3, 0xd7d7, 0xcfcf}, /* 16 white */
+	{0x2e2e, 0x3434, 0x3636}, /* 17 black */
+	{0x3434, 0x6565, 0xa4a4}, /* 18 blue */
+	{0x4e4e, 0x9a9a, 0x0606}, /* 19 green */
+	{0xcccc, 0x0000, 0x0000}, /* 20 red */
+	{0x8f8f, 0x3939, 0x0202}, /* 21 light red */
+	{0x5c5c, 0x3535, 0x6666}, /* 22 purple */
+	{0xcece, 0x5c5c, 0x0000}, /* 23 orange */
+	{0xc4c4, 0xa0a0, 0x0000}, /* 24 yellow */
+	{0x7373, 0xd2d2, 0x1616}, /* 25 green */
+	{0x1111, 0xa8a8, 0x7979}, /* 26 aqua */
+	{0x5858, 0xa1a1, 0x9d9d}, /* 27 light aqua */
+	{0x5757, 0x7979, 0x9e9e}, /* 28 blue */
+	{0xa0d0, 0x42d4, 0x6562}, /* 29 light purple */
+	{0x5555, 0x5757, 0x5353}, /* 30 grey */
+	{0x8888, 0x8a8a, 0x8585}, /* 31 light grey */
 
-	{0xd3d3/65535.0, 0xd7d7/65535.0, 0xcfcf/65535.0, 1.0}, /* 16 white */
-	{0x2e2e/65535.0, 0x3434/65535.0, 0x3636/65535.0, 1.0}, /* 17 black */
-	{0x3434/65535.0, 0x6565/65535.0, 0xa4a4/65535.0, 1.0}, /* 18 blue */
-	{0x4e4e/65535.0, 0x9a9a/65535.0, 0x0606/65535.0, 1.0}, /* 19 green */
-	{0xcccc/65535.0, 0x0000/65535.0, 0x0000/65535.0, 1.0}, /* 20 red */
-	{0x8f8f/65535.0, 0x3939/65535.0, 0x0202/65535.0, 1.0}, /* 21 light red */
-	{0x5c5c/65535.0, 0x3535/65535.0, 0x6666/65535.0, 1.0}, /* 22 purple */
-	{0xcece/65535.0, 0x5c5c/65535.0, 0x0000/65535.0, 1.0}, /* 23 orange */
-	{0xc4c4/65535.0, 0xa0a0/65535.0, 0x0000/65535.0, 1.0}, /* 24 yellow */
-	{0x7373/65535.0, 0xd2d2/65535.0, 0x1616/65535.0, 1.0}, /* 25 green */
-	{0x1111/65535.0, 0xa8a8/65535.0, 0x7979/65535.0, 1.0}, /* 26 aqua */
-	{0x5858/65535.0, 0xa1a1/65535.0, 0x9d9d/65535.0, 1.0}, /* 27 light aqua */
-	{0x5757/65535.0, 0x7979/65535.0, 0x9e9e/65535.0, 1.0}, /* 28 blue */
-	{0xa0d0/65535.0, 0x42d4/65535.0, 0x6562/65535.0, 1.0}, /* 29 light purple */
-	{0x5555/65535.0, 0x5757/65535.0, 0x5353/65535.0, 1.0}, /* 30 grey */
-	{0x8888/65535.0, 0x8a8a/65535.0, 0x8585/65535.0, 1.0}, /* 31 light grey */
-
-	{0xd3d3/65535.0, 0xd7d7/65535.0, 0xcfcf/65535.0, 1.0}, /* 32 marktext Fore (white) */
-	{0x2020/65535.0, 0x4a4a/65535.0, 0x8787/65535.0, 1.0}, /* 33 marktext Back (blue) */
-	{0x2512/65535.0, 0x29e8/65535.0, 0x2b85/65535.0, 1.0}, /* 34 foreground (black) */
-	{0xfae0/65535.0, 0xfae0/65535.0, 0xf8c4/65535.0, 1.0}, /* 35 background (white) */
-	{0x8f8f/65535.0, 0x3939/65535.0, 0x0202/65535.0, 1.0}, /* 36 marker line (red) */
+	{0xd3d3, 0xd7d7, 0xcfcf}, /* 32 marktext Fore (white) */
+	{0x2020, 0x4a4a, 0x8787}, /* 33 marktext Back (blue) */
+	{0x2512, 0x29e8, 0x2b85}, /* 34 foreground (black) */
+	{0xfae0, 0xfae0, 0xf8c4}, /* 35 background (white) */
+	{0x8f8f, 0x3939, 0x0202}, /* 36 marker line (red) */
 
 	/* colors for GUI */
-	{0x3434/65535.0, 0x6565/65535.0, 0xa4a4/65535.0, 1.0}, /* 37 tab New Data (dark red) */
-	{0x4e4e/65535.0, 0x9a9a/65535.0, 0x0606/65535.0, 1.0}, /* 38 tab Nick Mentioned (blue) */
-	{0xcece/65535.0, 0x5c5c/65535.0, 0x0000/65535.0, 1.0}, /* 39 tab New Message (red) */
-	{0x8888/65535.0, 0x8a8a/65535.0, 0x8585/65535.0, 1.0}, /* 40 away user (grey) */
-	{0xa4a4/65535.0, 0x0000/65535.0, 0x0000/65535.0, 1.0}, /* 41 spell checker color (red) */
+	{0x8f8f, 0x3939, 0x0202}, /* 37 tab New Data (dark red) */
+	{0x3434, 0x6565, 0xa4a4}, /* 38 tab Nick Mentioned (blue) */
+	{0xcccc, 0x0000, 0x0000}, /* 39 tab New Message (red) */
+	{0x8888, 0x8a8a, 0x8585}, /* 40 away user (grey) */
+	{0xa4a4, 0x0000, 0x0000}, /* 41 spell checker color (red) */
 };
+
+GdkRGBA colors[MAX_COL + 1];
 
 
 void
 palette_alloc (GtkWidget * widget)
 {
-#if 0 /* FIXME: Use GdkVisual */
+	static int done_init = FALSE;
 	int i;
-	static int done_alloc = FALSE;
-	GdkColormap *cmap;
 
-	if (!done_alloc)		  /* don't do it again */
+	if (!done_init)
 	{
-		done_alloc = TRUE;
-		cmap = gtk_widget_get_colormap (widget);
-		for (i = MAX_COL; i >= 0; i--)
-			gdk_colormap_alloc_color (cmap, &colors[i], FALSE, TRUE);
+		done_init = TRUE;
+		/* Initialize colors from default values - darken for GTK3 brightness */
+		for (i = 0; i <= MAX_COL; i++)
+		{
+			/* Skip background (35) to keep it light */
+			if (i == 35)
+			{
+				colors[i].red = default_colors[i][0] / 65535.0;
+				colors[i].green = default_colors[i][1] / 65535.0;
+				colors[i].blue = default_colors[i][2] / 65535.0;
+			}
+			else
+			{
+				colors[i].red = (default_colors[i][0] / 65535.0) * 0.7;
+				colors[i].green = (default_colors[i][1] / 65535.0) * 0.7;
+				colors[i].blue = (default_colors[i][2] / 65535.0) * 0.7;
+			}
+			colors[i].alpha = 1.0;
+		}
 	}
-#endif
 }
 
 /* maps XChat 2.0.x colors to current */

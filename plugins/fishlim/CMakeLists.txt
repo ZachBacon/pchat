@@ -1,0 +1,77 @@
+cmake_minimum_required(VERSION 3.10)
+
+project(pchat-fishlim C)
+
+# Find required packages
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GLIB REQUIRED glib-2.0)
+pkg_check_modules(OPENSSL REQUIRED openssl)
+
+# Plugin source files
+set(PLUGIN_SOURCES
+    plugin_pchat.c
+    fish.c
+    dh1080.c
+    irc.c
+    keystore.c
+    utils.c
+)
+
+# Create shared library
+add_library(fishlim MODULE ${PLUGIN_SOURCES})
+
+# Set output name and properties
+set_target_properties(fishlim PROPERTIES
+    PREFIX ""
+    OUTPUT_NAME "fishlim"
+)
+
+# Set appropriate suffix based on platform
+if(WIN32)
+    set_target_properties(fishlim PROPERTIES SUFFIX ".dll")
+else()
+    set_target_properties(fishlim PROPERTIES SUFFIX ".so")
+endif()
+
+# Include directories
+target_include_directories(fishlim PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src/common
+    ${GLIB_INCLUDE_DIRS}
+    ${OPENSSL_INCLUDE_DIRS}
+)
+
+# Link libraries
+target_link_libraries(fishlim
+    ${GLIB_LIBRARIES}
+    ${OPENSSL_LIBRARIES}
+)
+
+# Compiler flags
+target_compile_options(fishlim PRIVATE
+    -Wall
+    -Wextra
+    ${GLIB_CFLAGS_OTHER}
+    ${OPENSSL_CFLAGS_OTHER}
+)
+
+# Enable modern OpenSSL 1.1+ / 3.x API accessors
+target_compile_definitions(fishlim PRIVATE
+    HAVE_DH_SET0_PQG
+    HAVE_DH_SET0_KEY
+    HAVE_DH_GET0_KEY
+    HAVE_DH_GET0_PQG
+)
+
+# Platform-specific link options
+if(UNIX AND NOT APPLE)
+    target_link_options(fishlim PRIVATE 
+        "-Wl,--unresolved-symbols=ignore-all"
+    )
+endif()
+
+# Install plugin
+install(TARGETS fishlim
+    LIBRARY DESTINATION lib/pchat/plugins
+    RUNTIME DESTINATION lib/pchat/plugins
+)

@@ -29,6 +29,7 @@
 
 #define DBUS_REMOTE_PATH "/org/pchat/Remote"
 #define DBUS_REMOTE_INTERFACE "org.pchat.plugin"
+#define DBUS_SERVICE "org.pchat.service"
 
 #define DBUS_SERVICE_DBUS "org.freedesktop.DBus"
 #define DBUS_PATH_DBUS "/org/freedesktop/DBus"

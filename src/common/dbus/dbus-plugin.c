@@ -32,7 +32,13 @@
 #define PDESC _("plugin for remote access using DBUS")
 #define PVERSION ""
 
+#define DBUS_SERVICE "org.pchat.service"
 #define DBUS_OBJECT_PATH "/org/pchat"
+
+/* Forward declarations */
+static char** build_list (char *word[]);
+static guint context_list_find_id (pchat_context *context);
+static pchat_context* context_list_find_context (guint id);
 
 static pchat_plugin *ph;
 static guint last_context_id = 0;
@@ -241,15 +247,7 @@ static gboolean		remote_object_send_modes	(RemoteObject *obj,
 							 GError **error);
 
 #include "remote-object-glue.h"
-#include "../marshal.h"
-
-/* Useful functions */
-
-static char**		build_list			(char *word[]);
-static guint		context_list_find_id		(pchat_context *context);
-static pchat_context*	context_list_find_context	(guint id);
-
-/* Remote Object */
+#include "marshal.h"
 
 static void
 hook_info_destroy (gpointer data)
@@ -1002,7 +1000,7 @@ open_context_cb (char *word[],
 	info->context = pchat_get_context (ph);
 	contexts = g_list_prepend (contexts, info);
 
-	return pchat_EAT_NONE;
+	return PCHAT_EAT_NONE;
 }
 
 static int
@@ -1020,7 +1018,7 @@ close_context_cb (char *word[],
 		}
 	}
 
-	return pchat_EAT_NONE;
+	return PCHAT_EAT_NONE;
 }
 
 static gboolean
@@ -1044,10 +1042,10 @@ unload_plugin_cb (char *word[], char *word_eol[], void *userdata)
 		g_signal_emit (obj, 
 			       signals[UNLOAD_SIGNAL],
 			       0);
-		return pchat_EAT_ALL;
+		return PCHAT_EAT_ALL;
 	}
 	
-	return pchat_EAT_NONE;
+	return PCHAT_EAT_NONE;
 }
 
 int
@@ -1071,17 +1069,17 @@ dbus_plugin_init (pchat_plugin *plugin_handle,
 						 g_object_unref);
 
 		pchat_hook_print (ph, "Open Context",
-				  pchat_PRI_NORM,
+				  PCHAT_PRI_NORM,
 				  open_context_cb,
 				  NULL);
 
 		pchat_hook_print (ph, "Close Context",
-				  pchat_PRI_NORM,
+				  PCHAT_PRI_NORM,
 				  close_context_cb,
 				  NULL);
 
 		pchat_hook_command (ph, "unload",
-				    pchat_PRI_HIGHEST,
+				    PCHAT_PRI_HIGHEST,
 				    unload_plugin_cb, NULL, NULL);
 	}
 

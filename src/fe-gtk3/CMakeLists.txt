@@ -107,6 +107,15 @@ target_link_libraries(pchat PRIVATE
     ${GLIB_LIBRARIES}
 )
 
+# Windows-specific WMI libraries (needed by common library sysinfo backend)
+if(WIN32)
+    target_link_libraries(pchat PRIVATE
+        wbemuuid
+        ole32
+        oleaut32
+    )
+endif()
+
 if(LIBNOTIFY_FOUND)
     target_include_directories(pchat PRIVATE ${LIBNOTIFY_INCLUDE_DIRS})
     target_link_directories(pchat PRIVATE ${LIBNOTIFY_LIBRARY_DIRS})

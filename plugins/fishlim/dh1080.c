@@ -214,13 +214,15 @@ dh1080_compute_key (const char *priv_key, const char *pub_key, char **secret_key
 		gsize priv_key_len;
 		int shared_len;
 		BIGNUM *priv_key_num;
+	const BIGNUM *temp_pub_key = NULL;
 
-		priv_key_data = dh1080_decode_b64 (priv_key, &priv_key_len);
-		priv_key_num = BN_bin2bn(priv_key_data, priv_key_len, NULL);
-#ifndef HAVE_DH_SET0_KEY
-		dh->priv_key = priv_key_num;
+	priv_key_data = dh1080_decode_b64 (priv_key, &priv_key_len);
+	priv_key_num = BN_bin2bn(priv_key_data, priv_key_len, NULL);
+#ifdef HAVE_DH_SET0_KEY
+	DH_get0_key (dh, &temp_pub_key, NULL);
+	DH_set0_key (dh, NULL, priv_key_num);
 #else
-		DH_set0_key (dh, temp_pub_key, priv_key_num);
+	dh->priv_key = priv_key_num;
 #endif
 
 		shared_len = DH_compute_key (shared_key, pk, dh);

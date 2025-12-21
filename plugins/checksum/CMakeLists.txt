@@ -1,0 +1,64 @@
+cmake_minimum_required(VERSION 3.10)
+
+project(pchat-checksum C)
+
+# Find required packages
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GLIB REQUIRED glib-2.0)
+pkg_check_modules(GIO REQUIRED gio-2.0)
+
+# Plugin source files
+set(PLUGIN_SOURCES
+    checksum.c
+)
+
+# Create shared library
+add_library(checksum MODULE ${PLUGIN_SOURCES})
+
+# Set output name and properties
+set_target_properties(checksum PROPERTIES
+    PREFIX ""
+    OUTPUT_NAME "checksum"
+)
+
+# Set appropriate suffix based on platform
+if(WIN32)
+    set_target_properties(checksum PROPERTIES SUFFIX ".dll")
+else()
+    set_target_properties(checksum PROPERTIES SUFFIX ".so")
+endif()
+
+# Include directories
+target_include_directories(checksum PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src/common
+    ${GLIB_INCLUDE_DIRS}
+    ${GIO_INCLUDE_DIRS}
+)
+
+# Link libraries
+target_link_libraries(checksum
+    ${GLIB_LIBRARIES}
+    ${GIO_LIBRARIES}
+)
+
+# Compiler flags
+target_compile_options(checksum PRIVATE
+    -Wall
+    -Wextra
+    ${GLIB_CFLAGS_OTHER}
+    ${GIO_CFLAGS_OTHER}
+)
+
+# Platform-specific link options
+if(UNIX AND NOT APPLE)
+    target_link_options(checksum PRIVATE 
+        "-Wl,--unresolved-symbols=ignore-all"
+    )
+endif()
+
+# Install plugin
+install(TARGETS checksum
+    LIBRARY DESTINATION lib/pchat/plugins
+    RUNTIME DESTINATION lib/pchat/plugins
+)

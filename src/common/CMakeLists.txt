@@ -96,6 +96,11 @@ add_custom_command(
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/marshalers.list
 )
 
+# Create a custom target for marshal generation
+add_custom_target(generate_marshal
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/marshal.h ${CMAKE_CURRENT_BINARY_DIR}/marshal.c
+)
+
 # Add generated files as dependencies
 target_sources(pchatcommon PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}/textevents.h
@@ -103,6 +108,9 @@ target_sources(pchatcommon PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}/marshal.h
     ${CMAKE_CURRENT_BINARY_DIR}/marshal.c
 )
+
+# Ensure marshal is generated before pchatcommon is built
+add_dependencies(pchatcommon generate_marshal)
 
 # D-Bus support
 if(USE_DBUS)

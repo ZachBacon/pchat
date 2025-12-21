@@ -31,6 +31,9 @@ target_include_directories(pchat-dbus
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_BINARY_DIR}
     PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/common
+        ${CMAKE_BINARY_DIR}
+        ${CMAKE_BINARY_DIR}/src/common
         ${DBUS_INCLUDE_DIRS}
         ${GLIB_INCLUDE_DIRS}
 )
