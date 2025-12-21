@@ -98,4 +98,5 @@ endif()
 install(TARGETS lua
     LIBRARY DESTINATION lib/pchat/plugins
     RUNTIME DESTINATION lib/pchat/plugins
+    COMPONENT Plugins
 )

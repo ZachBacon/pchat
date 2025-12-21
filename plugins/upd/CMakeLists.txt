@@ -72,4 +72,5 @@ target_compile_options(upd PRIVATE
 install(TARGETS upd
     LIBRARY DESTINATION lib/pchat/plugins
     RUNTIME DESTINATION lib/pchat/plugins
+    COMPONENT Plugins
 )

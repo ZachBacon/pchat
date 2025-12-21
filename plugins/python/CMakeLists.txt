@@ -90,6 +90,7 @@ endif()
 install(TARGETS python
     LIBRARY DESTINATION lib/pchat/plugins
     RUNTIME DESTINATION lib/pchat/plugins
+    COMPONENT Plugins
 )
 
 # Install Python support files

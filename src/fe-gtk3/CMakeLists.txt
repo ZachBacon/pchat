@@ -1,32 +1,64 @@
 # GTK3 frontend executable
-add_executable(pchat
-    ascii.c
-    banlist.c
-    chanlist.c
-    chanview.c
-    custom-list.c
-    dccgui.c
-    editlist.c
-    fe-gtk.c
-    fkeys.c
-    gtkutil.c
-    ignoregui.c
-    joind.c
-    menu.c
-    maingui.c
-    notifygui.c
-    palette.c
-    pixmaps.c
-    plugin-tray.c
-    rawlog.c
-    servlistgui.c
-    setup.c
-    sexy-spell-entry.c
-    textgui.c
-    textview-chat.c
-    urlgrab.c
-    userlistgui.c
-)
+if(WIN32)
+    # Build as Windows GUI application (no console window)
+    add_executable(pchat WIN32
+        ascii.c
+        banlist.c
+        chanlist.c
+        chanview.c
+        custom-list.c
+        dccgui.c
+        editlist.c
+        fe-gtk.c
+        fkeys.c
+        gtkutil.c
+        ignoregui.c
+        joind.c
+        menu.c
+        maingui.c
+        notifygui.c
+        palette.c
+        pixmaps.c
+        plugin-tray.c
+        rawlog.c
+        servlistgui.c
+        setup.c
+        sexy-spell-entry.c
+        textgui.c
+        textview-chat.c
+        urlgrab.c
+        userlistgui.c
+    )
+else()
+    add_executable(pchat
+        ascii.c
+        banlist.c
+        chanlist.c
+        chanview.c
+        custom-list.c
+        dccgui.c
+        editlist.c
+        fe-gtk.c
+        fkeys.c
+        gtkutil.c
+        ignoregui.c
+        joind.c
+        menu.c
+        maingui.c
+        notifygui.c
+        palette.c
+        pixmaps.c
+        plugin-tray.c
+        rawlog.c
+        servlistgui.c
+        setup.c
+        sexy-spell-entry.c
+        textgui.c
+        textview-chat.c
+        urlgrab.c
+        userlistgui.c
+    )
+endif()
 
 # Windows resource file
 if(WIN32)
@@ -141,7 +173,7 @@ if(WIN32)
 endif()
 
 # Installation
-install(TARGETS pchat DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS pchat DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Runtime)
 
 # macOS Bundle targets
 if(APPLE)

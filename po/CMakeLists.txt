@@ -14,6 +14,7 @@ foreach(PO_FILE ${PO_FILES})
     install(FILES ${MO_FILE}
         DESTINATION ${CMAKE_INSTALL_LOCALEDIR}/${LANG}/LC_MESSAGES
         RENAME pchat.mo
+        COMPONENT Translations
     )
     
     list(APPEND MO_FILES ${MO_FILE})

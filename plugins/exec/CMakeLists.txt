@@ -44,4 +44,5 @@ target_compile_options(exec PRIVATE
 install(TARGETS exec
     LIBRARY DESTINATION lib/pchat/plugins
     RUNTIME DESTINATION lib/pchat/plugins
+    COMPONENT Plugins
 )

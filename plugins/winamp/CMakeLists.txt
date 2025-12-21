@@ -55,4 +55,5 @@ target_compile_options(winamp PRIVATE
 install(TARGETS winamp
     LIBRARY DESTINATION lib/pchat/plugins
     RUNTIME DESTINATION lib/pchat/plugins
+    COMPONENT Plugins
 )

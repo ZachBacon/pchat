@@ -5,4 +5,4 @@ add_subdirectory(misc)
 add_subdirectory(pkgconfig)
 
 # Install gresource XML
-install(FILES pchat.gresource.xml DESTINATION ${CMAKE_INSTALL_DATADIR}/pchat)
+install(FILES pchat.gresource.xml DESTINATION ${CMAKE_INSTALL_DATADIR}/pchat COMPONENT Runtime)

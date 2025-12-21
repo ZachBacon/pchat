@@ -50,6 +50,8 @@ pkg_check_modules(GLIB REQUIRED glib-2.0>=2.34.0 gobject-2.0 gmodule-2.0 gio-2.0
 
 if(ENABLE_GTKFE)
     pkg_check_modules(GTK3 REQUIRED gtk+-3.0>=3.10.0)
+    # Get GTK prefix for bundling
+    pkg_get_variable(GTK3_PREFIX gtk+-3.0 prefix)
 endif()
 
 # Optional dependencies
@@ -200,3 +202,51 @@ if(WIN32)
 endif()
 message(STATUS "  D-Bus support: ${ENABLE_DBUS}")
 message(STATUS "")
+
+# Windows NSIS installer (custom, not CPack)
+if(WIN32)
+    # Find NSIS
+    find_program(NSIS_EXECUTABLE makensis
+        PATHS "$ENV{MSYSTEM_PREFIX}/bin"
+        DOC "NSIS executable"
+    )
+    
+    if(NSIS_EXECUTABLE)
+        # Configure the NSIS script
+        configure_file(
+            "${CMAKE_SOURCE_DIR}/cmake/installer.nsi.in"
+            "${CMAKE_BINARY_DIR}/installer.nsi"
+            @ONLY
+        )
+        
+        # Configure dependency bundling script
+        configure_file(
+            "${CMAKE_SOURCE_DIR}/cmake/BundleDependencies.cmake.in"
+            "${CMAKE_BINARY_DIR}/BundleDependencies.cmake"
+            @ONLY
+        )
+        
+        # Run dependency bundling during install
+        install(SCRIPT "${CMAKE_BINARY_DIR}/BundleDependencies.cmake")
+        
+        # Add custom target to build installer
+        add_custom_target(installer
+            COMMAND ${CMAKE_COMMAND} -E echo "Installing to staging directory..."
+            COMMAND ${CMAKE_COMMAND} --install "${CMAKE_BINARY_DIR}" --prefix "${CMAKE_BINARY_DIR}/installer_staging"
+            COMMAND ${CMAKE_COMMAND} -E echo "Bundling dependencies..."
+            COMMAND ${CMAKE_COMMAND} 
+                -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/installer_staging
+                -P "${CMAKE_BINARY_DIR}/BundleDependencies.cmake"
+            COMMAND ${CMAKE_COMMAND} -E echo "Creating installer..."
+            COMMAND "${NSIS_EXECUTABLE}" "${CMAKE_BINARY_DIR}/installer.nsi"
+            DEPENDS pchat
+            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+            COMMENT "Building NSIS installer..."
+        )
+        
+        message(STATUS "NSIS installer support enabled")
+        message(STATUS "  Run 'cmake --build . --target installer' to create installer")
+    else()
+        message(STATUS "NSIS not found - installer target not available")
+    endif()
+endif()

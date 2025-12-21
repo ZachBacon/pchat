@@ -114,4 +114,5 @@ endif()
 install(TARGETS sysinfo
     LIBRARY DESTINATION lib/pchat/plugins
     RUNTIME DESTINATION lib/pchat/plugins
+    COMPONENT Plugins
 )

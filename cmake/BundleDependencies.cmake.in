@@ -1,0 +1,248 @@
+# CMake script to bundle Windows DLL dependencies
+# This script is configured by CMake and executed during install
+
+message(STATUS "========================================")
+message(STATUS "Bundling Windows dependencies...")
+message(STATUS "========================================")
+
+# Set the install prefix - use DESTDIR if set (for CPack), otherwise use CMAKE_INSTALL_PREFIX
+if(DEFINED ENV{DESTDIR} AND NOT "$ENV{DESTDIR}" STREQUAL "")
+    set(INSTALL_ROOT "$ENV{DESTDIR}@CMAKE_INSTALL_PREFIX@")
+    message(STATUS "Using DESTDIR: $ENV{DESTDIR}")
+    message(STATUS "Using CMAKE_INSTALL_PREFIX: @CMAKE_INSTALL_PREFIX@")
+elseif(DEFINED CMAKE_INSTALL_PREFIX AND NOT "${CMAKE_INSTALL_PREFIX}" STREQUAL "/" AND NOT "${CMAKE_INSTALL_PREFIX}" STREQUAL "")
+    set(INSTALL_ROOT "${CMAKE_INSTALL_PREFIX}")
+    message(STATUS "Using CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
+else()
+    set(INSTALL_ROOT "@CMAKE_INSTALL_PREFIX@")
+    message(STATUS "Using configured prefix: @CMAKE_INSTALL_PREFIX@")
+endif()
+
+message(STATUS "Install root: ${INSTALL_ROOT}")
+
+# Normalize path to remove double slashes
+file(TO_CMAKE_PATH "${INSTALL_ROOT}" INSTALL_ROOT)
+string(REGEX REPLACE "/$" "" INSTALL_ROOT "${INSTALL_ROOT}")
+
+set(BIN_DIR "${INSTALL_ROOT}/bin")
+set(LIB_DIR "${INSTALL_ROOT}/lib/pchat/plugins")
+
+message(STATUS "Normalized install root: ${INSTALL_ROOT}")
+message(STATUS "Bin directory: ${BIN_DIR}")
+message(STATUS "Lib directory: ${LIB_DIR}")
+
+# Ensure bin directory exists
+if(NOT EXISTS "${BIN_DIR}")
+    message(STATUS "Bin directory does not exist yet: ${BIN_DIR}")
+    message(STATUS "Listing install root contents:")
+    file(GLOB ROOT_CONTENTS "${INSTALL_ROOT}/*")
+    foreach(ITEM ${ROOT_CONTENTS})
+        message(STATUS "  - ${ITEM}")
+    endforeach()
+else()
+    message(STATUS "Bin directory exists: ${BIN_DIR}")
+endif()
+
+# Find objdump
+find_program(OBJDUMP objdump
+    PATHS "$ENV{MSYSTEM_PREFIX}/bin"
+)
+
+if(NOT OBJDUMP)
+    message(FATAL_ERROR "objdump not found! Cannot bundle dependencies.")
+endif()
+message(STATUS "Using objdump: ${OBJDUMP}")
+
+# Set search paths for DLLs
+set(DLL_SEARCH_PATHS
+    "$ENV{MSYSTEM_PREFIX}/bin"
+)
+
+message(STATUS "DLL search paths:")
+foreach(SEARCH_PATH ${DLL_SEARCH_PATHS})
+    if(EXISTS "${SEARCH_PATH}")
+        message(STATUS "  - ${SEARCH_PATH}")
+    endif()
+endforeach()
+
+# Create a list of executables and plugins to check
+set(EXECUTABLES
+    "${BIN_DIR}/pchat.exe"
+)
+
+# Plugin DLLs
+file(GLOB PLUGIN_DLLS "${LIB_DIR}/*.dll")
+message(STATUS "Checking for plugins in: ${LIB_DIR}")
+if(PLUGIN_DLLS)
+    list(LENGTH PLUGIN_DLLS PLUGIN_COUNT)
+    message(STATUS "Found ${PLUGIN_COUNT} plugin DLL(s):")
+    foreach(PLUGIN ${PLUGIN_DLLS})
+        get_filename_component(PLUGIN_NAME "${PLUGIN}" NAME)
+        message(STATUS "  - ${PLUGIN_NAME}")
+    endforeach()
+else()
+    message(WARNING "No plugin DLLs found in ${LIB_DIR}")
+endif()
+list(APPEND EXECUTABLES ${PLUGIN_DLLS})
+
+# Track which DLLs we've already processed to avoid infinite loops
+set(PROCESSED_DLLS "")
+
+# Function to find and copy DLL dependencies
+function(bundle_dll_dependencies target_file)
+    if(NOT EXISTS "${target_file}")
+        message(WARNING "Target file does not exist: ${target_file}")
+        return()
+    endif()
+    
+    get_filename_component(TARGET_NAME "${target_file}" NAME)
+    
+    # Check if we've already processed this DLL
+    list(FIND PROCESSED_DLLS "${TARGET_NAME}" ALREADY_PROCESSED)
+    if(NOT ALREADY_PROCESSED EQUAL -1)
+        return()
+    endif()
+    list(APPEND PROCESSED_DLLS "${TARGET_NAME}")
+    set(PROCESSED_DLLS "${PROCESSED_DLLS}" PARENT_SCOPE)
+    
+    message(STATUS "Analyzing: ${TARGET_NAME}")
+    
+    # Use objdump to find dependencies
+    execute_process(
+        COMMAND "${OBJDUMP}" -p "${target_file}"
+        OUTPUT_VARIABLE OBJDUMP_OUTPUT
+        ERROR_VARIABLE OBJDUMP_ERROR
+        RESULT_VARIABLE OBJDUMP_RESULT
+    )
+    
+    if(NOT OBJDUMP_RESULT EQUAL 0)
+        message(WARNING "objdump failed for ${TARGET_NAME}: ${OBJDUMP_ERROR}")
+        return()
+    endif()
+    
+    # Extract DLL names from objdump output
+    string(REGEX MATCHALL "DLL Name: [^\n]+" DLL_LINES "${OBJDUMP_OUTPUT}")
+    
+    if(NOT DLL_LINES)
+        message(STATUS "  No DLL dependencies found")
+        return()
+    endif()
+    
+    foreach(DLL_LINE ${DLL_LINES})
+        string(REGEX REPLACE "DLL Name: (.+)" "\\1" DLL_NAME "${DLL_LINE}")
+        string(STRIP "${DLL_NAME}" DLL_NAME)
+        
+        # Skip Windows system DLLs
+        string(TOLOWER "${DLL_NAME}" DLL_NAME_LOWER)
+        if(DLL_NAME_LOWER MATCHES "^(kernel32|user32|gdi32|winspool|shell32|ole32|oleaut32|uuid|comdlg32|advapi32|msvcrt|ucrtbase|api-ms-|vcruntime|ws2_32|shlwapi|dnsapi|iphlpapi|gdiplus|usp10|rpcrt4|dwrite|msimg32|dwmapi|imm32|opengl32|setupapi|winmm|hid|comctl32|crypt32|netapi32|version|wininet|secur32|bcrypt|userenv|ntdll|psapi)")
+            continue()
+        endif()
+        
+        # Skip if already in bin directory
+        if(EXISTS "${BIN_DIR}/${DLL_NAME}")
+            continue()
+        endif()
+        
+        # Search for the DLL
+        set(FOUND_DLL_PATH "")
+        foreach(SEARCH_PATH ${DLL_SEARCH_PATHS})
+            if(EXISTS "${SEARCH_PATH}/${DLL_NAME}")
+                set(FOUND_DLL_PATH "${SEARCH_PATH}/${DLL_NAME}")
+                break()
+            endif()
+        endforeach()
+        
+        if(FOUND_DLL_PATH)
+            message(STATUS "  -> Copying: ${DLL_NAME}")
+            file(COPY "${FOUND_DLL_PATH}" DESTINATION "${BIN_DIR}")
+            
+            # Recursively bundle dependencies of this DLL
+            bundle_dll_dependencies("${BIN_DIR}/${DLL_NAME}")
+            set(PROCESSED_DLLS "${PROCESSED_DLLS}" PARENT_SCOPE)
+        else()
+            message(WARNING "  -> Not found: ${DLL_NAME}")
+        endif()
+    endforeach()
+endfunction()
+
+message(STATUS "")
+message(STATUS "Processing executables and plugins...")
+message(STATUS "")
+
+# Bundle dependencies for each executable and plugin
+foreach(EXECUTABLE ${EXECUTABLES})
+    if(EXISTS "${EXECUTABLE}")
+        bundle_dll_dependencies("${EXECUTABLE}")
+    else()
+        message(WARNING "Executable not found: ${EXECUTABLE}")
+    endif()
+endforeach()
+
+# Copy GTK3 runtime files
+set(GTK_PREFIX "@GTK3_PREFIX@")
+if(GTK_PREFIX AND EXISTS "${GTK_PREFIX}")
+    # Copy GTK schemas
+    if(EXISTS "${GTK_PREFIX}/share/glib-2.0/schemas")
+        file(COPY "${GTK_PREFIX}/share/glib-2.0/schemas/"
+             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/glib-2.0/schemas")
+        message(STATUS "Copied GTK schemas")
+    endif()
+    
+    # Copy icon themes
+    if(EXISTS "${GTK_PREFIX}/share/icons/Adwaita")
+        file(COPY "${GTK_PREFIX}/share/icons/Adwaita"
+             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/icons")
+        message(STATUS "Copied Adwaita icon theme")
+    endif()
+    
+    # Copy GTK modules
+    if(EXISTS "${GTK_PREFIX}/lib/gtk-3.0")
+        file(COPY "${GTK_PREFIX}/lib/gtk-3.0"
+             DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
+        message(STATUS "Copied GTK modules")
+    endif()
+    
+    # Copy GDK pixbuf loaders
+    if(EXISTS "${GTK_PREFIX}/lib/gdk-pixbuf-2.0")
+        file(COPY "${GTK_PREFIX}/lib/gdk-pixbuf-2.0"
+             DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
+        message(STATUS "Copied GDK pixbuf loaders")
+        
+        # Update pixbuf loaders cache
+        find_program(GDK_PIXBUF_QUERY_LOADERS gdk-pixbuf-query-loaders
+            PATHS "${GTK_PREFIX}/bin"
+        )
+        if(GDK_PIXBUF_QUERY_LOADERS)
+            execute_process(
+                COMMAND "${GDK_PIXBUF_QUERY_LOADERS}"
+                OUTPUT_FILE "${CMAKE_INSTALL_PREFIX}/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
+                WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
+            )
+        endif()
+    endif()
+endif()
+
+# Copy locale files for GTK
+set(GTK_LOCALES ar bg ca cs da de el en_GB es eu fi fr gl hi hu id it ja ko lt nl no pa pl pt pt_BR ro ru sk sl sr sv th tr uk vi zh_CN zh_TW)
+foreach(LOCALE ${GTK_LOCALES})
+    if(EXISTS "${GTK_PREFIX}/share/locale/${LOCALE}/LC_MESSAGES/gtk30.mo")
+        file(COPY "${GTK_PREFIX}/share/locale/${LOCALE}"
+             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/locale")
+    endif()
+endforeach()
+
+# Compile GSettings schemas
+find_program(GLIB_COMPILE_SCHEMAS glib-compile-schemas
+    PATHS "${GTK_PREFIX}/bin" "$ENV{MSYSTEM_PREFIX}/bin"
+)
+if(GLIB_COMPILE_SCHEMAS AND EXISTS "${CMAKE_INSTALL_PREFIX}/share/glib-2.0/schemas")
+    execute_process(
+        COMMAND "${GLIB_COMPILE_SCHEMAS}" "${CMAKE_INSTALL_PREFIX}/share/glib-2.0/schemas"
+        RESULT_VARIABLE SCHEMA_RESULT
+    )
+    if(SCHEMA_RESULT EQUAL 0)
+        message(STATUS "Compiled GSettings schemas")
+    endif()
+endif()
+
+message(STATUS "Dependency bundling complete!")

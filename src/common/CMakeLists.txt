@@ -120,5 +120,5 @@ endif()
 
 # Install headers if plugin support is enabled
 if(ENABLE_PLUGIN)
-    install(FILES pchat-plugin.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/pchat)
+    install(FILES pchat-plugin.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/pchat COMPONENT Headers)
 endif()
