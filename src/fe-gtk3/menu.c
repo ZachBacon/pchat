@@ -1540,7 +1540,7 @@ menu_ctcpguiopen (void)
 static void
 menu_docs (GtkWidget *wid, gpointer none)
 {
-	fe_open_url ("http://pchat.in/docs");
+	fe_open_url ("https://thatzachbacon.com/docs");
 }
 
 /*static void
