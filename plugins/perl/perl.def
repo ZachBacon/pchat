@@ -1,4 +1,0 @@
-EXPORTS
-  pchat_plugin_init
-  pchat_plugin_deinit
-  pchat_plugin_get_info
