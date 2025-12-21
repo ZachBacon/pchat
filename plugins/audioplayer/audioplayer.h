@@ -61,6 +61,7 @@ void audioplayer_destroy(AudioPlayer *player);
 
 /* Playback controls */
 int audioplayer_play(AudioPlayer *player, const char *filepath);
+int audioplayer_play_playlist_item(AudioPlayer *player, PlaylistItem *item);
 int audioplayer_pause(AudioPlayer *player);
 int audioplayer_resume(AudioPlayer *player);
 int audioplayer_stop(AudioPlayer *player);

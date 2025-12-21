@@ -163,6 +163,8 @@ plugingui_load (void)
 	gtkutil_file_req (_("Select a Plugin or Script to load"), plugingui_load_cb, current_sess,
 #ifdef _WIN32
 							sub_dir, "*.dll;*.lua;*.pl;*.py;*.tcl;*.js", FRF_FILTERISINITIAL|FRF_EXTENSIONS);
+#elif defined(__APPLE__)
+							sub_dir, "*.dylib;*.so;*.lua;*.pl;*.py;*.tcl;*.js", FRF_FILTERISINITIAL|FRF_EXTENSIONS);
 #else
 							sub_dir, "*.so;*.lua;*.pl;*.py;*.tcl;*.js", FRF_FILTERISINITIAL|FRF_EXTENSIONS);
 #endif
@@ -193,7 +195,10 @@ plugingui_unload (GtkWidget * wid, gpointer unused)
 #ifdef _WIN32
 	if (len > 4 && g_ascii_strcasecmp (file + len - 4, ".dll") == 0)
 #else
-#if defined(__hpux)
+#if defined(__APPLE__)
+	if ((len > 6 && g_ascii_strcasecmp (file + len - 6, ".dylib") == 0) ||
+	    (len > 3 && g_ascii_strcasecmp (file + len - 3, ".so") == 0))
+#elif defined(__hpux)
 	if (len > 3 && g_ascii_strcasecmp (file + len - 3, ".sl") == 0)
 #else
 	if (len > 3 && g_ascii_strcasecmp (file + len - 3, ".so") == 0)

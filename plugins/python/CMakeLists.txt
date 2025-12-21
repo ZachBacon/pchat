@@ -37,6 +37,8 @@ set_target_properties(python PROPERTIES
 # Set appropriate suffix based on platform
 if(WIN32)
     set_target_properties(python PROPERTIES SUFFIX ".dll")
+elseif(APPLE)
+    set_target_properties(python PROPERTIES SUFFIX ".dylib")
 else()
     set_target_properties(python PROPERTIES SUFFIX ".so")
 endif()
@@ -48,6 +50,11 @@ target_include_directories(python PRIVATE
     ${CMAKE_BINARY_DIR}
     ${Python3_INCLUDE_DIRS}
     ${GLIB_INCLUDE_DIRS}
+)
+
+# Link directories
+target_link_directories(python PRIVATE
+    ${GLIB_LIBRARY_DIRS}
 )
 
 # Link libraries
@@ -69,7 +76,11 @@ target_compile_options(python PRIVATE
 )
 
 # Platform-specific link options
-if(UNIX AND NOT APPLE)
+if(APPLE)
+    target_link_options(python PRIVATE 
+        "-Wl,-undefined,dynamic_lookup"
+    )
+elseif(UNIX)
     target_link_options(python PRIVATE 
         "-Wl,--unresolved-symbols=ignore-all"
     )

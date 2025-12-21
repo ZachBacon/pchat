@@ -25,6 +25,8 @@ static GtkListStore *playlist_store = NULL;
 static pchat_plugin *ph_gui = NULL;
 static AudioPlayer *player_gui = NULL;
 static guint update_timer = 0;
+static gboolean playlist_needs_update = TRUE;
+static PlaylistItem *last_current_track = NULL;
 
 enum {
     COL_TITLE,
@@ -46,11 +48,19 @@ static void on_play_clicked(GtkButton *button, gpointer user_data) {
     if (audioplayer_get_state(player_gui) == STATE_PAUSED) {
         audioplayer_resume(player_gui);
     } else {
-        /* Play first track in playlist */
-        PlaylistItem *first = audioplayer_get_playlist(player_gui);
-        if (first) {
-            audioplayer_play(player_gui, first->filepath);
+        /* Play first track in playlist or current track */
+        PlaylistItem *current = audioplayer_get_current_track(player_gui);
+        if (current) {
+            /* Replay current track */
+            audioplayer_play_playlist_item(player_gui, current);
+        } else {
+            /* Play first track in playlist */
+            PlaylistItem *first = audioplayer_get_playlist(player_gui);
+            if (first) {
+                audioplayer_play_playlist_item(player_gui, first);
+            }
         }
+        playlist_needs_update = TRUE;
     }
 }
 
@@ -69,13 +79,17 @@ static void on_stop_clicked(GtkButton *button, gpointer user_data) {
 static void on_prev_clicked(GtkButton *button, gpointer user_data) {
     (void)button;
     (void)user_data;
-    audioplayer_prev(player_gui);
+    if (audioplayer_prev(player_gui) == 0) {
+        playlist_needs_update = TRUE;
+    }
 }
 
 static void on_next_clicked(GtkButton *button, gpointer user_data) {
     (void)button;
     (void)user_data;
-    audioplayer_next(player_gui);
+    if (audioplayer_next(player_gui) == 0) {
+        playlist_needs_update = TRUE;
+    }
 }
 
 static void on_volume_changed(GtkRange *range, gpointer user_data) {
@@ -126,7 +140,7 @@ static void on_add_file_clicked(GtkButton *button, gpointer user_data) {
         }
         
         g_slist_free(filenames);
-        update_playlist_view();
+        playlist_needs_update = TRUE;
     }
     
     gtk_widget_destroy(dialog);
@@ -165,7 +179,7 @@ static void on_load_playlist_clicked(GtkButton *button, gpointer user_data) {
         }
         
         g_free(filename);
-        update_playlist_view();
+        playlist_needs_update = TRUE;
     }
     
     gtk_widget_destroy(dialog);
@@ -176,7 +190,7 @@ static void on_clear_playlist_clicked(GtkButton *button, gpointer user_data) {
     (void)user_data;
     
     audioplayer_clear_playlist(player_gui);
-    update_playlist_view();
+    playlist_needs_update = TRUE;
 }
 
 static void on_playlist_row_activated(GtkTreeView *tree_view, GtkTreePath *path,
@@ -187,12 +201,13 @@ static void on_playlist_row_activated(GtkTreeView *tree_view, GtkTreePath *path,
     
     GtkTreeIter iter;
     if (gtk_tree_model_get_iter(GTK_TREE_MODEL(playlist_store), &iter, path)) {
-        gchar *filepath;
-        gtk_tree_model_get(GTK_TREE_MODEL(playlist_store), &iter, COL_FILEPATH, &filepath, -1);
+        PlaylistItem *item = NULL;
+        gtk_tree_model_get(GTK_TREE_MODEL(playlist_store), &iter, COL_POINTER, &item, -1);
         
-        if (filepath) {
-            audioplayer_play(player_gui, filepath);
-            g_free(filepath);
+        if (item && item->filepath) {
+            /* Use the play_playlist_item function to properly set current_track */
+            audioplayer_play_playlist_item(player_gui, item);
+            playlist_needs_update = TRUE;
         }
     }
 }
@@ -210,16 +225,29 @@ static void on_window_destroy(GtkWidget *widget, gpointer user_data) {
 }
 
 static void update_playlist_view(void) {
-    if (!playlist_store) return;
+    if (!playlist_store || !playlist_view) return;
+    
+    /* Save scroll position */
+    GtkAdjustment *vadj = gtk_scrolled_window_get_vadjustment(
+        GTK_SCROLLED_WINDOW(gtk_widget_get_parent(playlist_view)));
+    gdouble scroll_pos = gtk_adjustment_get_value(vadj);
     
     gtk_list_store_clear(playlist_store);
     
     PlaylistItem *item = audioplayer_get_playlist(player_gui);
     PlaylistItem *current = audioplayer_get_current_track(player_gui);
     
+    GtkTreeIter current_iter;
+    gboolean has_current = FALSE;
+    
     while (item) {
         GtkTreeIter iter;
         gtk_list_store_append(playlist_store, &iter);
+        
+        if (item == current) {
+            current_iter = iter;
+            has_current = TRUE;
+        }
         
         /* Format: [▶] Artist - Title */
         gchar *display_title;
@@ -242,6 +270,15 @@ static void update_playlist_view(void) {
         
         g_free(display_title);
         item = item->next;
+    }
+    
+    /* Restore scroll position */
+    gtk_adjustment_set_value(vadj, scroll_pos);
+    
+    /* Optionally highlight current track */
+    if (has_current) {
+        GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(playlist_view));
+        gtk_tree_selection_select_iter(selection, &current_iter);
     }
 }
 
@@ -283,8 +320,16 @@ static void update_now_playing(void) {
 static gboolean update_timer_callback(gpointer data) {
     (void)data;
     
+    /* Always update now playing label */
     update_now_playing();
-    update_playlist_view();
+    
+    /* Only update playlist view if current track changed or playlist was modified */
+    PlaylistItem *current = audioplayer_get_current_track(player_gui);
+    if (playlist_needs_update || current != last_current_track) {
+        update_playlist_view();
+        last_current_track = current;
+        playlist_needs_update = FALSE;
+    }
     
     return TRUE;  /* Continue timer */
 }
@@ -302,34 +347,33 @@ void audioplayer_gui_init(pchat_plugin *ph, AudioPlayer *player) {
     /* Create main window */
     main_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(main_window), "Audio Player");
-    gtk_window_set_default_size(GTK_WINDOW(main_window), 500, 400);
-    gtk_container_set_border_width(GTK_CONTAINER(main_window), 10);
+    gtk_window_set_default_size(GTK_WINDOW(main_window), 600, 450);
     g_signal_connect(main_window, "destroy", G_CALLBACK(on_window_destroy), NULL);
     
-    /* Create main vertical box */
-    GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
-    gtk_container_add(GTK_CONTAINER(main_window), vbox);
+    /* Create headerbar */
+    GtkWidget *headerbar = gtk_header_bar_new();
+    gtk_header_bar_set_show_close_button(GTK_HEADER_BAR(headerbar), TRUE);
+    gtk_header_bar_set_title(GTK_HEADER_BAR(headerbar), "Audio Player");
+    gtk_window_set_titlebar(GTK_WINDOW(main_window), headerbar);
     
-    /* Now playing label */
-    now_playing_label = gtk_label_new("Not playing");
-    gtk_label_set_xalign(GTK_LABEL(now_playing_label), 0.0);
-    gtk_box_pack_start(GTK_BOX(vbox), now_playing_label, FALSE, FALSE, 5);
+    /* Playback control buttons in headerbar */
+    prev_button = gtk_button_new_from_icon_name("media-skip-backward-symbolic", GTK_ICON_SIZE_BUTTON);
+    gtk_widget_set_tooltip_text(prev_button, "Previous");
+    play_button = gtk_button_new_from_icon_name("media-playback-start-symbolic", GTK_ICON_SIZE_BUTTON);
+    gtk_widget_set_tooltip_text(play_button, "Play");
+    pause_button = gtk_button_new_from_icon_name("media-playback-pause-symbolic", GTK_ICON_SIZE_BUTTON);
+    gtk_widget_set_tooltip_text(pause_button, "Pause");
+    stop_button = gtk_button_new_from_icon_name("media-playback-stop-symbolic", GTK_ICON_SIZE_BUTTON);
+    gtk_widget_set_tooltip_text(stop_button, "Stop");
+    next_button = gtk_button_new_from_icon_name("media-skip-forward-symbolic", GTK_ICON_SIZE_BUTTON);
+    gtk_widget_set_tooltip_text(next_button, "Next");
     
-    /* Playback controls */
-    GtkWidget *controls_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-    gtk_box_pack_start(GTK_BOX(vbox), controls_box, FALSE, FALSE, 5);
-    
-    prev_button = gtk_button_new_with_label("⏮ Previous");
-    play_button = gtk_button_new_with_label("▶ Play");
-    pause_button = gtk_button_new_with_label("⏸ Pause");
-    stop_button = gtk_button_new_with_label("⏹ Stop");
-    next_button = gtk_button_new_with_label("⏭ Next");
-    
-    gtk_box_pack_start(GTK_BOX(controls_box), prev_button, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(controls_box), play_button, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(controls_box), pause_button, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(controls_box), stop_button, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(controls_box), next_button, TRUE, TRUE, 0);
+    /* Add buttons to headerbar - playback controls on the left */
+    gtk_header_bar_pack_start(GTK_HEADER_BAR(headerbar), prev_button);
+    gtk_header_bar_pack_start(GTK_HEADER_BAR(headerbar), play_button);
+    gtk_header_bar_pack_start(GTK_HEADER_BAR(headerbar), pause_button);
+    gtk_header_bar_pack_start(GTK_HEADER_BAR(headerbar), stop_button);
+    gtk_header_bar_pack_start(GTK_HEADER_BAR(headerbar), next_button);
     
     g_signal_connect(prev_button, "clicked", G_CALLBACK(on_prev_clicked), NULL);
     g_signal_connect(play_button, "clicked", G_CALLBACK(on_play_clicked), NULL);
@@ -337,37 +381,67 @@ void audioplayer_gui_init(pchat_plugin *ph, AudioPlayer *player) {
     g_signal_connect(stop_button, "clicked", G_CALLBACK(on_stop_clicked), NULL);
     g_signal_connect(next_button, "clicked", G_CALLBACK(on_next_clicked), NULL);
     
-    /* Volume control */
-    GtkWidget *volume_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-    gtk_box_pack_start(GTK_BOX(vbox), volume_box, FALSE, FALSE, 5);
+    /* Volume popover button on the right */
+    GtkWidget *volume_button = gtk_menu_button_new();
+    GtkWidget *volume_icon = gtk_image_new_from_icon_name("audio-volume-high-symbolic", GTK_ICON_SIZE_BUTTON);
+    gtk_button_set_image(GTK_BUTTON(volume_button), volume_icon);
+    gtk_widget_set_tooltip_text(volume_button, "Volume");
     
-    GtkWidget *volume_label = gtk_label_new("🔊 Volume:");
-    gtk_box_pack_start(GTK_BOX(volume_box), volume_label, FALSE, FALSE, 0);
+    /* Create popover with volume slider */
+    GtkWidget *volume_popover = gtk_popover_new(volume_button);
+    GtkWidget *volume_popover_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+    gtk_widget_set_margin_start(volume_popover_box, 12);
+    gtk_widget_set_margin_end(volume_popover_box, 12);
+    gtk_widget_set_margin_top(volume_popover_box, 12);
+    gtk_widget_set_margin_bottom(volume_popover_box, 12);
+    gtk_container_add(GTK_CONTAINER(volume_popover), volume_popover_box);
     
-    volume_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 0.0, 100.0, 1.0);
-    gtk_scale_set_value_pos(GTK_SCALE(volume_scale), GTK_POS_RIGHT);
+    /* Volume slider in popover */
+    volume_scale = gtk_scale_new_with_range(GTK_ORIENTATION_VERTICAL, 0.0, 100.0, 1.0);
+    gtk_scale_set_draw_value(GTK_SCALE(volume_scale), TRUE);
+    gtk_scale_set_value_pos(GTK_SCALE(volume_scale), GTK_POS_BOTTOM);
+    gtk_range_set_inverted(GTK_RANGE(volume_scale), TRUE);  /* Higher values at top */
     gtk_range_set_value(GTK_RANGE(volume_scale), audioplayer_get_volume(player_gui) * 100.0);
-    gtk_box_pack_start(GTK_BOX(volume_box), volume_scale, TRUE, TRUE, 0);
+    gtk_widget_set_size_request(volume_scale, -1, 120);
+    gtk_box_pack_start(GTK_BOX(volume_popover_box), volume_scale, TRUE, TRUE, 0);
     
     g_signal_connect(volume_scale, "value-changed", G_CALLBACK(on_volume_changed), NULL);
     
-    /* Playlist controls */
-    GtkWidget *playlist_controls = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-    gtk_box_pack_start(GTK_BOX(vbox), playlist_controls, FALSE, FALSE, 5);
+    gtk_menu_button_set_popover(GTK_MENU_BUTTON(volume_button), volume_popover);
+    gtk_widget_show_all(volume_popover_box);
     
-    GtkWidget *add_file_btn = gtk_button_new_with_label("➕ Add Files");
-    GtkWidget *load_playlist_btn = gtk_button_new_with_label("📂 Load Playlist");
-    GtkWidget *clear_btn = gtk_button_new_with_label("🗑 Clear");
+    /* Playlist control buttons on the right */
+    GtkWidget *add_file_btn = gtk_button_new_from_icon_name("list-add-symbolic", GTK_ICON_SIZE_BUTTON);
+    gtk_widget_set_tooltip_text(add_file_btn, "Add Files");
+    GtkWidget *load_playlist_btn = gtk_button_new_from_icon_name("document-open-symbolic", GTK_ICON_SIZE_BUTTON);
+    gtk_widget_set_tooltip_text(load_playlist_btn, "Load Playlist");
+    GtkWidget *clear_btn = gtk_button_new_from_icon_name("edit-clear-all-symbolic", GTK_ICON_SIZE_BUTTON);
+    gtk_widget_set_tooltip_text(clear_btn, "Clear Playlist");
     
-    gtk_box_pack_start(GTK_BOX(playlist_controls), add_file_btn, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(playlist_controls), load_playlist_btn, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(playlist_controls), clear_btn, TRUE, TRUE, 0);
+    gtk_header_bar_pack_end(GTK_HEADER_BAR(headerbar), clear_btn);
+    gtk_header_bar_pack_end(GTK_HEADER_BAR(headerbar), load_playlist_btn);
+    gtk_header_bar_pack_end(GTK_HEADER_BAR(headerbar), add_file_btn);
+    gtk_header_bar_pack_end(GTK_HEADER_BAR(headerbar), volume_button);
     
     g_signal_connect(add_file_btn, "clicked", G_CALLBACK(on_add_file_clicked), NULL);
     g_signal_connect(load_playlist_btn, "clicked", G_CALLBACK(on_load_playlist_clicked), NULL);
     g_signal_connect(clear_btn, "clicked", G_CALLBACK(on_clear_playlist_clicked), NULL);
     
-    /* Playlist view */
+    /* Create main vertical box */
+    GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_container_add(GTK_CONTAINER(main_window), vbox);
+    
+    /* Now playing label with padding */
+    now_playing_label = gtk_label_new("Not playing");
+    gtk_label_set_xalign(GTK_LABEL(now_playing_label), 0.0);
+    gtk_label_set_ellipsize(GTK_LABEL(now_playing_label), PANGO_ELLIPSIZE_END);
+    gtk_widget_set_margin_start(now_playing_label, 10);
+    gtk_widget_set_margin_end(now_playing_label, 10);
+    gtk_widget_set_margin_top(now_playing_label, 5);
+    gtk_widget_set_margin_bottom(now_playing_label, 5);
+    gtk_box_pack_start(GTK_BOX(vbox), now_playing_label, FALSE, FALSE, 0);
+    
+    /* Playlist view - fills remaining space */
     GtkWidget *scrolled = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled),
         GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);

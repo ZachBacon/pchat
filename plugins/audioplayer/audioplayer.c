@@ -127,6 +127,35 @@ int audioplayer_play(AudioPlayer *player, const char *filepath) {
     return 0;
 }
 
+/* Play a specific playlist item */
+int audioplayer_play_playlist_item(AudioPlayer *player, PlaylistItem *item) {
+    if (!player || !item) {
+        return -1;
+    }
+    
+    pthread_mutex_lock(&player->lock);
+    
+    /* Stop current playback if any */
+    if (player->state != STATE_STOPPED) {
+        audioplayer_stop_locked(player);
+    }
+    
+    /* Set current track to the playlist item */
+    player->current_track = item;
+    player->state = STATE_PLAYING;
+    
+    /* Start playback thread */
+    if (pthread_create(&player->playback_thread, NULL, playback_thread_func, player) != 0) {
+        player->current_track = NULL;
+        player->state = STATE_STOPPED;
+        pthread_mutex_unlock(&player->lock);
+        return -1;
+    }
+    
+    pthread_mutex_unlock(&player->lock);
+    return 0;
+}
+
 /* Pause playback */
 int audioplayer_pause(AudioPlayer *player) {
     if (!player) {
@@ -200,17 +229,28 @@ int audioplayer_next(AudioPlayer *player) {
     
     if (next) {
         bool was_playing = (player->state == STATE_PLAYING);
-        pthread_mutex_unlock(&player->lock);
         
-        audioplayer_stop(player);
-        
-        pthread_mutex_lock(&player->lock);
-        player->current_track = next;
-        pthread_mutex_unlock(&player->lock);
-        
-        if (was_playing) {
-            audioplayer_play(player, next->filepath);
+        /* Stop current playback */
+        if (player->state != STATE_STOPPED) {
+            audioplayer_stop_locked(player);
         }
+        
+        /* Set new track */
+        player->current_track = next;
+        
+        /* Start playing if we were playing */
+        if (was_playing) {
+            player->state = STATE_PLAYING;
+            
+            /* Start playback thread */
+            if (pthread_create(&player->playback_thread, NULL, playback_thread_func, player) != 0) {
+                player->state = STATE_STOPPED;
+                pthread_mutex_unlock(&player->lock);
+                return -1;
+            }
+        }
+        
+        pthread_mutex_unlock(&player->lock);
         return 0;
     }
     
@@ -233,17 +273,28 @@ int audioplayer_prev(AudioPlayer *player) {
     
     if (prev) {
         bool was_playing = (player->state == STATE_PLAYING);
-        pthread_mutex_unlock(&player->lock);
         
-        audioplayer_stop(player);
-        
-        pthread_mutex_lock(&player->lock);
-        player->current_track = prev;
-        pthread_mutex_unlock(&player->lock);
-        
-        if (was_playing) {
-            audioplayer_play(player, prev->filepath);
+        /* Stop current playback */
+        if (player->state != STATE_STOPPED) {
+            audioplayer_stop_locked(player);
         }
+        
+        /* Set new track */
+        player->current_track = prev;
+        
+        /* Start playing if we were playing */
+        if (was_playing) {
+            player->state = STATE_PLAYING;
+            
+            /* Start playback thread */
+            if (pthread_create(&player->playback_thread, NULL, playback_thread_func, player) != 0) {
+                player->state = STATE_STOPPED;
+                pthread_mutex_unlock(&player->lock);
+                return -1;
+            }
+        }
+        
+        pthread_mutex_unlock(&player->lock);
         return 0;
     }
     

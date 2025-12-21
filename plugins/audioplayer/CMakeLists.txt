@@ -35,11 +35,21 @@ add_library(audioplayer MODULE ${PLUGIN_SOURCES})
 set_target_properties(audioplayer PROPERTIES
     PREFIX ""
     OUTPUT_NAME "audioplayer"
-    SUFFIX ".so"
 )
 
+# Set appropriate suffix based on platform
+if(APPLE)
+    set_target_properties(audioplayer PROPERTIES SUFFIX ".dylib")
+else()
+    set_target_properties(audioplayer PROPERTIES SUFFIX ".so")
+endif()
+
 # Allow undefined symbols - they'll be resolved when PChat loads the plugin
-if(UNIX AND NOT APPLE)
+if(APPLE)
+    target_link_options(audioplayer PRIVATE 
+        "-Wl,-undefined,dynamic_lookup"
+    )
+elseif(UNIX)
     target_link_options(audioplayer PRIVATE 
         "-Wl,--unresolved-symbols=ignore-all"
     )
@@ -55,6 +65,16 @@ target_include_directories(audioplayer PRIVATE
     ${SWRESAMPLE_INCLUDE_DIRS}
     ${FAUDIO_INCLUDE_DIRS}
     ${GTK3_INCLUDE_DIRS}
+)
+
+# Link directories
+target_link_directories(audioplayer PRIVATE
+    ${AVCODEC_LIBRARY_DIRS}
+    ${AVFORMAT_LIBRARY_DIRS}
+    ${AVUTIL_LIBRARY_DIRS}
+    ${SWRESAMPLE_LIBRARY_DIRS}
+    ${FAUDIO_LIBRARY_DIRS}
+    ${GTK3_LIBRARY_DIRS}
 )
 
 # Link libraries

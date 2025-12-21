@@ -1014,7 +1014,7 @@ fe_open_url_inner (const char *url)
 	/* on Mac you can just 'open http://foo.bar/' */
 	gchar open[512];
 	g_snprintf (open, sizeof(open), "%s %s", g_find_program_in_path ("open"), url, NULL);
-	xchat_exec (open);
+	pchat_exec (open);
 #else
 	gtk_show_uri_on_window (NULL, url, GDK_CURRENT_TIME, NULL);
 #endif

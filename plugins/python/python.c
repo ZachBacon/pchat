@@ -52,6 +52,7 @@
  */
 
 #include <glib.h>
+#include <glib/gstdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -62,7 +63,6 @@
 
 #ifdef WIN32
 #include <direct.h>
-#include <glib/gstdio.h>
 #else
 #include <unistd.h>
 #include <dirent.h>

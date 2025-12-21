@@ -43,6 +43,8 @@ set_target_properties(sysinfo PROPERTIES
 # Set appropriate suffix based on platform
 if(WIN32)
     set_target_properties(sysinfo PROPERTIES SUFFIX ".dll")
+elseif(APPLE)
+    set_target_properties(sysinfo PROPERTIES SUFFIX ".dylib")
 else()
     set_target_properties(sysinfo PROPERTIES SUFFIX ".so")
 endif()
@@ -54,6 +56,11 @@ target_include_directories(sysinfo PRIVATE
     ${CMAKE_SOURCE_DIR}/src/common
     ${CMAKE_SOURCE_DIR}/src/common/sysinfo
     ${GLIB_INCLUDE_DIRS}
+)
+
+# Link directories
+target_link_directories(sysinfo PRIVATE
+    ${GLIB_LIBRARY_DIRS}
 )
 
 # Link libraries
@@ -93,7 +100,11 @@ target_compile_options(sysinfo PRIVATE
 )
 
 # Platform-specific link options
-if(UNIX AND NOT APPLE)
+if(APPLE)
+    target_link_options(sysinfo PRIVATE 
+        "-Wl,-undefined,dynamic_lookup"
+    )
+elseif(UNIX)
     target_link_options(sysinfo PRIVATE 
         "-Wl,--unresolved-symbols=ignore-all"
     )
