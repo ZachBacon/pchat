@@ -58,16 +58,16 @@ get_client (void)
 }
 
 static hwinfo hwinfos[] = {
-	{"client", "Client", get_client},
-	{"os", "OS", sysinfo_backend_get_os},
-	{"cpu", "CPU", sysinfo_backend_get_cpu},
-	{"memory", "Memory", sysinfo_backend_get_memory},
-	{"storage", "Storage", sysinfo_backend_get_disk},
-	{"vga", "VGA", sysinfo_backend_get_gpu},
+	{"client", "Client", get_client, FALSE},
+	{"os", "OS", sysinfo_backend_get_os, FALSE},
+	{"cpu", "CPU", sysinfo_backend_get_cpu, FALSE},
+	{"memory", "Memory", sysinfo_backend_get_memory, FALSE},
+	{"storage", "Storage", sysinfo_backend_get_disk, FALSE},
+	{"vga", "VGA", sysinfo_backend_get_gpu, FALSE},
 	{"sound", "Sound", sysinfo_backend_get_sound, TRUE},
 	{"ethernet", "Ethernet", sysinfo_backend_get_network, TRUE},
-	{"uptime", "Uptime", sysinfo_backend_get_uptime},
-	{NULL, NULL},
+	{"uptime", "Uptime", sysinfo_backend_get_uptime, FALSE},
+	{NULL, NULL, NULL, FALSE},
 };
 
 static gboolean sysinfo_get_bool_pref (const char *pref, gboolean def);
@@ -193,6 +193,7 @@ sysinfo_set_pref (char *key, char *value)
 static int
 sysinfo_cb (char *word[], char *word_eol[], void *userdata)
 {
+	(void)userdata; /* Unused but required by callback signature */
 	gboolean announce = sysinfo_get_bool_pref("announce", DEFAULT_ANNOUNCE);
 	int offset = 0, channel_type;
 	char *cmd;
@@ -228,6 +229,7 @@ sysinfo_cb (char *word[], char *word_eol[], void *userdata)
 int
 pchat_plugin_init (pchat_plugin *plugin_handle, char **plugin_name, char **plugin_desc, char **plugin_version, char *arg)
 {
+	(void)arg; /* Unused but required by plugin API */
 	ph = plugin_handle;
 	*plugin_name = name;
 	*plugin_desc = desc;

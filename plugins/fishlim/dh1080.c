@@ -36,6 +36,16 @@
 #include <string.h>
 #include <glib.h>
 
+/* Suppress OpenSSL 3.0 deprecation warnings for DH functions
+ * TODO: Migrate to EVP API in the future */
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#endif
+
 #define DH1080_PRIME_BITS 1080
 #define DH1080_PRIME_BYTES 135
 #define SHA256_DIGEST_LENGTH 32
@@ -116,7 +126,9 @@ dh1080_decode_b64 (const char *data, gsize *out_len)
 		g_string_append_c (str, '=');
 
 	ret = g_base64_decode_inplace (str->str, out_len);
-	g_string_free (str, FALSE);
+	/* g_string_free_and_steal returns the str->str pointer which is the same as ret */
+	/* We assign it to avoid unused result warning even though we already have it in ret */
+	ret = (guchar *)g_string_free_and_steal (str);
   	return ret;
 }
 
@@ -186,13 +198,10 @@ dh1080_generate_key (char **priv_key, char **pub_key)
 int
 dh1080_compute_key (const char *priv_key, const char *pub_key, char **secret_key)
 {
-	char *pub_key_data;
+	guchar *pub_key_data;
 	gsize pub_key_len;
 	BIGNUM *pk;
 	DH *dh;
-#ifdef HAVE_DH_SET0_KEY
-	BIGNUM *temp_pub_key = BN_new();
-#endif
 
 	g_assert (secret_key != NULL);
 
@@ -210,11 +219,13 @@ dh1080_compute_key (const char *priv_key, const char *pub_key, char **secret_key
 	{
 		guchar shared_key[DH1080_PRIME_BYTES] = { 0 };
 		guchar sha256[SHA256_DIGEST_LENGTH] = { 0 };
-		char *priv_key_data;
+		guchar *priv_key_data;
 		gsize priv_key_len;
 		int shared_len;
 		BIGNUM *priv_key_num;
+#ifdef HAVE_DH_SET0_KEY
 	const BIGNUM *temp_pub_key = NULL;
+#endif
 
 	priv_key_data = dh1080_decode_b64 (priv_key, &priv_key_len);
 	priv_key_num = BN_bin2bn(priv_key_data, priv_key_len, NULL);
@@ -238,3 +249,10 @@ dh1080_compute_key (const char *priv_key, const char *pub_key, char **secret_key
 	g_free (pub_key_data);
 	return 1;
 }
+
+/* Re-enable warnings */
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic pop
+#elif defined(_MSC_VER)
+#pragma warning(pop)
+#endif

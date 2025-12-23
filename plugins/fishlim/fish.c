@@ -447,6 +447,7 @@ char *fish_decrypt(const char *key, size_t keylen, const char *data, enum fish_m
  * @return Array of char with data decrypted
  */
 char *fish_decrypt_str(const char *key, size_t keylen, const char *data, enum fish_mode mode) {
+    (void)keylen; /* Unused but kept for API consistency */
     char *decrypted = NULL;
     char *plaintext_str = NULL;
     size_t decrypted_len = 0;

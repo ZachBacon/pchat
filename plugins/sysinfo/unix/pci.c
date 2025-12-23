@@ -28,6 +28,11 @@
 
 #include "sysinfo.h"
 
+/* Define the path to the PCI IDs database */
+#ifndef PCIIDS_FILE
+#define PCIIDS_FILE "/usr/share/hwdata/pci.ids"
+#endif
+
 static struct pci_filter filter;       /* Device filter */
 static struct pci_access *pacc;
 int bus, dev, func; /* Location of the card */

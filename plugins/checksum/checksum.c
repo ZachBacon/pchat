@@ -72,6 +72,7 @@ print_sha256_result (ChecksumCallbackInfo *info, const char *checksum, const cha
 static void
 file_sha256_complete (GFile *file, GAsyncResult *result, gpointer user_data)
 {	
+	(void)file; /* Unused but required by callback signature */
 	ChecksumCallbackInfo * callback_info = user_data;
 	GError *error = NULL;
 	char *sha256 = NULL;
@@ -90,6 +91,7 @@ file_sha256_complete (GFile *file, GAsyncResult *result, gpointer user_data)
 static void
 thread_sha256_file (GTask *task, GFile *file, gpointer task_data, GCancellable *cancellable)
 {
+	(void)task_data; /* Unused but required by callback signature */
 	GChecksum *checksum;
 	GFileInputStream *istream;
 	guint8 buffer[32768];
@@ -120,6 +122,7 @@ thread_sha256_file (GTask *task, GFile *file, gpointer task_data, GCancellable *
 static int
 dccrecv_cb (char *word[], void *userdata)
 {
+	(void)userdata; /* Unused but required by callback signature */
 	GTask *task;
 	char *filename_fs;
 	GFile *file;
@@ -159,6 +162,7 @@ dccrecv_cb (char *word[], void *userdata)
 static int
 dccoffer_cb (char *word[], void *userdata)
 {
+	(void)userdata; /* Unused but required by callback signature */
 	GFile *file;
 	GTask *task;
 	char *filename;
@@ -183,6 +187,7 @@ dccoffer_cb (char *word[], void *userdata)
 int
 pchat_plugin_init (pchat_plugin *plugin_handle, char **plugin_name, char **plugin_desc, char **plugin_version, char *arg)
 {
+	(void)arg; /* Unused but required by plugin API */
 	ph = plugin_handle;
 
 	*plugin_name = name;

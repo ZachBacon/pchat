@@ -266,8 +266,7 @@ char *decrypt_raw_message(const char *message, const char *key) {
                 g_string_append(message_decrypted, right);
             }
 
-            result = message_decrypted->str;
-            g_string_free(message_decrypted, FALSE);
+            result = g_string_free_and_steal(message_decrypted);
             return result;
         }
     }
@@ -288,6 +287,8 @@ char *decrypt_raw_message(const char *message, const char *key) {
  * Called when a message is to be sent.
  */
 static int handle_outgoing(char *word[], char *word_eol[], void *userdata) {
+    (void)word; /* Unused but required by callback signature */
+    (void)userdata; /* Unused but required by callback signature */
     char *prefix;
     enum fish_mode mode;
     char *message;
@@ -338,6 +339,7 @@ static int handle_outgoing(char *word[], char *word_eol[], void *userdata) {
  * Called when a channel message or private message is received.
  */
 static int handle_incoming(char *word[], char *word_eol[], pchat_event_attrs *attrs, void *userdata) {
+    (void)userdata; /* Unused but required by callback signature */
     const char *prefix;
     const char *command;
     const char *recipient;
@@ -375,13 +377,14 @@ static int handle_incoming(char *word[], char *word_eol[], pchat_event_attrs *at
 
     if (attrs->server_time_utc)
     {
-        GTimeVal tv = { (glong)attrs->server_time_utc, 0 };
-        char *timestamp = g_time_val_to_iso8601 (&tv);
+        GDateTime *dt = g_date_time_new_from_unix_utc ((gint64)attrs->server_time_utc);
+        char *timestamp = g_date_time_format_iso8601 (dt);
 
        g_string_append (message, "@time=");
        g_string_append (message, timestamp);
        g_string_append (message, " ");
        g_free (timestamp);
+       g_date_time_unref (dt);
     }
 
     g_string_append (message, decrypted);
@@ -397,6 +400,8 @@ static int handle_incoming(char *word[], char *word_eol[], pchat_event_attrs *at
 }
 
 static int handle_keyx_notice(char *word[], char *word_eol[], void *userdata) {
+    (void)word_eol; /* Unused but required by callback signature */
+    (void)userdata; /* Unused but required by callback signature */
     const char *dh_message = word[4];
     const char *dh_pubkey = word[5];
     pchat_context *query_ctx;
@@ -466,6 +471,7 @@ cleanup:
  * Command handler for /setkey
  */
 static int handle_setkey(char *word[], char *word_eol[], void *userdata) {
+    (void)userdata; /* Unused but required by callback signature */
     const char *nick;
     const char *key;
     enum fish_mode mode;
@@ -508,6 +514,7 @@ static int handle_setkey(char *word[], char *word_eol[], void *userdata) {
  * Command handler for /delkey
  */
 static int handle_delkey(char *word[], char *word_eol[], void *userdata) {
+    (void)userdata; /* Unused but required by callback signature */
     char *nick = NULL;
     int ctx_type = 0;
 
@@ -537,6 +544,8 @@ static int handle_delkey(char *word[], char *word_eol[], void *userdata) {
 }
 
 static int handle_keyx(char *word[], char *word_eol[], void *userdata) {
+    (void)word_eol; /* Unused but required by callback signature */
+    (void)userdata; /* Unused but required by callback signature */
     const char *target = word[2];
     pchat_context *query_ctx = NULL;
     char *pub_key, *priv_key;
@@ -577,6 +586,8 @@ static int handle_keyx(char *word[], char *word_eol[], void *userdata) {
  * Command handler for /topic+
  */
 static int handle_crypt_topic(char *word[], char *word_eol[], void *userdata) {
+    (void)word; /* Unused but required by callback signature */
+    (void)userdata; /* Unused but required by callback signature */
     const char *target;
     const char *topic = word_eol[2];
     enum fish_mode mode;
@@ -621,6 +632,7 @@ static int handle_crypt_topic(char *word[], char *word_eol[], void *userdata) {
  * Command handler for /notice+
  */
 static int handle_crypt_notice(char *word[], char *word_eol[], void *userdata) {
+    (void)userdata; /* Unused but required by callback signature */
     const char *target = word[2];
     const char *notice = word_eol[3];
     char *notice_flag;
@@ -671,6 +683,7 @@ static int handle_crypt_notice(char *word[], char *word_eol[], void *userdata) {
  * Command handler for /msg+
  */
 static int handle_crypt_msg(char *word[], char *word_eol[], void *userdata) {
+    (void)userdata; /* Unused but required by callback signature */
     const char *target = word[2];
     const char *message = word_eol[3];
     char *message_flag;
@@ -731,6 +744,8 @@ static int handle_crypt_msg(char *word[], char *word_eol[], void *userdata) {
 }
 
 static int handle_crypt_me(char *word[], char *word_eol[], void *userdata) {
+    (void)word; /* Unused but required by callback signature */
+    (void)userdata; /* Unused but required by callback signature */
     const char *channel = pchat_get_info(ph, "channel");
     enum fish_mode mode;
     GString *command;
@@ -772,6 +787,7 @@ static int handle_crypt_me(char *word[], char *word_eol[], void *userdata) {
  */
 void pchat_plugin_get_info(const char **name, const char **desc,
                            const char **version, void **reserved) {
+    (void)reserved; /* Unused but required by plugin API */
     *name = plugin_name;
     *desc = plugin_desc;
     *version = plugin_version;
@@ -785,6 +801,7 @@ int pchat_plugin_init(pchat_plugin *plugin_handle,
                       const char **desc,
                       const char **version,
                       char *arg) {
+    (void)arg; /* Unused but required by plugin API */
     ph = plugin_handle;
 
     /* Send our info to PChat */
