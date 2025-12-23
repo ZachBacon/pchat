@@ -313,7 +313,9 @@ cv_tabs_init (chanview *cv)
 							G_CALLBACK (cv_tabs_sizerequest), cv); */
 	g_signal_connect (G_OBJECT (viewport), "scroll_event",
 							G_CALLBACK (tab_scroll_cb), cv);
-	gtk_box_pack_start (GTK_BOX (outer), viewport, 1, 1, 0);
+	/* Constrain tab bar height - don't expand */
+	gtk_box_pack_start (GTK_BOX (outer), viewport, 0, 1, 0);
+	gtk_widget_set_size_request (viewport, -1, 26);
 	gtk_widget_show (viewport);
 
 	if (cv->vertical)
@@ -568,9 +570,22 @@ static void *
 cv_tabs_add (chanview *cv, chan *ch, char *name, GtkTreeIter *parent)
 {
 	GtkWidget *but;
+	GtkWidget *label;
 
 	but = gtk_toggle_button_new_with_label (name);
 	gtk_widget_set_name (but, "xchat-tab");
+	
+	/* Reduce tab height - set smaller padding and size */
+	gtk_widget_set_size_request (but, -1, 24);
+	label = gtk_bin_get_child (GTK_BIN (but));
+	if (label)
+	{
+		gtk_widget_set_margin_top (label, 1);
+		gtk_widget_set_margin_bottom (label, 1);
+		gtk_widget_set_margin_start (label, 4);
+		gtk_widget_set_margin_end (label, 4);
+	}
+	
 	g_object_set_data (G_OBJECT (but), "c", ch);
 	/* used to trap right-clicks */
 	g_signal_connect (G_OBJECT (but), "button_press_event",

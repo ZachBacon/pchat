@@ -258,6 +258,22 @@ fe_args (int argc, char *argv[])
 
 	gtk_init (&argc, &argv);
 
+	/* Apply CSS to reduce tab button padding/height */
+	{
+		GtkCssProvider *css_provider = gtk_css_provider_new();
+		const gchar *css_data = 
+			"#xchat-tab { "
+			"  padding: 2px 6px; "
+			"  min-height: 0; "
+			"}";
+		gtk_css_provider_load_from_data(css_provider, css_data, -1, NULL);
+		gtk_style_context_add_provider_for_screen(
+			gdk_screen_get_default(),
+			GTK_STYLE_PROVIDER(css_provider),
+			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		g_object_unref(css_provider);
+	}
+
 	/* Suppress GTK scale factor warnings that don't affect functionality */
 	g_log_set_handler ("Gtk", G_LOG_LEVEL_CRITICAL, 
 		(GLogFunc) gtk_log_handler_suppress_scale_factor, NULL);

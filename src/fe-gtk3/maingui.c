@@ -1782,7 +1782,8 @@ mg_userlist_button (GtkWidget * box, char *label, char *cmd,
 							G_CALLBACK (userlist_button_cb), cmd);
 	gtk_grid_attach (GTK_GRID (box), wid, a, c, b - a, d - c);
 	gtk_widget_set_hexpand (wid, TRUE);
-	gtk_widget_set_vexpand (wid, TRUE);
+	gtk_widget_set_vexpand (wid, FALSE);
+	gtk_widget_set_valign (wid, GTK_ALIGN_START);
 	show_and_unfocus (wid);
 }
 
@@ -1795,6 +1796,8 @@ mg_create_userlistbuttons (GtkWidget *box)
 	GtkWidget *tab;
 
 	tab = gtk_grid_new ();
+	gtk_grid_set_row_spacing (GTK_GRID (tab), 2);
+	gtk_grid_set_column_spacing (GTK_GRID (tab), 2);
 	gtk_box_pack_end (GTK_BOX (box), tab, FALSE, FALSE, 0);
 
 	while (list)

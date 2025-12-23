@@ -276,7 +276,7 @@ chanview_new (int type, int trunc_len, gboolean sort, gboolean use_icons,
 	cv->style = style;
 	cv->box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
 	gtk_widget_set_hexpand (cv->box, TRUE);
-	gtk_widget_set_vexpand (cv->box, TRUE);
+	gtk_widget_set_vexpand (cv->box, FALSE);
 	cv->trunc_len = trunc_len;
 	cv->sorted = sort;
 	cv->use_icons = use_icons;
