@@ -55,6 +55,10 @@ typedef struct session pchat_context;
 #include <gmodule.h>
 #endif
 
+#ifdef USE_LIBPEAS
+#include "plugin-peas.h"
+#endif
+
 #define DEBUG(x) {x;}
 
 /* crafted to be an even 32 bytes */
@@ -381,6 +385,11 @@ plugin_kill_all (void)
 			plugin_free (list->data, TRUE, FALSE);
 		list = next;
 	}
+
+#ifdef USE_LIBPEAS
+	/* Cleanup libpeas plugins */
+	plugin_peas_cleanup ();
+#endif
 }
 
 #if defined(USE_PLUGIN) || defined(WIN32)
@@ -502,6 +511,12 @@ plugin_auto_load (session *sess)
 	for_files (sub_dir, "*."PLUGIN_SUFFIX, plugin_auto_load_cb);
 
 	g_free (sub_dir);
+
+#ifdef USE_LIBPEAS
+	/* Initialize and auto-load libpeas plugins */
+	plugin_peas_init ();
+	plugin_peas_auto_load ();
+#endif
 }
 
 int

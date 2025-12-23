@@ -61,6 +61,14 @@ target_link_libraries(pchatcommon PRIVATE
     ${GLIB_LIBRARIES}
 )
 
+# Libpeas support
+if(LIBPEAS_FOUND)
+    target_sources(pchatcommon PRIVATE plugin-peas.c)
+    target_include_directories(pchatcommon PRIVATE ${LIBPEAS_INCLUDE_DIRS})
+    target_link_libraries(pchatcommon PRIVATE ${LIBPEAS_LIBRARIES})
+    target_compile_definitions(pchatcommon PRIVATE USE_LIBPEAS)
+endif()
+
 # Windows socket library
 if(WIN32)
     target_link_libraries(pchatcommon PRIVATE ws2_32)

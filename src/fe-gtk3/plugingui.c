@@ -32,8 +32,13 @@ typedef struct session pchat_context;
 #include "../common/fe.h"
 #include "../common/pchatc.h"
 #include "../common/cfgfiles.h"
+#include "../common/text.h"
 #include "gtkutil.h"
 #include "maingui.h"
+
+#ifdef USE_LIBPEAS
+#include "../common/plugin-peas.h"
+#endif
 
 /* model for the plugin treeview */
 enum
@@ -135,6 +140,15 @@ fe_pluginlist_update (void)
 		}
 		list = list->next;
 	}
+
+#ifdef USE_LIBPEAS
+	/* Note: In libpeas 2, there's no API to enumerate all discovered plugins.
+	 * Plugins need to be explicitly loaded by module name, and only loaded plugins
+	 * appear in the engine. For now, we won't auto-populate libpeas plugins in the list.
+	 * They can be loaded via the Load button by selecting .plugin files.
+	 * TODO: Implement a custom plugin directory scanner if needed.
+	 */
+#endif
 }
 
 static void
@@ -142,6 +156,98 @@ plugingui_load_cb (session *sess, char *file)
 {
 	if (file)
 	{
+#ifdef USE_LIBPEAS
+		PrintTextf (current_sess, "Loading file: %s\n", file);
+		/* Check if this is a .plugin file or if a .plugin file exists alongside */
+		int len = strlen (file);
+		if (len > 7 && g_ascii_strcasecmp (file + len - 7, ".plugin") == 0)
+		{
+			PrintTextf (current_sess, "Detected .plugin file\n");
+			
+			/* Add the parent directory of the .plugin file to the search path
+			 * Libpeas expects: <search-path>/<plugin-name>/<plugin-name>.plugin */
+			char *plugin_dir = g_path_get_dirname (file);
+			char *search_path = g_path_get_dirname (plugin_dir);
+			PeasEngine *engine = plugin_peas_get_engine ();
+			if (engine)
+			{
+				peas_engine_add_search_path (engine, search_path, NULL);
+				peas_engine_rescan_plugins (engine);
+				PrintTextf (current_sess, "Added plugin search path: %s\n", search_path);
+			}
+			g_free (search_path);
+			
+			/* Extract module name from .plugin file path */
+			char *basename = g_path_get_basename (file);
+			char *module_name = g_strndup (basename, strlen (basename) - 7);
+			g_free (basename);
+			
+			PrintTextf (current_sess, "Attempting to load libpeas module: %s\n", module_name);
+			if (plugin_peas_load (module_name))
+			{
+				PrintTextf (current_sess, "Successfully loaded libpeas plugin\n");
+				fe_pluginlist_update ();
+			}
+			else
+			{
+				const char *error = plugin_peas_get_last_error ();
+				if (error)
+					PrintTextf (current_sess, "Error: %s\n", error);
+				else
+					PrintTextf (current_sess, "Failed to load libpeas plugin (unknown error)\n");
+				fe_message (_("Failed to load libpeas plugin.\n"), FE_MSG_ERROR);
+			}
+			g_free (module_name);
+			g_free (plugin_dir);
+			return;
+		}
+		else
+		{
+			/* Check if a .plugin file exists in the same directory */
+			char *dir = g_path_get_dirname (file);
+			char *base = g_path_get_basename (file);
+			char *dot = strrchr (base, '.');
+			
+			if (dot)
+			{
+				char *module_name = g_strndup (base, dot - base);
+				char *plugin_file = g_strdup_printf ("%s%c%s.plugin", dir, G_DIR_SEPARATOR, module_name);
+				
+				PrintTextf (current_sess, "Checking for plugin file: %s\n", plugin_file);
+				if (g_file_test (plugin_file, G_FILE_TEST_EXISTS))
+				{
+					PrintTextf (current_sess, "Found .plugin file, loading as libpeas plugin: %s\n", module_name);
+					/* This is a libpeas plugin, load it by module name */
+					if (plugin_peas_load (module_name))
+					{
+						PrintTextf (current_sess, "Successfully loaded libpeas plugin\n");
+						fe_pluginlist_update ();
+					}
+					else
+					{
+						const char *error = plugin_peas_get_last_error ();
+						if (error)
+							PrintTextf (current_sess, "Error: %s\n", error);
+						else
+							PrintTextf (current_sess, "Failed to load libpeas plugin (unknown error)\n");
+						fe_message (_("Failed to load libpeas plugin.\n"), FE_MSG_ERROR);
+					}
+					g_free (plugin_file);
+					g_free (module_name);
+					g_free (base);
+					g_free (dir);
+					return;
+				}
+				
+				g_free (plugin_file);
+				g_free (module_name);
+			}
+			g_free (base);
+			g_free (dir);
+		}
+		PrintTextf (current_sess, "Not a libpeas plugin, falling through to traditional loading\n");
+#endif
+		/* Fall through to traditional plugin loading */
 		char *buf = malloc (strlen (file) + 9);
 
 		if (strchr (file, ' '))
@@ -162,11 +268,11 @@ plugingui_load (void)
 
 	gtkutil_file_req (_("Select a Plugin or Script to load"), plugingui_load_cb, current_sess,
 #ifdef _WIN32
-							sub_dir, "*.dll;*.lua;*.pl;*.py;*.tcl;*.js", FRF_FILTERISINITIAL|FRF_EXTENSIONS);
+							sub_dir, "*.dll;*.lua;*.pl;*.py;*.tcl;*.js;*.plugin", FRF_FILTERISINITIAL|FRF_EXTENSIONS);
 #elif defined(__APPLE__)
-							sub_dir, "*.dylib;*.so;*.lua;*.pl;*.py;*.tcl;*.js", FRF_FILTERISINITIAL|FRF_EXTENSIONS);
+							sub_dir, "*.dylib;*.so;*.lua;*.pl;*.py;*.tcl;*.js;*.plugin", FRF_FILTERISINITIAL|FRF_EXTENSIONS);
 #else
-							sub_dir, "*.so;*.lua;*.pl;*.py;*.tcl;*.js", FRF_FILTERISINITIAL|FRF_EXTENSIONS);
+							sub_dir, "*.so;*.lua;*.pl;*.py;*.tcl;*.js;*.plugin", FRF_FILTERISINITIAL|FRF_EXTENSIONS);
 #endif
 
 	g_free (sub_dir);
@@ -207,7 +313,16 @@ plugingui_unload (GtkWidget * wid, gpointer unused)
 	{
 		if (plugin_kill (modname, FALSE) == 2)
 			fe_message (_("That plugin is refusing to unload.\n"), FE_MSG_ERROR);
-	} else
+	}
+#ifdef USE_LIBPEAS
+	/* Check if it's a libpeas plugin (no file extension) */
+	else if (strchr (file, '.') == NULL)
+	{
+		if (!plugin_peas_unload (file))
+			fe_message (_("Failed to unload libpeas plugin.\n"), FE_MSG_ERROR);
+	}
+#endif
+	else
 	{
 		/* let python.so or perl.so handle it */
 		buf = malloc (strlen (file) + 10);

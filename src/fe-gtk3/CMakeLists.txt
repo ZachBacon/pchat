@@ -121,11 +121,21 @@ target_include_directories(pchat PRIVATE
     ${GLIB_INCLUDE_DIRS}
 )
 
+# Add libpeas include directories if available
+if(LIBPEAS_FOUND)
+    target_include_directories(pchat PRIVATE ${LIBPEAS_INCLUDE_DIRS})
+endif()
+
 # Compiler definitions
 target_compile_definitions(pchat PRIVATE
     HAVE_CONFIG_H
     LOCALEDIR="${CMAKE_INSTALL_FULL_LOCALEDIR}"
 )
+
+# Inherit libpeas support from common library
+if(LIBPEAS_FOUND)
+    target_compile_definitions(pchat PRIVATE USE_LIBPEAS)
+endif()
 
 # Link libraries
 target_link_directories(pchat PRIVATE
