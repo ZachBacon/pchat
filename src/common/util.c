@@ -1012,11 +1012,11 @@ make_ping_time (void)
 #ifndef WIN32
 	struct timeval timev;
 	gettimeofday (&timev, 0);
-#else
-	GTimeVal timev;
-	g_get_current_time (&timev);
-#endif
 	return (timev.tv_sec - 50000) * 1000 + timev.tv_usec/1000;
+#else
+	gint64 now = g_get_real_time ();
+	return (now / G_USEC_PER_SEC - 50000) * 1000 + (now % G_USEC_PER_SEC) / 1000;
+#endif
 }
 
 int

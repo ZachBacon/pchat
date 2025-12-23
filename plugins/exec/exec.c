@@ -33,6 +33,7 @@ static char version[] = "1.2";
 static int
 run_command (char *word[], char *word_eol[], void *userdata)
 {
+	(void)userdata;
 	char commandLine[1024];
 	char buffer[4096];
 	DWORD dwRead = 0;
@@ -140,6 +141,7 @@ run_command (char *word[], char *word_eol[], void *userdata)
 int
 pchat_plugin_init (pchat_plugin *plugin_handle, char **plugin_name, char **plugin_desc, char **plugin_version, char *arg)
 {
+	(void)arg;
 	ph = plugin_handle;
 
 	*plugin_name = name;

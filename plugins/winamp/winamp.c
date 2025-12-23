@@ -25,6 +25,7 @@ static pchat_plugin *ph;   /* plugin handle */
 static int
 winamp(char *word[], char *word_eol[], void *userdata)
 {
+	(void)userdata;
 	HWND hwndWinamp = FindWindowW(L"Winamp v1.x",NULL);
 
 	if (hwndWinamp)
@@ -130,6 +131,7 @@ pchat_plugin_init(pchat_plugin *plugin_handle,
 					  char **plugin_version,
 					  char *arg)
 {
+	(void)arg;
 	/* we need to save this for use with any hexchat_* functions */
 	ph = plugin_handle;
 
