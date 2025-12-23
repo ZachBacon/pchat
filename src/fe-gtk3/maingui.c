@@ -2536,6 +2536,8 @@ mg_create_meters (session_gui *gui, GtkWidget *parent_box)
 		gui->throttleinfo = wid = mg_create_infoframe (infbox);
 		gtk_label_set_text ((GtkLabel *) wid, "Throttle");
 	}
+	
+	gtk_widget_show_all (box);
 }
 
 void
@@ -2560,6 +2562,7 @@ mg_create_userlist (session_gui *gui, GtkWidget *box)
 	gtk_widget_set_vexpand (vbox, TRUE);
 	gtk_widget_set_hexpand (vbox, TRUE);  /* Expand to fill allocated space */
 	gtk_box_pack_start (GTK_BOX (box), vbox, TRUE, TRUE, 0);  /* Expand in packing */
+	gtk_widget_show (vbox);
 
 	frame = gtk_frame_new (NULL);
 	if (prefs.pchat_gui_ulist_count)
@@ -2722,6 +2725,7 @@ mg_create_center (session *sess, session_gui *gui, GtkWidget *box)
 	gtk_widget_set_hexpand (hbox, TRUE);  /* Expand to fill the allocated space */
 	gui->user_box = hbox;
 	mg_create_userlist (gui, hbox);
+	gtk_widget_show_all (hbox);
 
 	/* The userlist container will be added to vpane_right or vpane_left 
 	   by mg_place_userlist_and_chanview() based on prefs.pchat_gui_ulist_pos */

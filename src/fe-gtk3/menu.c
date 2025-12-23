@@ -2019,15 +2019,19 @@ menu_radio_item (char *label, GtkWidget *menu, void *callback, void *userdata,
 }
 
 static void
-menu_reorder (GtkMenu *menu, GtkWidget *item, int pos)
+menu_reorder (GtkWidget *menu, GtkWidget *item, int pos)
 {
 	if (pos == 0xffff)	/* outbound.c uses this default */
 		return;
 
+	/* Only reorder if we have a GtkMenu, not a GtkMenuBar */
+	if (!GTK_IS_MENU (menu))
+		return;
+
 	if (pos < 0)	/* position offset from end/bottom */
-		gtk_menu_reorder_child (menu, item, (g_list_length (gtk_container_get_children (GTK_CONTAINER (menu))) + pos) - 1);
+		gtk_menu_reorder_child (GTK_MENU (menu), item, (g_list_length (gtk_container_get_children (GTK_CONTAINER (menu))) + pos) - 1);
 	else
-		gtk_menu_reorder_child (menu, item, pos);
+		gtk_menu_reorder_child (GTK_MENU (menu), item, pos);
 }
 
 static GtkWidget *
@@ -2041,7 +2045,7 @@ menu_add_radio (GtkWidget *menu, menu_entry *me)
 	if (menu)
 	{
 		item = menu_radio_item (me->label, menu, menu_radio_cb, me, me->state, me->group);
-		menu_reorder (GTK_MENU (menu), item, me->pos);
+		menu_reorder (menu, item, me->pos);
 	}
 	return item;
 }
@@ -2057,7 +2061,7 @@ menu_add_toggle (GtkWidget *menu, menu_entry *me)
 	if (menu)
 	{
 		item = menu_toggle_item (me->label, menu, menu_toggle_cb, me, me->state);
-		menu_reorder (GTK_MENU (menu), item, me->pos);
+		menu_reorder (menu, item, me->pos);
 	}
 	return item;
 }
@@ -2073,7 +2077,7 @@ menu_add_item (GtkWidget *menu, menu_entry *me, char *target)
 	if (menu)
 	{
 		item = menu_quick_item (me->cmd, me->label, menu, me->markup ? XCMENU_MARKUP|XCMENU_MNEMONIC : XCMENU_MNEMONIC, target, me->icon);
-		menu_reorder (GTK_MENU (menu), item, me->pos);
+		menu_reorder (menu, item, me->pos);
 	}
 	return item;
 }

@@ -12,6 +12,7 @@
 #include <ctype.h>
 #include <unistd.h>
 #include "textview-chat.h"
+#include "palette.h"
 #include "css-helpers.h"
 #include "../common/pchat.h"
 #include "../common/util.h"
@@ -76,26 +77,6 @@ enum {
 
 static guint signals[LAST_SIGNAL] = { 0 };
 
-/* Standard mIRC colors */
-static const GdkRGBA mirc_colors[16] = {
-	{ 1.0, 1.0, 1.0, 1.0 },    /* 0 white */
-	{ 0.0, 0.0, 0.0, 1.0 },    /* 1 black */
-	{ 0.0, 0.0, 0.5, 1.0 },    /* 2 blue */
-	{ 0.0, 0.5, 0.0, 1.0 },    /* 3 green */
-	{ 1.0, 0.0, 0.0, 1.0 },    /* 4 red */
-	{ 0.5, 0.0, 0.0, 1.0 },    /* 5 brown */
-	{ 0.5, 0.0, 0.5, 1.0 },    /* 6 purple */
-	{ 1.0, 0.5, 0.0, 1.0 },    /* 7 orange */
-	{ 1.0, 1.0, 0.0, 1.0 },    /* 8 yellow */
-	{ 0.0, 1.0, 0.0, 1.0 },    /* 9 light green */
-	{ 0.0, 0.5, 0.5, 1.0 },    /* 10 cyan */
-	{ 0.0, 1.0, 1.0, 1.0 },    /* 11 light cyan */
-	{ 0.0, 0.0, 1.0, 1.0 },    /* 12 light blue */
-	{ 1.0, 0.0, 1.0, 1.0 },    /* 13 pink */
-	{ 0.5, 0.5, 0.5, 1.0 },    /* 14 grey */
-	{ 0.75, 0.75, 0.75, 1.0 }  /* 15 light grey */
-};
-
 /* Idle callback data for deferred scrolling */
 typedef struct {
 	PchatTextViewChat *chat;
@@ -106,11 +87,19 @@ static gboolean
 scroll_to_mark_idle (gpointer user_data)
 {
 	ScrollData *data = user_data;
+	GtkTextBuffer *view_buffer, *mark_buffer;
 	
 	if (GTK_IS_TEXT_VIEW (data->chat) && GTK_IS_TEXT_MARK (data->mark))
 	{
-		gtk_text_view_scroll_to_mark (GTK_TEXT_VIEW (data->chat), data->mark,
-		                              0.0, TRUE, 0.0, 1.0);
+		/* Check that the mark belongs to the text view's current buffer */
+		view_buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (data->chat));
+		mark_buffer = gtk_text_mark_get_buffer (data->mark);
+		
+		if (view_buffer == mark_buffer)
+		{
+			gtk_text_view_scroll_to_mark (GTK_TEXT_VIEW (data->chat), data->mark,
+			                              0.0, TRUE, 0.0, 1.0);
+		}
 	}
 	
 	g_free (data);
@@ -165,7 +154,7 @@ pchat_textview_chat_create_tags (PchatTextViewChat *chat)
 	{
 		g_snprintf (tag_name, sizeof(tag_name), "fg-color-%d", i);
 		priv->fg_color_tags[i] = gtk_text_tag_new (tag_name);
-		g_object_set (priv->fg_color_tags[i], "foreground-rgba", &mirc_colors[i], NULL);
+		g_object_set (priv->fg_color_tags[i], "foreground-rgba", &colors[i], NULL);
 		gtk_text_tag_table_add (priv->tag_table, priv->fg_color_tags[i]);
 	}
 	
@@ -174,7 +163,7 @@ pchat_textview_chat_create_tags (PchatTextViewChat *chat)
 	{
 		g_snprintf (tag_name, sizeof(tag_name), "bg-color-%d", i);
 		priv->bg_color_tags[i] = gtk_text_tag_new (tag_name);
-		g_object_set (priv->bg_color_tags[i], "background-rgba", &mirc_colors[i], NULL);
+		g_object_set (priv->bg_color_tags[i], "background-rgba", &colors[i], NULL);
 		gtk_text_tag_table_add (priv->tag_table, priv->bg_color_tags[i]);
 	}
 }

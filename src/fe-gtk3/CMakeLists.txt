@@ -139,6 +139,11 @@ target_link_libraries(pchat PRIVATE
     ${GLIB_LIBRARIES}
 )
 
+# Export symbols for plugins on Linux/Unix
+if(UNIX AND NOT APPLE)
+    target_link_options(pchat PRIVATE "-Wl,--export-dynamic")
+endif()
+
 # Windows-specific WMI libraries (needed by common library sysinfo backend)
 if(WIN32)
     target_link_libraries(pchat PRIVATE
