@@ -481,8 +481,8 @@ int pchat_plugin_init(pchat_plugin *plugin_handle,
     ph->pchat_hook_command(ph, "APLAYER", PCHAT_PRI_NORM, gui_cb,
                       "APLAYER - Show audio player GUI", NULL);
     
-    /* Add to user menu automatically */
-    ph->pchat_command(ph, "MENU -p5 ADD \"Audio Player\" \"APLAYER\" \"\"");
+    /* Add to Window menu */
+    ph->pchat_command(ph, "MENU ADD \"Window/Audio Player\" \"APLAYER\"");
     
     ph->pchat_print(ph, "AudioPlayer plugin loaded successfully!\n");
     ph->pchat_print(ph, "Commands: /PLAY, /PAUSE, /STOP, /NEXT, /PREV, /PLAYLIST, /NP, /APLAYER\n");
@@ -494,8 +494,8 @@ int pchat_plugin_init(pchat_plugin *plugin_handle,
 /* Plugin cleanup */
 int pchat_plugin_deinit(void)
 {
-    /* Remove from user menu */
-    ph->pchat_command(ph, "MENU DEL \"Audio Player\"");
+    /* Remove from Window menu */
+    ph->pchat_command(ph, "MENU DEL \"Window/Audio Player\"");
     
     audioplayer_gui_cleanup();
     
