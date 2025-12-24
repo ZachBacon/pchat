@@ -81,13 +81,52 @@ static guint signals[LAST_SIGNAL] = { 0 };
 typedef struct {
 	PchatTextViewChat *chat;
 	GtkTextMark *mark;
+	gboolean should_scroll; /* Whether we should scroll (saved before text append) */
 } ScrollData;
+
+/* Helper function to check if scrolled to bottom */
+static gboolean
+is_scrolled_to_bottom (GtkTextView *text_view)
+{
+	GtkWidget *parent;
+	GtkAdjustment *vadj;
+	gdouble value, upper, page_size;
+	
+	/* Find the parent scrolled window */
+	parent = gtk_widget_get_parent (GTK_WIDGET (text_view));
+	
+	/* Walk up the widget hierarchy to find a scrolled window */
+	while (parent && !GTK_IS_SCROLLED_WINDOW (parent))
+	{
+		parent = gtk_widget_get_parent (parent);
+	}
+	
+	if (!parent)
+		return TRUE; /* No scrolled window found, always scroll */
+	
+	vadj = gtk_scrolled_window_get_vadjustment (GTK_SCROLLED_WINDOW (parent));
+	if (!vadj)
+		return TRUE;
+	
+	value = gtk_adjustment_get_value (vadj);
+	upper = gtk_adjustment_get_upper (vadj);
+	page_size = gtk_adjustment_get_page_size (vadj);
+	
+	/* If not yet laid out (upper == page_size), assume we want to scroll */
+	if (upper <= page_size)
+		return TRUE;
+	
+	/* Check if we're within 10 pixels of the bottom */
+	return (value + page_size + 10.0 >= upper);
+}
 
 static gboolean
 scroll_to_mark_idle (gpointer user_data)
 {
 	ScrollData *data = user_data;
 	GtkTextBuffer *view_buffer, *mark_buffer;
+	GtkWidget *parent;
+	GtkAdjustment *vadj;
 	
 	if (GTK_IS_TEXT_VIEW (data->chat) && GTK_IS_TEXT_MARK (data->mark))
 	{
@@ -95,10 +134,26 @@ scroll_to_mark_idle (gpointer user_data)
 		view_buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (data->chat));
 		mark_buffer = gtk_text_mark_get_buffer (data->mark);
 		
-		if (view_buffer == mark_buffer)
+		if (view_buffer == mark_buffer && data->should_scroll)
 		{
-			gtk_text_view_scroll_to_mark (GTK_TEXT_VIEW (data->chat), data->mark,
-			                              0.0, TRUE, 0.0, 1.0);
+			/* Find the scrolled window and scroll to bottom by setting adjustment */
+			parent = gtk_widget_get_parent (GTK_WIDGET (data->chat));
+			while (parent && !GTK_IS_SCROLLED_WINDOW (parent))
+			{
+				parent = gtk_widget_get_parent (parent);
+			}
+			
+			if (parent)
+			{
+				vadj = gtk_scrolled_window_get_vadjustment (GTK_SCROLLED_WINDOW (parent));
+				if (vadj)
+				{
+					gdouble upper = gtk_adjustment_get_upper (vadj);
+					gdouble page_size = gtk_adjustment_get_page_size (vadj);
+					gdouble new_value = upper - page_size;
+					gtk_adjustment_set_value (vadj, new_value);
+				}
+			}
 		}
 	}
 	
@@ -483,6 +538,7 @@ pchat_chat_buffer_show (PchatTextViewChat *chat, PchatChatBuffer *buf)
 	ScrollData *scroll_data = g_new0 (ScrollData, 1);
 	scroll_data->chat = chat;
 	scroll_data->mark = buf->end_mark;
+	scroll_data->should_scroll = TRUE; /* Always scroll when showing a buffer */
 	g_idle_add (scroll_to_mark_idle, scroll_data);
 }
 
@@ -725,6 +781,7 @@ pchat_textview_chat_append (PchatTextViewChat *chat, const gchar *text, gsize le
 {
 	PchatTextViewChatPrivate *priv = chat->priv;
 	PchatChatBuffer *buf;
+	gboolean was_at_bottom;
 	
 	g_return_if_fail (PCHAT_IS_TEXTVIEW_CHAT (chat));
 	
@@ -735,6 +792,9 @@ pchat_textview_chat_append (PchatTextViewChat *chat, const gchar *text, gsize le
 	if (len == 0)
 		len = strlen (text);
 	
+	/* Check if we're at bottom BEFORE appending text */
+	was_at_bottom = is_scrolled_to_bottom (GTK_TEXT_VIEW (chat));
+	
 	pchat_textview_chat_append_with_formatting (chat, buf->buffer, text, len);
 	buf->line_count++;
 	
@@ -742,6 +802,7 @@ pchat_textview_chat_append (PchatTextViewChat *chat, const gchar *text, gsize le
 	ScrollData *scroll_data = g_new0 (ScrollData, 1);
 	scroll_data->chat = chat;
 	scroll_data->mark = buf->end_mark;
+	scroll_data->should_scroll = was_at_bottom;
 	g_idle_add (scroll_to_mark_idle, scroll_data);
 }
 
@@ -750,14 +811,34 @@ void
 pchat_chat_buffer_append (PchatChatBuffer *buf, PchatTextViewChat *chat,
                           const gchar *text, gsize len)
 {
+	gboolean was_at_bottom = FALSE;
+	gboolean is_current_buffer = FALSE;
+	
 	if (!buf || !chat)
 		return;
 	
 	if (len == 0)
 		len = strlen (text);
 	
+	/* Check if this is the currently displayed buffer */
+	is_current_buffer = (buf == chat->priv->current_buffer);
+	
+	/* If appending to the current buffer, check scroll position before appending */
+	if (is_current_buffer)
+		was_at_bottom = is_scrolled_to_bottom (GTK_TEXT_VIEW (chat));
+	
 	pchat_textview_chat_append_with_formatting (chat, buf->buffer, text, len);
 	buf->line_count++;
+	
+	/* Auto-scroll if this is the current buffer and we were at bottom */
+	if (is_current_buffer && was_at_bottom)
+	{
+		ScrollData *scroll_data = g_new0 (ScrollData, 1);
+		scroll_data->chat = chat;
+		scroll_data->mark = buf->end_mark;
+		scroll_data->should_scroll = TRUE;
+		g_idle_add (scroll_to_mark_idle, scroll_data);
+	}
 }
 
 void
