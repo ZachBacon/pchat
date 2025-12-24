@@ -1253,6 +1253,12 @@ cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				{
 					set_showval (sess, &vars[i], tbuf);
 				}
+
+				/* Call after_update callback if defined for TYPE_STR settings */
+				if (vars[i].after_update != NULL)
+				{
+					vars[i].after_update();
+				}
 				break;
 			case TYPE_INT:
 			case TYPE_BOOL:

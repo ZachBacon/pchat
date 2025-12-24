@@ -299,6 +299,22 @@ pchat_textview_chat_leave_notify (GtkWidget *widget, GdkEventCrossing *event, gp
 }
 
 static void
+pchat_textview_chat_realize (GtkWidget *widget, gpointer user_data)
+{
+	PchatTextViewChat *chat = PCHAT_TEXTVIEW_CHAT (widget);
+	PchatTextViewChatPrivate *priv = chat->priv;
+	
+	/* Apply stored font settings when widget is realized */
+	if (priv->font_name)
+	{
+		/* Duplicate the font name before passing it, since set_font will free priv->font_name */
+		gchar *font_name_copy = g_strdup (priv->font_name);
+		pchat_textview_chat_set_font (chat, font_name_copy);
+		g_free (font_name_copy);
+	}
+}
+
+static void
 pchat_textview_chat_finalize (GObject *object)
 {
 	PchatTextViewChat *chat = PCHAT_TEXTVIEW_CHAT (object);
@@ -387,6 +403,10 @@ pchat_textview_chat_init (PchatTextViewChat *chat)
 	                  G_CALLBACK (pchat_textview_chat_motion_notify), NULL);
 	g_signal_connect (chat, "leave-notify-event",
 	                  G_CALLBACK (pchat_textview_chat_leave_notify), NULL);
+	
+	/* Connect realize handler to apply font when widget becomes visible */
+	g_signal_connect (chat, "realize",
+	                  G_CALLBACK (pchat_textview_chat_realize), NULL);
 	
 	/* Enable motion events */
 	gtk_widget_add_events (GTK_WIDGET (chat), GDK_POINTER_MOTION_MASK | GDK_LEAVE_NOTIFY_MASK);
@@ -911,6 +931,11 @@ pchat_textview_chat_set_font (PchatTextViewChat *chat, const gchar *font_name)
 	
 	font_desc = pango_font_description_from_string (font_name);
 	
+	if (!font_desc)
+	{
+		return;
+	}
+	
 	/* Only apply styling if widget is realized */
 	if (!gtk_widget_get_realized (GTK_WIDGET (chat)))
 	{
@@ -932,13 +957,23 @@ pchat_textview_chat_set_font (PchatTextViewChat *chat, const gchar *font_name)
 	chat->priv->font_provider = gtk_css_provider_new ();
 	css_font = pango_font_description_to_css (font_desc);
 	css = g_strdup_printf ("textview { %s }", css_font);
-	gtk_css_provider_load_from_data (chat->priv->font_provider, css, -1, NULL);
+	
+	GError *error = NULL;
+	if (!gtk_css_provider_load_from_data (chat->priv->font_provider, css, -1, &error))
+	{
+		if (error)
+			g_error_free (error);
+	}
 	g_free (css);
 	g_free (css_font);
 	
 	gtk_style_context_add_provider (context,
 	                                 GTK_STYLE_PROVIDER (chat->priv->font_provider),
 	                                 GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+	
+	/* Force GTK to recompute and apply the new styles */
+	gtk_widget_reset_style (GTK_WIDGET (chat));
+	gtk_widget_queue_draw (GTK_WIDGET (chat));
 	
 	pango_font_description_free (font_desc);
 }

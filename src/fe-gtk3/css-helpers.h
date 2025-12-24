@@ -22,24 +22,25 @@ pango_font_description_to_css (PangoFontDescription *desc)
 	PangoStyle style = pango_font_description_get_style (desc);
 	GString *css = g_string_new ("");
 	
+	/* Quote font family to handle names with spaces or special characters */
 	if (family)
-		g_string_append_printf (css, "font-family: %s; ", family);
+		g_string_append_printf (css, "font-family: '%s';", family);
 	
 	if (size > 0)
 	{
 		if (pango_font_description_get_size_is_absolute (desc))
-			g_string_append_printf (css, "font-size: %dpx; ", size);
+			g_string_append_printf (css, " font-size: %dpx;", size);
 		else
-			g_string_append_printf (css, "font-size: %dpt; ", size / PANGO_SCALE);
+			g_string_append_printf (css, " font-size: %dpt;", size / PANGO_SCALE);
 	}
 	
 	if (weight != PANGO_WEIGHT_NORMAL)
-		g_string_append_printf (css, "font-weight: %d; ", weight);
+		g_string_append_printf (css, " font-weight: %d;", weight);
 	
 	if (style == PANGO_STYLE_ITALIC)
-		g_string_append (css, "font-style: italic; ");
+		g_string_append (css, " font-style: italic;");
 	else if (style == PANGO_STYLE_OBLIQUE)
-		g_string_append (css, "font-style: oblique; ");
+		g_string_append (css, " font-style: oblique;");
 	
 	return g_string_free (css, FALSE);
 }
