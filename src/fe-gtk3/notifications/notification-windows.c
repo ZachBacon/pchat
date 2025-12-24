@@ -19,9 +19,7 @@
  */
 
 /* This file loads the WinRT notification DLL dynamically.
- * If the DLL is not available (e.g., on MinGW builds or if compilation failed),
- * it gracefully fails and the notification system won't work.
- * Consider using notification-windows-simple.c instead for MinGW builds. */
+ * If the DLL is not available, it falls back to Shell_NotifyIcon. */
 
 #include "../../common/config.h"
 #include "../../common/pchat.h"
@@ -30,21 +28,58 @@
 
 #include <gmodule.h>
 #include <windows.h>
+#include <shellapi.h>
 
+/* WinRT DLL function pointers */
 void (*winrt_notification_backend_show) (const char *title, const char *text) = NULL;
 int (*winrt_notification_backend_init) (const char **error) = NULL;
 void (*winrt_notification_backend_deinit) (void) = NULL;
 int (*winrt_notification_backend_supported) (void) = NULL;
 
+/* Simple fallback using Shell_NotifyIcon */
+static NOTIFYICONDATAW nid = {0};
+static gboolean simple_backend_active = FALSE;
+
+static void
+simple_notification_show (const char *title, const char *text)
+{
+	wchar_t *wtitle, *wtext;
+	
+	if (!simple_backend_active)
+		return;
+
+	wtitle = g_utf8_to_utf16 (title, -1, NULL, NULL, NULL);
+	wtext = g_utf8_to_utf16 (text, -1, NULL, NULL, NULL);
+	
+	if (wtitle && wtext)
+	{
+		nid.uFlags = NIF_INFO;
+		nid.dwInfoFlags = NIIF_INFO | NIIF_NOSOUND;
+		
+		wcsncpy (nid.szInfoTitle, wtitle, sizeof(nid.szInfoTitle)/sizeof(wchar_t) - 1);
+		nid.szInfoTitle[sizeof(nid.szInfoTitle)/sizeof(wchar_t) - 1] = 0;
+		
+		wcsncpy (nid.szInfo, wtext, sizeof(nid.szInfo)/sizeof(wchar_t) - 1);
+		nid.szInfo[sizeof(nid.szInfo)/sizeof(wchar_t) - 1] = 0;
+		
+		Shell_NotifyIconW (NIM_MODIFY, &nid);
+	}
+	
+	g_free (wtitle);
+	g_free (wtext);
+}
+
 void
 notification_backend_show (const char *title, const char *text)
 {
-	if (winrt_notification_backend_show == NULL)
+	if (winrt_notification_backend_show != NULL)
 	{
-		return;
+		winrt_notification_backend_show (title, text);
 	}
-
-	winrt_notification_backend_show (title, text);
+	else if (simple_backend_active)
+	{
+		simple_notification_show (title, text);
+	}
 }
 
 int
@@ -83,8 +118,10 @@ notification_backend_init (const char **error)
 
 	if (module == NULL)
 	{
-		*error = "pcnotifications-winrt not found. Using fallback notifications.";
-		return 0;
+		/* WinRT DLL not available, use simple Shell_NotifyIcon fallback */
+		simple_backend_active = TRUE;
+		*error = NULL;
+		return 1;
 	}
 
 	g_module_symbol (module, "notification_backend_show", (gpointer *) &winrt_notification_backend_show);
@@ -98,21 +135,22 @@ notification_backend_init (const char **error)
 void
 notification_backend_deinit (void)
 {
-	if (winrt_notification_backend_deinit == NULL)
+	if (winrt_notification_backend_deinit != NULL)
 	{
-		return;
+		winrt_notification_backend_deinit ();
 	}
-
-	winrt_notification_backend_deinit ();
+	
+	simple_backend_active = FALSE;
 }
 
 int
 notification_backend_supported (void)
 {
-	if (winrt_notification_backend_supported == NULL)
+	if (winrt_notification_backend_supported != NULL)
 	{
-		return 0;
+		return winrt_notification_backend_supported ();
 	}
-
-	return winrt_notification_backend_supported ();
+	
+	/* Simple backend is always supported on Windows */
+	return simple_backend_active ? 1 : 0;
 }

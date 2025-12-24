@@ -24,6 +24,7 @@ option(ENABLE_LIBNOTIFY "Enable libnotify support" ON)
 option(ENABLE_LIBCANBERRA "Enable libcanberra support" ON)
 option(ENABLE_LIBPROXY "Enable libproxy support" OFF)
 option(ENABLE_PORTABLE "Build in portable mode (stores config beside executable)" OFF)
+option(ENABLE_WINRT_NOTIFICATIONS "Use WinRT Toast notifications (Windows 8+, requires C++)" ON)
 
 # Find required packages
 find_package(PkgConfig REQUIRED)
