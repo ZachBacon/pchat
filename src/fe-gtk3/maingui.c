@@ -41,6 +41,7 @@
 #include "../common/text.h"
 #include "../common/chanopt.h"
 #include "../common/cfgfiles.h"
+#include "../common/debug-log.h"
 
 #include "banlist.h"
 #include "gtkutil.h"
@@ -3464,8 +3465,10 @@ mg_create_tabwindow (session *sess)
 	GtkWidget *win;
 	GtkWidget *table;
 
+	DEBUG_LOG("GUI", "mg_create_tabwindow: Creating window");
 	win = gtkutil_window_new ("PChat", NULL, prefs.pchat_gui_win_width,
 									  prefs.pchat_gui_win_height, 0);
+	DEBUG_LOG("GUI", "mg_create_tabwindow: Window created");
 	sess->gui->window = win;
 	gtk_window_move (GTK_WINDOW (win), prefs.pchat_gui_win_left,
 						  prefs.pchat_gui_win_top);
@@ -3476,6 +3479,7 @@ mg_create_tabwindow (session *sess)
 	gtk_widget_set_opacity (GTK_WIDGET (win), (prefs.pchat_gui_transparency / 255.));
 	gtk_container_set_border_width (GTK_CONTAINER (win), GUI_BORDER);
 
+	DEBUG_LOG("GUI", "mg_create_tabwindow: Connecting signals");
 	g_signal_connect (G_OBJECT (win), "delete_event",
 						   G_CALLBACK (mg_tabwindow_de_cb), 0);
 	g_signal_connect (G_OBJECT (win), "destroy",
@@ -3487,23 +3491,31 @@ mg_create_tabwindow (session *sess)
 	g_signal_connect (G_OBJECT (win), "window_state_event",
 							G_CALLBACK (mg_windowstate_cb), NULL);
 
+	DEBUG_LOG("GUI", "mg_create_tabwindow: Allocating palette");
 	palette_alloc (win);
 
+	DEBUG_LOG("GUI", "mg_create_tabwindow: Creating headerbar with menu");
 	/* Create and set the header bar with integrated menu */
 	GtkWidget *headerbar = mg_create_headerbar_with_menu (sess->gui, win, sess->server->is_away);
+	DEBUG_LOG("GUI", "mg_create_tabwindow: Setting titlebar");
 	gtk_window_set_titlebar (GTK_WINDOW (win), headerbar);
 
+	DEBUG_LOG("GUI", "mg_create_tabwindow: Creating main table");
 	sess->gui->main_table = table = gtk_grid_new ();
 	/* No spacing needed since menu is now in header bar */
 	/* left and right borders */
 	gtk_grid_set_column_spacing (GTK_GRID (table), 1);
 	gtk_container_add (GTK_CONTAINER (win), table);
 
+	DEBUG_LOG("GUI", "mg_create_tabwindow: Creating IRC tab");
 	mg_create_irctab (sess, table);
+	DEBUG_LOG("GUI", "mg_create_tabwindow: Creating tabs");
 	mg_create_tabs (sess->gui);
 
+	DEBUG_LOG("GUI", "mg_create_tabwindow: Setting focus");
 	mg_focus (sess);
 
+	DEBUG_LOG("GUI", "mg_create_tabwindow: Showing widgets");
 	gtk_widget_show_all (table);
 	
 	/* Show the header bar and menu */
@@ -3531,7 +3543,13 @@ mg_create_tabwindow (session *sess)
 
 	mg_place_userlist_and_chanview (sess->gui);
 
+	DEBUG_LOG("GUI", "mg_create_tabwindow: Realizing window");
+	gtk_widget_realize (win);
+	DEBUG_LOG("GUI", "mg_create_tabwindow: Window realized, now showing");
+	debug_log_write("GUI", "About to call gtk_widget_show - flushing log");
 	gtk_widget_show (win);
+	debug_log_write("GUI", "gtk_widget_show completed successfully");
+	DEBUG_LOG("GUI", "mg_create_tabwindow: Completed");
 }
 
 void
@@ -3743,8 +3761,11 @@ mg_changui_new (session *sess, restore_gui *res, int tab, int focus)
 	session_gui *gui;
 	struct User *user = NULL;
 
+	DEBUG_LOG("GUI", "mg_changui_new: Starting, tab=%d, focus=%d", tab, focus);
+
 	if (!res)
 	{
+		DEBUG_LOG("GUI", "mg_changui_new: Allocating restore_gui");
 		res = malloc (sizeof (restore_gui));
 		memset (res, 0, sizeof (restore_gui));
 	}
@@ -3754,34 +3775,43 @@ mg_changui_new (session *sess, restore_gui *res, int tab, int focus)
 	if (!sess->server->front_session)
 		sess->server->front_session = sess;
 
+	DEBUG_LOG("GUI", "mg_changui_new: Checking for user");
 	if (!is_channel (sess->server, sess->channel))
 		user = userlist_find_global (sess->server, sess->channel);
 
 	if (!tab)
 	{
+		DEBUG_LOG("GUI", "mg_changui_new: Creating top window (not tab)");
 		gui = malloc (sizeof (session_gui));
 		memset (gui, 0, sizeof (session_gui));
 		gui->is_tab = FALSE;
 		sess->gui = gui;
 		mg_create_topwindow (sess);
+		DEBUG_LOG("GUI", "mg_changui_new: Top window created");
 		fe_set_title (sess);
 		if (user && user->hostname)
 			set_topic (sess, user->hostname, user->hostname);
+		DEBUG_LOG("GUI", "mg_changui_new: Completed (top window)");
 		return;
 	}
 
+	DEBUG_LOG("GUI", "mg_changui_new: Creating tab window");
 	if (mg_gui == NULL)
 	{
+		DEBUG_LOG("GUI", "mg_changui_new: First tab, creating tab window");
 		first_run = TRUE;
 		gui = &static_mg_gui;
 		memset (gui, 0, sizeof (session_gui));
 		gui->is_tab = TRUE;
 		sess->gui = gui;
+		DEBUG_LOG("GUI", "mg_changui_new: Calling mg_create_tabwindow");
 		mg_create_tabwindow (sess);
+		DEBUG_LOG("GUI", "mg_changui_new: mg_create_tabwindow completed");
 		mg_gui = gui;
 		parent_window = gui->window;
 	} else
 	{
+		DEBUG_LOG("GUI", "mg_changui_new: Reusing existing tab window");
 		sess->gui = gui = mg_gui;
 		gui->is_tab = TRUE;
 	}
@@ -3789,11 +3819,18 @@ mg_changui_new (session *sess, restore_gui *res, int tab, int focus)
 	if (user && user->hostname)
 		set_topic (sess, user->hostname, user->hostname);
 
+	DEBUG_LOG("GUI", "mg_changui_new: Adding channel tab");
 	mg_add_chan (sess);
+	DEBUG_LOG("GUI", "mg_changui_new: Channel tab added");
 
 	if (first_run || (prefs.pchat_gui_tab_newtofront == FOCUS_NEW_ONLY_ASKED && focus)
 			|| prefs.pchat_gui_tab_newtofront == FOCUS_NEW_ALL )
+	{
+		DEBUG_LOG("GUI", "mg_changui_new: Setting focus");
 		chan_focus (res->tab);
+	}
+
+	DEBUG_LOG("GUI", "mg_changui_new: Completed");
 }
 
 GtkWidget *

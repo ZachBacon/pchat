@@ -40,6 +40,7 @@
 #include "cfgfiles.h"
 #include "chanopt.h"
 #include "ignore.h"
+#include "debug-log.h"
 #include "pchat-plugin.h"
 #include "inbound.h"
 #include "plugin.h"
@@ -961,19 +962,23 @@ xchat_init (void)
 	/* turned OFF via -a arg or by passing urls */
 	if (!arg_dont_autoconnect && !arg_urls && !arg_url)
 	{
+		DEBUG_LOG("INIT", "xchat_init: Checking for auto-connect");
 		/* do any auto connects */
 		if (!servlist_have_auto ())	/* if no new windows open .. */
 		{
+			DEBUG_LOG("INIT", "xchat_init: No auto-connect servers, opening new window");
 			/* and no serverlist gui ... */
 			if (prefs.pchat_gui_slist_skip || arg_url || arg_urls)
 				/* we'll have to open one. */
 				new_ircwindow (NULL, NULL, SESS_SERVER, 0);
 		} else
 		{
+			DEBUG_LOG("INIT", "xchat_init: Scheduling auto-connect");
 			fe_idle_add (xchat_auto_connect, NULL);
 		}
 	} else
 	{
+		DEBUG_LOG("INIT", "xchat_init: Auto-connect disabled");
 		if (prefs.pchat_gui_slist_skip || arg_url || arg_urls)
 			new_ircwindow (NULL, NULL, SESS_SERVER, 0);
 	}

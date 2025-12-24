@@ -336,17 +336,61 @@ _SSL_socket (SSL_CTX *ctx, int sd)
 char *
 _SSL_set_verify (SSL_CTX *ctx, void *verify_callback)
 {
-#ifdef DEFAULT_CERT_FILE
-	if (!SSL_CTX_load_verify_locations (ctx, DEFAULT_CERT_FILE, NULL))
+	int success = 0;
+
+#ifdef WIN32
+	/* On Windows, try to load cert.pem from beside the executable first */
+	char *exe_path = NULL;
+	char *cert_path = NULL;
+
+	if (portable_mode())
 	{
-		__SSL_fill_err_buf ("SSL_CTX_load_verify_locations");
-		return (err_buf);
+		exe_path = g_win32_get_package_installation_directory_of_module (NULL);
 	}
-#else
-	if (!SSL_CTX_set_default_verify_paths (ctx))
+	else
 	{
-		__SSL_fill_err_buf ("SSL_CTX_set_default_verify_paths");
-		return (err_buf);
+		exe_path = g_strdup (XCHATSHAREDIR);
+	}
+
+	if (exe_path)
+	{
+		cert_path = g_build_filename (exe_path, "cert.pem", NULL);
+		g_free (exe_path);
+
+		if (g_file_test (cert_path, G_FILE_TEST_EXISTS))
+		{
+			if (SSL_CTX_load_verify_locations (ctx, cert_path, NULL))
+			{
+				success = 1;
+			}
+			else
+			{
+				__SSL_fill_err_buf ("SSL_CTX_load_verify_locations");
+			}
+		}
+		g_free (cert_path);
+	}
+
+	/* If loading from local cert.pem failed, fall back to system paths */
+	if (!success)
+	{
+#endif
+
+#ifdef DEFAULT_CERT_FILE
+		if (!SSL_CTX_load_verify_locations (ctx, DEFAULT_CERT_FILE, NULL))
+		{
+			__SSL_fill_err_buf ("SSL_CTX_load_verify_locations");
+			return (err_buf);
+		}
+#else
+		if (!SSL_CTX_set_default_verify_paths (ctx))
+		{
+			__SSL_fill_err_buf ("SSL_CTX_set_default_verify_paths");
+			return (err_buf);
+		}
+#endif
+
+#ifdef WIN32
 	}
 #endif
 

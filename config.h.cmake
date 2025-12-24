@@ -31,6 +31,7 @@
 #cmakedefine USE_LIBPROXY 1
 #cmakedefine HAVE_GTK_MAC 1
 #cmakedefine SOCKS 1
+#cmakedefine PORTABLE_BUILD 1
 
 /* System detection */
 #cmakedefine USING_LINUX 1

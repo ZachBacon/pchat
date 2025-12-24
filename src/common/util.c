@@ -1329,6 +1329,10 @@ int
 portable_mode (void)
 {
 #ifdef WIN32
+	/* If built with ENABLE_PORTABLE=ON, always use portable mode */
+#ifdef PORTABLE_BUILD
+	return 1;
+#else
 	static int is_portable = -1;
 
 	if (G_UNLIKELY(is_portable == -1))
@@ -1347,6 +1351,7 @@ portable_mode (void)
 	}
 
 	return is_portable;
+#endif
 #else
 	return 0;
 #endif

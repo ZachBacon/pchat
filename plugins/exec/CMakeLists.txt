@@ -42,7 +42,7 @@ target_compile_options(exec PRIVATE
 
 # Install plugin
 install(TARGETS exec
-    LIBRARY DESTINATION lib/pchat/plugins
-    RUNTIME DESTINATION lib/pchat/plugins
+    LIBRARY DESTINATION ${PCHAT_LIBDIR}
+    RUNTIME DESTINATION ${PCHAT_LIBDIR}
     COMPONENT Plugins
 )

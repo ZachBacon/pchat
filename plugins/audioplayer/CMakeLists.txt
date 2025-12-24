@@ -107,6 +107,6 @@ target_compile_options(audioplayer PRIVATE
 
 # Install plugin
 install(TARGETS audioplayer
-    LIBRARY DESTINATION lib/pchat/plugins
+    LIBRARY DESTINATION ${PCHAT_LIBDIR}
     COMPONENT Plugins
 )

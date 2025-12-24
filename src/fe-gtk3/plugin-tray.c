@@ -28,6 +28,7 @@
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 #include <string.h>
+#include <gio/gio.h>
 #include "fe-gtk.h"
 #include "../common/pchat-plugin.h"
 #include "../common/pchat.h"
@@ -40,21 +41,10 @@
 #include "pixmaps.h"
 #include "maingui.h"
 #include "menu.h"
+#include "notifications/notification-backend.h"
 
 #ifndef _WIN32
 #include <unistd.h>
-#endif
-
-#ifdef USE_LIBNOTIFY
-#include <libnotify/notify.h>
-#ifndef NOTIFY_CHECK_VERSION
-#define NOTIFY_CHECK_VERSION(x,y,z) 0
-#endif
-#if NOTIFY_CHECK_VERSION(0,7,0)
-#define XC_NOTIFY_NEW(a,b,c,d) notify_notification_new(a,b,c)
-#else
-#define XC_NOTIFY_NEW(a,b,c,d) notify_notification_new(a,b,c,d)
-#endif
 #endif
 
 typedef enum	/* current icon status */
@@ -168,12 +158,7 @@ fe_tray_set_tooltip (const char *text)
 void
 fe_tray_set_balloon (const char *title, const char *text)
 {
-#ifndef _WIN32
-#if 0
-	const char *argv[8];
-	const char *path;
-	char time[16];
-#endif
+	char *stripped_title, *stripped_text;
 	WinStatus ws;
 
 	/* no balloons if the window is focused */
@@ -190,41 +175,15 @@ fe_tray_set_balloon (const char *title, const char *text)
 	if (!text)
 		return;
 
-#ifdef USE_LIBNOTIFY
-	static int notify_text_strip_flags = STRIP_ALL;
-	NotifyNotification *notification;
-	char *notify_text, *notify_title;
+	/* Strip colors from title and text */
+	stripped_title = strip_color ((char*)title, -1, STRIP_ALL);
+	stripped_text = strip_color ((char*)text, -1, STRIP_ALL);
 
-	if (!notify_is_initted())
-	{
-		notify_init(PACKAGE_NAME);
+	/* Use the notification backend for cross-platform notifications */
+	notification_backend_show (stripped_title, stripped_text);
 
-		GList* server_caps = notify_get_server_caps ();
-		if (g_list_find_custom (server_caps, "body-markup", (GCompareFunc)strcmp))
-		{
-			notify_text_strip_flags |= STRIP_ESCMARKUP;
-		}
-		g_list_free_full (server_caps, g_free);
-	}
-
-	notify_text = strip_color (text, -1, notify_text_strip_flags);
-	notify_title = strip_color (title, -1, STRIP_ALL);
-
-	notification = XC_NOTIFY_NEW (notify_title, notify_text, XCHATSHAREDIR "/icons/hicolor/48x48/apps/pchat.png", NULL);
-
-#if NOTIFY_CHECK_VERSION(0,7,0)
-	notify_notification_set_hint (notification, "desktop-entry", g_variant_new_string ("pchat"));
-#endif
-
-	g_free ((char *)notify_title);
-	g_free ((char *)notify_text);
-
-	notify_notification_set_timeout (notification, prefs.pchat_input_balloon_time*1000);
-	notify_notification_show (notification, NULL);
-
-	g_object_unref (notification);
-#endif
-#endif
+	g_free (stripped_title);
+	g_free (stripped_text);
 }
 
 static void

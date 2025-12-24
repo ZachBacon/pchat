@@ -4,6 +4,7 @@ add_library(pchatcommon STATIC
     chanopt.c
     ctcp.c
     dcc.c
+    debug-log.c
     pchat.c
     history.c
     ignore.c

@@ -88,8 +88,8 @@ endif()
 
 # Install plugin
 install(TARGETS python
-    LIBRARY DESTINATION lib/pchat/plugins
-    RUNTIME DESTINATION lib/pchat/plugins
+    LIBRARY DESTINATION ${PCHAT_LIBDIR}
+    RUNTIME DESTINATION ${PCHAT_LIBDIR}
     COMPONENT Plugins
 )
 
@@ -99,5 +99,5 @@ install(FILES
     python.py
     xchat.py
     _pchat.py
-    DESTINATION lib/pchat/plugins
+    DESTINATION ${PCHAT_LIBDIR}
 )

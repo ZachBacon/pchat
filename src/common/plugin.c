@@ -452,6 +452,16 @@ static void
 plugin_auto_load_cb (char *filename)
 {
 	char *pMsg;
+	char *basename;
+
+	/* Skip notification backend DLLs - they're not plugins */
+	basename = g_path_get_basename (filename);
+	if (g_strcmp0 (basename, "pcnotifications-winrt.dll") == 0)
+	{
+		g_free (basename);
+		return;
+	}
+	g_free (basename);
 
 	pMsg = plugin_load (ps, filename, NULL);
 	if (pMsg)
@@ -465,12 +475,33 @@ static const char *
 plugin_get_libdir (void)
 {
 	const char *libdir;
+	static char *portable_libdir = NULL;
 
 	libdir = g_getenv ("PCHAT_LIBDIR");
 	if (libdir && *libdir)
 		return libdir;
-	else
-		return PCHATLIBDIR;
+
+#ifdef WIN32
+	if (portable_mode ())
+	{
+		if (!portable_libdir)
+		{
+			char *path = g_win32_get_package_installation_directory_of_module (NULL);
+			if (path)
+			{
+				portable_libdir = g_build_filename (path, "plugins", NULL);
+				g_free (path);
+			}
+			else
+			{
+				portable_libdir = g_strdup (".\\plugins");
+			}
+		}
+		return portable_libdir;
+	}
+#endif
+
+	return PCHATLIBDIR;
 }
 
 void
@@ -486,15 +517,15 @@ plugin_auto_load (session *sess)
 #ifdef WIN32
 	/* a long list of bundled plugins that should be loaded automatically,
 	 * user plugins should go to <config>, leave Program Files alone! */
-	for_files (lib_dir, "pcchecksum.dll", plugin_auto_load_cb);
-	for_files (lib_dir, "pcexec.dll", plugin_auto_load_cb);
-	for_files (lib_dir, "pcfishlim.dll", plugin_auto_load_cb);
-	for_files(lib_dir, "pclua.dll", plugin_auto_load_cb);
-	for_files (lib_dir, "pcperl.dll", plugin_auto_load_cb);
-	for_files (lib_dir, "pcpython3.dll", plugin_auto_load_cb);
-	for_files (lib_dir, "pcupd.dll", plugin_auto_load_cb);
-	for_files (lib_dir, "pcwinamp.dll", plugin_auto_load_cb);
-	for_files (lib_dir, "pcsysinfo.dll", plugin_auto_load_cb);
+	for_files (lib_dir, "audioplayer.dll", plugin_auto_load_cb);
+	for_files (lib_dir, "checksum.dll", plugin_auto_load_cb);
+	for_files (lib_dir, "pchatexec.dll", plugin_auto_load_cb);
+	for_files (lib_dir, "fishlim.dll", plugin_auto_load_cb);
+	for_files (lib_dir, "lua.dll", plugin_auto_load_cb);
+	for_files (lib_dir, "python.dll", plugin_auto_load_cb);
+	for_files (lib_dir, "pchatupd.dll", plugin_auto_load_cb);
+	for_files (lib_dir, "pchatwinamp.dll", plugin_auto_load_cb);
+	for_files (lib_dir, "sysinfo.dll", plugin_auto_load_cb);
 #else
 	for_files (lib_dir, "*."PLUGIN_SUFFIX, plugin_auto_load_cb);
 #endif

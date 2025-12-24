@@ -1,4 +1,49 @@
 # GTK3 frontend executable
+
+# Try to build WinRT notification DLL (MSVC only)
+if(WIN32)
+    add_subdirectory(notifications)
+endif()
+
+# Notification backend sources - platform specific
+if(WIN32)
+    if(MSVC AND HAVE_WINRT_NOTIFICATIONS)
+        # On Windows with MSVC, try to use WinRT Toast notifications
+        # notification-windows.c loads the WinRT DLL dynamically
+        # and falls back to simple notifications if not available
+        set(NOTIFICATION_SOURCES
+            plugin-notification.c
+            notifications/notification-windows.c
+        )
+        message(STATUS "Using WinRT notification backend with fallback")
+    else()
+        # On Windows with MinGW or if WinRT failed, use simple Shell_NotifyIcon
+        set(NOTIFICATION_SOURCES
+            plugin-notification.c
+            notifications/notification-windows-simple.c
+        )
+        message(STATUS "Using simple Windows notification backend")
+    endif()
+elseif(UNIX AND NOT APPLE)
+    # On Linux, use Freedesktop notifications (via DBus)
+    set(NOTIFICATION_SOURCES
+        plugin-notification.c
+        notifications/notification-freedesktop.c
+    )
+elseif(APPLE)
+    # On macOS, use native notifications (requires Objective-C)
+    set(NOTIFICATION_SOURCES
+        plugin-notification.c
+        notifications/notification-osx.m
+    )
+else()
+    # Fallback dummy backend
+    set(NOTIFICATION_SOURCES
+        plugin-notification.c
+        notifications/notification-dummy.c
+    )
+endif()
+
 if(WIN32)
     # Build as Windows GUI application (no console window)
     add_executable(pchat WIN32
@@ -20,6 +65,7 @@ if(WIN32)
         palette.c
         pixmaps.c
         plugin-tray.c
+        ${NOTIFICATION_SOURCES}
         rawlog.c
         servlistgui.c
         setup.c
@@ -49,6 +95,7 @@ else()
         palette.c
         pixmaps.c
         plugin-tray.c
+        ${NOTIFICATION_SOURCES}
         rawlog.c
         servlistgui.c
         setup.c

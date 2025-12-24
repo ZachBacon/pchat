@@ -23,6 +23,7 @@ option(ENABLE_DBUS "Enable D-Bus support" ON)
 option(ENABLE_LIBNOTIFY "Enable libnotify support" ON)
 option(ENABLE_LIBCANBERRA "Enable libcanberra support" ON)
 option(ENABLE_LIBPROXY "Enable libproxy support" OFF)
+option(ENABLE_PORTABLE "Build in portable mode (stores config beside executable)" OFF)
 
 # Find required packages
 find_package(PkgConfig REQUIRED)
@@ -161,10 +162,28 @@ if(ENABLE_PLUGIN)
     set(USE_GMODULE 1)
 endif()
 
+if(ENABLE_PORTABLE)
+    set(PORTABLE_BUILD 1)
+    message(STATUS "Building in portable mode - config will be stored beside executable")
+endif()
+
 # Installation directories
 include(GNUInstallDirs)
-set(PCHAT_LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}/pchat")
-set(PCHAT_SHAREDIR "${CMAKE_INSTALL_FULL_DATADIR}/pchat")
+
+if(ENABLE_PORTABLE AND WIN32)
+    # Portable mode: flat directory structure
+    set(CMAKE_INSTALL_BINDIR ".")
+    set(CMAKE_INSTALL_LIBDIR "lib")
+    set(CMAKE_INSTALL_DATADIR "share")
+    set(CMAKE_INSTALL_INCLUDEDIR "include")
+    set(CMAKE_INSTALL_MANDIR "share/man")
+    set(PCHAT_LIBDIR "plugins")
+    set(PCHAT_SHAREDIR "share/pchat")
+else()
+    # Standard FHS layout
+    set(PCHAT_LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}/pchat")
+    set(PCHAT_SHAREDIR "${CMAKE_INSTALL_FULL_DATADIR}/pchat")
+endif()
 
 # Configure config.h
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)

@@ -42,6 +42,7 @@
 #include "../common/plugin.h"
 #include "../common/server.h"
 #include "../common/url.h"
+#include "../common/debug-log.h"
 #include "gtkutil.h"
 #include "maingui.h"
 #include "pixmaps.h"
@@ -69,6 +70,7 @@ gtk_log_handler_suppress_scale_factor (const gchar *log_domain,
 #include "textgui.h"
 #include "fkeys.h"
 #include "plugin-tray.h"
+#include "plugin-notification.h"
 #include "urlgrab.h"
 #include "setup.h"
 
@@ -256,7 +258,49 @@ fe_args (int argc, char *argv[])
 	}
 #endif
 
+	char *log_path = g_build_filename (get_xdir (), "pchat-debug.log", NULL);
+	debug_log_init(log_path);
+	g_free(log_path);
+	DEBUG_LOG("INIT", "Starting PChat initialization");
+
+#ifdef _WIN32
+	/* Set up GTK environment for standalone execution */
+	{
+		char *exe_path = g_win32_get_package_installation_directory_of_module(NULL);
+		if (exe_path)
+		{
+			char *share_path = g_build_filename(exe_path, "share", NULL);
+			char *lib_path = g_build_filename(exe_path, "lib", NULL);
+			
+			/* Set environment variables for GTK to find its resources */
+			g_setenv("GTK_DATA_PREFIX", exe_path, TRUE);
+			g_setenv("XDG_DATA_DIRS", share_path, TRUE);
+			g_setenv("GTK_EXE_PREFIX", exe_path, TRUE);
+			g_setenv("GTK_PATH", lib_path, TRUE);
+			
+			/* Force software rendering to avoid graphics driver issues */
+			g_setenv("GDK_RENDERING", "image", TRUE);
+			g_setenv("GSK_RENDERER", "cairo", TRUE);
+			
+			/* Enable verbose debugging */
+			g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
+			g_setenv("GTK_DEBUG", "all", TRUE);
+			g_setenv("GDK_DEBUG", "all", TRUE);
+			g_setenv("G_DEBUG", "fatal-warnings", TRUE);
+			
+			DEBUG_LOG("INIT", "Set GTK paths - exe: %s", exe_path);
+			DEBUG_LOG("INIT", "Forced software rendering (GDK_RENDERING=image, GSK_RENDERER=cairo)");
+			DEBUG_LOG("INIT", "Enabled GTK debugging");
+			
+			g_free(share_path);
+			g_free(lib_path);
+			g_free(exe_path);
+		}
+	}
+#endif
+
 	gtk_init (&argc, &argv);
+	DEBUG_LOG("INIT", "GTK initialized successfully");
 
 	/* Apply CSS to reduce tab button padding/height */
 	{
@@ -339,6 +383,7 @@ create_input_style_font (void)
 void
 fe_init (void)
 {
+	DEBUG_LOG("INIT", "fe_init: Starting frontend initialization");
 	palette_load ();
 	key_init ();
 	pixmaps_init ();
@@ -349,16 +394,19 @@ fe_init (void)
 	channelwin_pix = gdk_pixbuf_new_from_file (prefs.pchat_text_background, NULL);
 	input_font_desc = create_input_style_font ();
 	create_input_style_css ();
+	DEBUG_LOG("INIT", "fe_init: Frontend initialization complete");
 }
 
 void
 fe_main (void)
 {
+	DEBUG_LOG("INIT", "fe_main: Entering GTK main loop");
 #ifdef HAVE_GTK_MAC
 	gtkosx_application_ready(osx_app);
 #endif
 
 	gtk_main ();
+	DEBUG_LOG("INIT", "fe_main: GTK main loop exited");
 
 	/* sleep for 2 seconds so any QUIT messages are not lost. The  */
 	/* GUI is closed at this point, so the user doesn't even know! */
@@ -421,14 +469,18 @@ log_handler (const gchar   *log_domain,
 
 #endif
 
-/* install tray stuff */
+/* install tray and notification plugins */
 
 static int
 fe_idle (gpointer data)
 {
 	session *sess = sess_list->data;
 
+	DEBUG_LOG("INIT", "fe_idle: Loading tray plugin");
 	plugin_add (sess, NULL, NULL, tray_plugin_init, tray_plugin_deinit, NULL, FALSE);
+	DEBUG_LOG("INIT", "fe_idle: Loading notification plugin");
+	plugin_add (sess, NULL, NULL, notification_plugin_init, notification_plugin_deinit, NULL, FALSE);
+	DEBUG_LOG("INIT", "fe_idle: Plugins loaded successfully");
 
 	if (arg_minimize == 1)
 		gtk_window_iconify (GTK_WINDOW (sess->gui->window));
@@ -442,6 +494,7 @@ void
 fe_new_window (session *sess, int focus)
 {
 	int tab = FALSE;
+	DEBUG_LOG("WINDOW", "fe_new_window: type=%d, focus=%d", sess->type, focus);
 
 	if (sess->type == SESS_DIALOG)
 	{
@@ -453,17 +506,27 @@ fe_new_window (session *sess, int focus)
 			tab = TRUE;
 	}
 
+	DEBUG_LOG("WINDOW", "fe_new_window: Calling mg_changui_new, tab=%d", tab);
 	mg_changui_new (sess, NULL, tab, focus);
+	DEBUG_LOG("WINDOW", "fe_new_window: mg_changui_new completed");
 
 #ifdef _WIN32
+	DEBUG_LOG("WINDOW", "fe_new_window: Setting up log handlers");
 	g_log_set_handler ("GLib", G_LOG_LEVEL_CRITICAL|G_LOG_LEVEL_WARNING, (GLogFunc)log_handler, 0);
 	g_log_set_handler ("GLib-GObject", G_LOG_LEVEL_CRITICAL|G_LOG_LEVEL_WARNING, (GLogFunc)log_handler, 0);
 	g_log_set_handler ("Gdk", G_LOG_LEVEL_CRITICAL|G_LOG_LEVEL_WARNING, (GLogFunc)log_handler, 0);
 	g_log_set_handler ("Gtk", G_LOG_LEVEL_CRITICAL|G_LOG_LEVEL_WARNING, (GLogFunc)log_handler, 0);
+	DEBUG_LOG("WINDOW", "fe_new_window: Log handlers set");
 #endif
 
 	if (!sess_list->next)
+	{
+		DEBUG_LOG("WINDOW", "fe_new_window: Adding fe_idle callback");
 		g_idle_add (fe_idle, NULL);
+		DEBUG_LOG("WINDOW", "fe_new_window: fe_idle callback added");
+	}
+
+	DEBUG_LOG("WINDOW", "fe_new_window: Completed");
 }
 
 void

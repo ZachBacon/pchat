@@ -71,7 +71,7 @@ endif()
 
 # Install plugin
 install(TARGETS checksum
-    LIBRARY DESTINATION lib/pchat/plugins
-    RUNTIME DESTINATION lib/pchat/plugins
+    LIBRARY DESTINATION ${PCHAT_LIBDIR}
+    RUNTIME DESTINATION ${PCHAT_LIBDIR}
     COMPONENT Plugins
 )
