@@ -2175,7 +2175,7 @@ setup_apply_real (int new_pix, int do_ulist, int do_layout)
 		log_open_or_close (sess);
 
 		if (do_ulist)
-			userlist_rehash (sess);
+			userlist_resort (sess);
 
 		list = list->next;
 	}
@@ -2246,6 +2246,10 @@ setup_apply (struct pchatprefs *pr)
 		do_layout = TRUE;
 
 	if (color_change || (DIFF (pchat_gui_ulist_color)) || (DIFF (pchat_away_size_max)) || (DIFF (pchat_away_track)))
+		do_ulist = TRUE;
+
+	/* Check if userlist sort preference changed - need to resort */
+	if (DIFF (pchat_gui_ulist_sort))
 		do_ulist = TRUE;
 
 	if ((pr->pchat_gui_tab_pos == 5 || pr->pchat_gui_tab_pos == 6) &&

@@ -30,25 +30,30 @@
 
 
 int
-nick_cmp_az_ops (server *serv, struct User *user1, struct User *user2)
+nick_cmp_az_ops (struct User *user1, struct User *user2, server *serv)
 {
 	unsigned int access1 = user1->access;
 	unsigned int access2 = user2->access;
 	int pos;
 
+	/* If access levels differ, compare from highest rank (pos 0) to lowest */
 	if (access1 != access2)
 	{
 		for (pos = 0; pos < USERACCESS_SIZE; pos++)
 		{
-			if ((access1&(1<<pos)) && (access2&(1<<pos)))
-				break;
-			if ((access1&(1<<pos)) && !(access2&(1<<pos)))
+			/* If both have this rank, continue to next lower rank */
+			if ((access1 & (1<<pos)) && (access2 & (1<<pos)))
+				continue;
+			/* user1 has this rank, user2 doesn't - user1 comes first */
+			if (access1 & (1<<pos))
 				return -1;
-			if (!(access1&(1<<pos)) && (access2&(1<<pos)))
+			/* user2 has this rank, user1 doesn't - user2 comes first */
+			if (access2 & (1<<pos))
 				return 1;
 		}
 	}
 
+	/* Same access level or no special access - sort alphabetically */
 	return serv->p_cmp (user1->nick, user2->nick);
 }
 
@@ -56,6 +61,62 @@ int
 nick_cmp_alpha (struct User *user1, struct User *user2, server *serv)
 {
 	return serv->p_cmp (user1->nick, user2->nick);
+}
+
+int
+nick_cmp_za_ops (struct User *user1, struct User *user2, server *serv)
+{
+	unsigned int access1 = user1->access;
+	unsigned int access2 = user2->access;
+	int pos;
+
+	/* If access levels differ, compare from highest rank (pos 0) to lowest */
+	/* But put ops LAST, so reverse the comparison */
+	if (access1 != access2)
+	{
+		for (pos = 0; pos < USERACCESS_SIZE; pos++)
+		{
+			/* If both have this rank, continue to next lower rank */
+			if ((access1 & (1<<pos)) && (access2 & (1<<pos)))
+				continue;
+			/* user1 has this rank, user2 doesn't - user2 comes first */
+			if (access1 & (1<<pos))
+				return 1;
+			/* user2 has this rank, user1 doesn't - user1 comes first */
+			if (access2 & (1<<pos))
+				return -1;
+		}
+	}
+
+	/* Same access level or no special access - sort reverse alphabetically */
+	return -(serv->p_cmp (user1->nick, user2->nick));
+}
+
+int
+nick_cmp_za (struct User *user1, struct User *user2, server *serv)
+{
+	return -(serv->p_cmp (user1->nick, user2->nick));
+}
+
+/* Master comparison function that delegates based on preference */
+int
+nick_cmp (struct User *user1, struct User *user2, server *serv)
+{
+	/* Delegate to the appropriate comparison function based on preference */
+	switch (prefs.pchat_gui_ulist_sort)
+	{
+		case 1:  /* A-Z (alphabetical only) */
+			return nick_cmp_alpha (user1, user2, serv);
+		case 2:  /* Z-A, Ops last */
+			return nick_cmp_za_ops (user1, user2, serv);
+		case 3:  /* Z-A (reverse alphabetical) */
+			return nick_cmp_za (user1, user2, serv);
+		case 4:  /* Unsorted - all equal */
+			return 0;
+		case 0:  /* A-Z, Ops first */
+		default:
+			return nick_cmp_az_ops (user1, user2, serv);
+	}
 }
 
 /*
@@ -68,7 +129,8 @@ userlist_insertname (session *sess, struct User *newuser)
 {
 	if (!sess->usertree)
 	{
-		sess->usertree = tree_new ((tree_cmp_func *)nick_cmp_alpha, sess->server);
+		/* Always use nick_cmp which checks the preference dynamically */
+		sess->usertree = tree_new ((tree_cmp_func *)nick_cmp, sess->server);
 	}
 
 	return tree_insert (sess->usertree, newuser);
@@ -297,8 +359,8 @@ userlist_update_mode (session *sess, char *name, char mode, char sign)
 	update_counts (sess, user, prefix, level, offset);
 
 	/* insert it back into its new place */
-	tree_insert (sess->usertree, user);
-	fe_userlist_insert (sess, user, FALSE);
+	int row = tree_insert (sess->usertree, user);
+	fe_userlist_insert (sess, user, row, FALSE);
 	fe_userlist_numbers (sess);
 }
 
@@ -315,8 +377,8 @@ userlist_change (struct session *sess, char *oldname, char *newname)
 
 		safe_strcpy (user->nick, newname, NICKLEN);
 
-		tree_insert (sess->usertree, user);
-		fe_userlist_insert (sess, user, FALSE);
+		int row = tree_insert (sess->usertree, user);
+		fe_userlist_insert (sess, user, row, FALSE);
 
 		return 1;
 	}
@@ -420,7 +482,7 @@ userlist_add (struct session *sess, char *name, char *hostname,
 	if (user->me)
 		sess->me = user;
 
-	fe_userlist_insert (sess, user, FALSE);
+	fe_userlist_insert (sess, user, row, FALSE);
 	if(sess->end_of_names)
 		fe_userlist_numbers (sess);
 }
@@ -468,4 +530,36 @@ userlist_double_list(session *sess)
 
 	tree_foreach (sess->usertree, (tree_traverse_func *)double_cb, &list);
 	return list;
+}
+
+/* Rebuild the userlist tree to resort it */
+void
+userlist_resort (session *sess)
+{
+	GSList *list;
+	GSList *node;
+	struct User *user;
+	
+	if (!sess->usertree)
+		return;
+	
+	/* Get all users */
+	list = userlist_flat_list (sess);
+	
+	/* Destroy the old tree */
+	tree_destroy (sess->usertree);
+	sess->usertree = NULL;
+	
+	/* Clear the GUI userlist */
+	fe_userlist_clear (sess);
+	
+	/* Rebuild tree and GUI with current comparison function */
+	for (node = list; node; node = node->next)
+	{
+		user = node->data;
+		int row = userlist_insertname (sess, user);
+		fe_userlist_insert (sess, user, row, FALSE);
+	}
+	
+	g_slist_free (list);
 }

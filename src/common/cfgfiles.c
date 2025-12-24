@@ -830,6 +830,7 @@ load_default_config(void)
 	prefs.pchat_gui_tab_trunc = 20;
 	prefs.pchat_gui_throttlemeter = 1;
 	prefs.pchat_gui_ulist_pos = 3;
+	prefs.pchat_gui_ulist_sort = 0;		/* 0 = A-Z, Ops first */
 	prefs.pchat_gui_win_height = 400;
 	prefs.pchat_gui_win_width = 640;
 	prefs.pchat_irc_ban_type = 1;

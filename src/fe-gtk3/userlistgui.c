@@ -335,7 +335,7 @@ fe_userlist_rehash (session *sess, struct User *user)
 }
 
 void
-fe_userlist_insert (session *sess, struct User *newuser, gboolean sel)
+fe_userlist_insert (session *sess, struct User *newuser, int row, gboolean sel)
 {
 	GtkTreeModel *model = sess->res->user_model;
 	GdkPixbuf *pix = get_user_icon (sess->server, newuser);
@@ -360,7 +360,8 @@ fe_userlist_insert (session *sess, struct User *newuser, gboolean sel)
 		pix = NULL;
 	}
 
-gtk_list_store_insert_with_values (GTK_LIST_STORE (model), &iter, -1,
+/* Use the row position from the sorted tree, not -1 (append to end) */
+gtk_list_store_insert_with_values (GTK_LIST_STORE (model), &iter, row,
 									COL_PIX, pix,
 									COL_NICK, nick,
 									COL_HOST, newuser->hostname,
@@ -402,7 +403,7 @@ void
 fe_userlist_move (session *sess, struct User *user, int new_row)
 {
 	gboolean was_selected = fe_userlist_remove (sess, user);
-	fe_userlist_insert (sess, user, was_selected);
+	fe_userlist_insert (sess, user, new_row, was_selected);
 }
 
 void
